@@ -1,0 +1,1214 @@
+/* eslint-disable */
+@import url('https://fonts.googleapis.com/css?family=Lato:300');
+@import url('https://fonts.googleapis.com/css?family=Raleway:100,600');
+.booking-kare body {
+  font-family: 'Lato', sans-serif;
+  color: #333;
+  font-size: 14px;
+  font-weight: 300;
+  background: #fff;
+  overflow-x: hidden;
+}
+.booking-kare p {
+  font-size: 14px;
+  line-height: 26px;
+}
+.booking-kare a:hover,
+.booking-kare a:focus {
+  color: #4676fa;
+}
+.booking-kare a {
+  -webkit-transition: all 0.2s linear;
+  -moz-transition: all 0.2s linear;
+  -o-transition: all 0.2s linear;
+  transition: all 0.2s linear;
+}
+.booking-kare .btn {
+  font-size: 14px;
+  padding: 10px 30px;
+  border-radius: 0px;
+  font-weight: 400;
+  color: #fff;
+  text-transform: uppercase;
+  -webkit-transition: all 0.2s linear;
+  -moz-transition: all 0.2s linear;
+  -o-transition: all 0.2s linear;
+  transition: all 0.2s linear;
+  display: inline-block;
+  font-family: 'Lato', sans-serif;
+}
+.booking-kare .btn:focus {
+  box-shadow: none;
+  outline: none;
+}
+.booking-kare .btn-common {
+  border: 2px solid #4676fa;
+  background-color: #4676fa;
+  position: relative;
+  z-index: 1;
+  border-radius: 4px;
+}
+.booking-kare .btn-common:hover {
+  color: #4676fa;
+  background-color: transparent;
+  border: 2px solid #4676fa;
+  transition: all 0.5s ease-in-out;
+  -moz-transition: all 0.5s ease-in-out;
+  -webkit-transition: all 0.5s ease-in-out;
+}
+.booking-kare .btn-border {
+  color: #fff;
+  background-color: transparent;
+  border: 2px solid #fff;
+  border-radius: 4px;
+}
+.booking-kare .btn-border:hover {
+  border: 2px solid #fff;
+  color: #fff;
+  background-color: #4676fa;
+}
+.booking-kare .btn-lg {
+  padding: 14px 33px;
+  text-transform: uppercase;
+  font-size: 16px;
+}
+.booking-kare .btn-rm {
+  padding: 7px 10px;
+  text-transform: capitalize;
+}
+.booking-kare .clear {
+  clear: both;
+}
+.booking-kare h1,
+.booking-kare h2,
+.booking-kare h3,
+.booking-kare h4,
+.booking-kare h5 {
+  font-family: 'Raleway', sans-serif;
+  font-size: 40px;
+  font-weight: 100;
+  letter-spacing: 1px;
+}
+.booking-kare ul {
+  margin: 0;
+  padding: 0;
+}
+.booking-kare ul li {
+  list-style: none;
+}
+.booking-kare a:hover,
+.booking-kare a:focus {
+  text-decoration: none;
+  outline: none;
+}
+.booking-kare a:not([href]):not([tabindex]) {
+  color: #fff;
+}
+.booking-kare a:not([href]):not([tabindex]):focus,
+.booking-kare a:not([href]):not([tabindex]):hover {
+  color: #4676fa;
+}
+.booking-kare .section {
+  padding: 80px 0;
+}
+.booking-kare .section-header {
+  color: #fff;
+  margin-bottom: 40px;
+  text-align: center;
+}
+.booking-kare .section-header .section-title {
+  font-size: 42px;
+  margin-top: 0;
+  text-transform: uppercase;
+  font-weight: 100;
+  color: #0d3559;
+  position: relative;
+}
+.booking-kare .section-header .section-title span {
+  color: #4676fa;
+}
+.booking-kare .section-header .section-subtitle {
+  margin-top: 15px;
+  color: #333;
+  font-size: 14px;
+  font-weight: 400;
+}
+.booking-kare .section-header .lines {
+  margin: auto;
+  width: 70px;
+  position: relative;
+  border-top: 2px solid #346afe;
+  margin-top: 15px;
+}
+.booking-kare .section-header .lines:before {
+  position: absolute;
+  content: "";
+  display: inline-block;
+  height: 10px;
+  width: 10px;
+  top: -10px;
+  border: 4px solid #fff;
+  border-radius: 50%;
+  background: #4676fa;
+  left: 27px;
+}
+/* ==========================================================================
+   Navbar Style
+   ========================================================================== */
+.booking-kare .bg-faded {
+  background-color: #fff;
+}
+.booking-kare .logo-menu a {
+  font-size: 20px;
+  color: #fff;
+}
+.booking-kare .menu-bg {
+  background-color: #fff!important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.16), 0 1px 3px 0 rgba(0, 0, 0, 0.12);
+  z-index: 999;
+  padding: 3px;
+}
+.booking-kare .menu-bg .menu-button {
+  top: 0;
+}
+.booking-kare .menu-bg .menu-button:hover {
+  cursor: pointer;
+  color: #4676fa;
+}
+.booking-kare .menu-bg .logo-menu a {
+  color: #4676fa;
+}
+.booking-kare .menu-button:hover {
+  cursor: pointer;
+  opacity: #eee;
+}
+.booking-kare .close-button {
+  cursor: pointer;
+}
+.booking-kare .navbar-light .navbar-nav .nav-item {
+  margin-left: 15px;
+}
+.booking-kare .navbar-light .navbar-nav .nav-link {
+  color: #0d3559;
+  padding: 7px 0px;
+  margin-left: 5px;
+  position: relative;
+  font-size: 15px;
+  letter-spacing: 0.3px;
+}
+.booking-kare .navbar-light .navbar-nav .nav-link:focus,
+.booking-kare .navbar-light .navbar-nav .nav-link:hover,
+.booking-kare .navbar-light .navbar-nav .nav-link:hover:before {
+  color: #4676fa;
+  -webkit-transform: scale(1);
+  transform: scale(1);
+}
+.booking-kare .navbar-light .navbar-nav .active > .nav-link,
+.booking-kare .navbar-light .navbar-nav .nav-link.active,
+.booking-kare .navbar-light .navbar-nav .nav-link.active:before,
+.booking-kare .navbar-light .navbar-nav .nav-link.open,
+.booking-kare .navbar-light .navbar-nav .open > .nav-link {
+  color: #4676fa;
+  -webkit-transform: scale(1);
+  transform: scale(1);
+}
+.booking-kare .navbar-light .navbar-toggler {
+  border-color: #333;
+  border-radius: 0px;
+}
+.booking-kare .navbar-light .navbar-toggler {
+  float: right;
+  margin: 10px;
+}
+.booking-kare .navbar-light .navbar-toggler i {
+  color: #333!important;
+}
+/* ==========================================================================
+   Hero Area Style
+   ========================================================================== */
+.booking-kare #hero-area {
+  background: url(../img/blog/img1.jpg) fixed no-repeat;
+  background-size: cover;
+  color: #fff;
+  overflow: hidden;
+  position: relative;
+}
+.booking-kare #hero-area .overlay {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0px;
+  left: 0px;
+  background: #4676fa;
+  opacity: 0.7;
+  filter: alpha(opacity=70);
+}
+.booking-kare #hero-area .contents {
+  padding: 160px 0 80px;
+}
+.booking-kare #hero-area .contents h1 {
+  color: #fff;
+  font-size: 50px;
+  font-weight: 100;
+  margin-bottom: 25px;
+}
+.booking-kare #hero-area .contents p {
+  font-size: 14px;
+  color: #fff;
+  font-weight: 400;
+  line-height: 30px;
+  letter-spacing: 0.5px;
+}
+.booking-kare #hero-area .contents .btn {
+  margin: 20px 10px;
+  text-transform: uppercase;
+}
+.booking-kare #hero-area .banner_bottom_btn {
+  margin-top: 40px;
+}
+.booking-kare #hero-area .banner_bottom_btn i {
+  color: #fff;
+  font-size: 48px;
+  -webkit-transition: all 0.2s linear;
+  -moz-transition: all 0.2s linear;
+  -o-transition: all 0.2s linear;
+  transition: all 0.2s linear;
+}
+.booking-kare #hero-area .banner_bottom_btn i:hover {
+  color: #4676fa;
+}
+/* ==========================================================================
+   Slider Area
+   ========================================================================== */
+.booking-kare #slider-area {
+  margin-top: -1px;
+}
+.booking-kare #slider-area h1 {
+  font-weight: 100;
+  font-size: 30px;
+  line-height: 36px;
+  text-transform: uppercase;
+}
+.booking-kare #slider-area p {
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 400;
+}
+.booking-kare #slider-area .sticky-navigation {
+  background: transparent;
+}
+.booking-kare #slider-area .btn {
+  margin-right: 15px;
+}
+.booking-kare #slider-area .large_white {
+  color: #fff;
+}
+/* ==========================================================================
+   Video Background
+   ========================================================================== */
+.booking-kare #video-area {
+  overflow: hidden;
+  position: relative;
+}
+.booking-kare #video-area .contents {
+  padding: 160px 0 80px;
+}
+.booking-kare #video-area .contents h1 {
+  color: #fff;
+  font-size: 50px;
+  font-weight: 600;
+  margin-bottom: 25px;
+  line-height: 70px;
+}
+.booking-kare #video-area .contents p {
+  font-size: 14px;
+  color: #fff;
+  font-weight: 400;
+  line-height: 30px;
+  letter-spacing: 0.5px;
+}
+.booking-kare #video-area .contents .btn {
+  margin: 20px 10px;
+  text-transform: uppercase;
+}
+.booking-kare #video-area .banner_bottom_btn {
+  margin-top: 40px;
+}
+.booking-kare #video-area .banner_bottom_btn i {
+  color: #fff;
+  font-size: 48px;
+  -webkit-transition: all 0.2s linear;
+  -moz-transition: all 0.2s linear;
+  -o-transition: all 0.2s linear;
+  transition: all 0.2s linear;
+}
+.booking-kare #video-area .banner_bottom_btn i:hover {
+  color: #4676fa;
+}
+.booking-kare .overlay-2 {
+  background: rgba(0, 0, 0, 0.7) !important;
+}
+/* ==========================================================================
+   About Section Style
+   ========================================================================== */
+.booking-kare #about {
+  position: relative;
+  background: #f2f2f2;
+}
+.booking-kare .item-boxes {
+  text-align: center;
+  padding: 15px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  webkit-transition: all 0.3s ease 0s;
+  -moz-transition: all 0.3s ease 0s;
+  transition: all 0.3s ease 0s;
+}
+.booking-kare .item-boxes .icon {
+  width: 60px;
+  height: 60px;
+  text-align: center;
+  border: 1px solid #4676fa;
+  display: inline-block;
+  border-radius: 5px;
+  margin-top: 10px;
+  margin-bottom: 15px;
+  webkit-transition: all 0.3s ease-in-out;
+  -webkit-transition: all 0.3s ease-in-out;
+  transition: all 0.3s ease-in-out;
+}
+.booking-kare .item-boxes .icon i {
+  font-size: 30px;
+  line-height: 60px;
+  color: #4676fa;
+}
+.booking-kare .item-boxes h4 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+.booking-kare .item-boxes:hover {
+  background: #fff;
+  box-shadow: 0 8px 48px 0 rgba(0, 0, 0, 0.15);
+}
+.booking-kare #services {
+  position: relative;
+  background: #f2f2f2;
+}
+/* ==========================================================================
+   Features Section Style
+   ========================================================================== */
+.booking-kare #features {
+  background: #fff;
+}
+.booking-kare #features .icon {
+  display: inline-block;
+  width: 60px;
+  height: 60px;
+  border-radius: 4px;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+.booking-kare #features .content-left {
+  position: relative;
+  top: 60px;
+}
+.booking-kare #features .content-left span {
+  float: right;
+  margin-left: 25px;
+}
+.booking-kare #features .content-right {
+  position: relative;
+  top: 60px;
+}
+.booking-kare #features .content-right span {
+  float: left;
+  margin-right: 25px;
+}
+.booking-kare #features .box-item {
+  padding-bottom: 30px;
+}
+.booking-kare #features .box-item .icon {
+  border: 1px solid #4676fa;
+  text-align: center;
+  margin: 12px;
+  -webkit-transition: all 0.2s linear;
+  -moz-transition: all 0.2s linear;
+  -o-transition: all 0.2s linear;
+  transition: all 0.2s linear;
+}
+.booking-kare #features .box-item .icon i {
+  color: #4676fa;
+  font-size: 24px;
+  line-height: 60px;
+  -webkit-transition: all 0.2s linear;
+  -moz-transition: all 0.2s linear;
+  -o-transition: all 0.2s linear;
+  transition: all 0.2s linear;
+}
+.booking-kare #features .box-item .text h4 {
+  font-weight: 600;
+  font-size: 18px;
+  line-height: 22px;
+}
+.booking-kare #features .box-item .text p {
+  font-size: 14px;
+  line-height: 26px;
+}
+.booking-kare #features .box-item:hover .icon {
+  background: #4676fa;
+}
+.booking-kare #features .box-item:hover .icon i {
+  color: #ffffff;
+}
+.booking-kare #features .show-box {
+  padding: 80px 0px 0px;
+}
+.booking-kare #features .show-box img {
+  width: 100%;
+}
+/* ==========================================================================
+   Screenshots Section Start
+   ========================================================================== */
+.booking-kare #screenshots {
+  background: #f2f2f2;
+}
+.booking-kare .shot-item {
+  margin-right: 15px;
+  padding: 8px;
+  border-radius: 4px;
+  background: #fff;
+}
+.booking-kare .shot-item img {
+  width: 100%;
+}
+.booking-kare .shot-item .overlay {
+  display: block;
+  position: relative;
+}
+.booking-kare .shot-item .overlay:before,
+.booking-kare .shot-item .overlay:after {
+  position: absolute;
+  content: "";
+  height: 30%;
+  width: 30%;
+  background: #346afe;
+  opacity: 0;
+  -webkit-transition: all 0.5s ease-in-out;
+  transition: all 0.5s ease-in-out;
+}
+.booking-kare .shot-item .overlay:before {
+  top: 0;
+  left: 0;
+  z-index: 1;
+}
+.booking-kare .shot-item .overlay:after {
+  bottom: 0;
+  right: 0;
+  z-index: 1;
+}
+.booking-kare .shot-item:hover .overlay:before {
+  height: 50%;
+  width: 100%;
+  opacity: 0.8;
+}
+.booking-kare .shot-item:hover .overlay:after {
+  height: 50%;
+  width: 100%;
+  opacity: 0.8;
+}
+.booking-kare .overlay .item-icon {
+  height: 48px;
+  width: 48px;
+  line-height: 48px;
+  color: #fff;
+  left: 50%;
+  margin-left: -24px;
+  margin-top: -24px;
+  top: 50%;
+  position: absolute;
+  z-index: 2;
+  visibility: hidden;
+  opacity: 0;
+  cursor: pointer;
+  text-align: center;
+  font-size: 24px;
+  -webkit-transition: all 0.5s ease-in-out;
+  -moz-transition: all 0.5s ease-in-out;
+  transition: all 0.5s ease-in-out;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+.booking-kare .shot-item:hover .item-icon {
+  visibility: visible;
+  opacity: 1;
+}
+/* ==========================================================================
+   Portfolio Section
+   ========================================================================== */
+.booking-kare #portfolios {
+  background: #f2f2f2;
+}
+.booking-kare #portfolios .mix {
+  padding: 10px;
+}
+.booking-kare #portfolios .portfolio-item .shot-item {
+  margin: 0px;
+}
+.booking-kare #portfolio-list .mix {
+  display: none;
+}
+.booking-kare .controls {
+  text-align: center;
+  padding: 0px 0px 20px;
+}
+.booking-kare .controls .mixitup-control-active {
+  color: #4676fa !important;
+  border-color: #4676fa;
+  background: transparent;
+}
+.booking-kare .controls .btn {
+  text-transform: uppercase;
+  margin: 2px;
+}
+.booking-kare .controls:hover {
+  cursor: pointer;
+}
+.booking-kare .portfolio-img {
+  overflow: hidden;
+  display: block;
+  position: relative;
+}
+.booking-kare .portfolio-img img {
+  width: 100%;
+}
+.booking-kare .portfoli-content {
+  width: 100%;
+  position: absolute;
+  height: 100%;
+  opacity: 0;
+  top: 0;
+  -webkit-transition: opacity 0.8s cubic-bezier(0.19, 1, 0.22, 1);
+  transition: opacity 0.8s cubic-bezier(0.19, 1, 0.22, 1);
+}
+.booking-kare .portfoli-content:before {
+  background-color: rgba(1, 3, 7, 0.8);
+  top: 0px;
+  left: 0px;
+  bottom: 15px;
+  right: 30px;
+  content: '';
+  position: absolute;
+  -webkit-transform: scale(0.9);
+  -moz-transform: scale(0.9);
+  -ms-transform: scale(0.9);
+  -o-transform: scale(0.9);
+  transform: scale(0.9);
+  -webkit-transition: all 400ms ease;
+  transition: all 400ms ease;
+}
+.booking-kare .sup-desc-wrap {
+  display: table;
+  width: 100%;
+  height: 100%;
+}
+.booking-kare .sup-desc-wrap .sup-desc-inner {
+  display: table-cell;
+  text-align: center;
+  vertical-align: middle;
+  padding: 0 35px;
+}
+.booking-kare .sup-desc-wrap .sup-meta-wrap .sup-title {
+  display: block;
+  outline: none;
+  margin-bottom: 10px;
+  -webkit-transform: scale(0);
+  -moz-transform: scale(0);
+  -ms-transform: scale(0);
+  -o-transform: scale(0);
+  transform: scale(0);
+  opacity: 0;
+  -webkit-transition: all 0.5s ease;
+  -moz-transition: all 0.5s ease;
+  transition: all 0.5s ease;
+}
+.booking-kare .sup-desc-wrap .sup-meta-wrap .sup-title h4 {
+  font-size: 22px;
+  color: #fff;
+  margin: 0 0 5px;
+  line-height: 26px;
+  text-transform: uppercase;
+  font-weight: 100;
+}
+.booking-kare .sup-desc-wrap .sup-meta-wrap .sup-description {
+  font-size: 14px;
+  line-height: 22px;
+  color: #fff;
+  text-align: center;
+  -webkit-transform: translateY(40px);
+  transform: translateY(40px);
+  opacity: 0;
+  -webkit-transition: all 0.5s ease;
+  -moz-transition: all 0.5s ease;
+  transition: all 0.5s ease;
+}
+.booking-kare .portfolio-item:hover .portfoli-content,
+.booking-kare .portfolio-item:hover .portfoli-content:before {
+  opacity: 1;
+  -webkit-transform: scale(1);
+  -moz-transform: scale(1);
+  -ms-transform: scale(1);
+  -o-transform: scale(1);
+  transform: scale(1);
+}
+.booking-kare .portfolio-item:hover .sup-title {
+  -webkit-transform: scale(1);
+  -moz-transform: scale(1);
+  -ms-transform: scale(1);
+  -o-transform: scale(1);
+  transform: scale(1);
+  opacity: 1;
+}
+.booking-kare .portfolio-item:hover .sup-description {
+  opacity: 1;
+  -webkit-transform: translateY(0px);
+  transform: translateY(0px);
+}
+/* ==========================================================================
+   Video promo Style
+   ========================================================================== */
+.booking-kare .video-promo {
+  background: url(../img/bg_2.jpg) fixed;
+  background-position: cover;
+  position: relative;
+}
+.booking-kare .video-promo .video-promo-content {
+  color: #fff;
+}
+.booking-kare .video-promo .video-promo-content h2 {
+  color: #fff;
+  font-size: 30px;
+  text-transform: uppercase;
+}
+.booking-kare .video-promo .video-promo-content p {
+  margin-bottom: 30px;
+}
+.booking-kare .video-promo .video-promo-content .video-popup {
+  min-width: 120px;
+  border: 2px solid #fff;
+  border-radius: 10px;
+  padding: 20px;
+  color: #fff;
+  display: inline-block;
+  font-size: 38px;
+  -webkit-transition: all 0.5s ease-in-out;
+  -moz-transition: all 0.5s ease-in-out;
+  transition: all 0.5s ease-in-out;
+}
+.booking-kare .video-promo .video-promo-content .video-popup:hover {
+  background: #4676fa;
+  border-color: #4676fa;
+  color: #fff;
+}
+.booking-kare .overlay {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0px;
+  left: 0px;
+  background: #4676fa;
+  opacity: 0.7;
+  filter: alpha(opacity=70);
+}
+/* ==========================================================================
+    Pricing Table
+    ========================================================================== */
+.booking-kare .pricing-table {
+  padding: 20px 20px 40px 20px;
+  margin: 0 auto;
+  margin-bottom: 30px;
+  border: transparent;
+  background-color: #FFFFFF;
+  box-shadow: 0px 0px 20px 0px rgba(0, 0, 0, 0.1);
+  -webkit-transition: all 0.3s;
+  -moz-transition: all 0.3s;
+  transition: all 0.3s;
+  text-align: center;
+}
+.booking-kare .pricing-table:hover {
+  box-shadow: 0 0 60px 0 rgba(0, 0, 0, 0.1);
+}
+.booking-kare .pricing-table .icon {
+  font-size: 26px;
+  color: #4676fa;
+  border: 1px solid #4676fa;
+  border-radius: 4px;
+  width: 64px;
+  height: 64px;
+  text-align: center;
+  line-height: 64px;
+  margin: 30px auto;
+}
+.booking-kare .pricing-table .pricing-details h2 {
+  font-size: 22px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 10px;
+}
+.booking-kare .pricing-table .pricing-details span {
+  display: inline-block;
+  font-size: 28px;
+  font-weight: 400;
+  color: #4676fa;
+  margin-bottom: 20px;
+}
+.booking-kare .pricing-table .pricing-details ul {
+  margin-bottom: 35px;
+}
+.booking-kare .pricing-table .pricing-details ul li {
+  padding: 10px;
+  font-size: 15px;
+  border-bottom: 1px solid #eee;
+}
+.booking-kare .table-left {
+  margin-top: 20px;
+}
+/* ==========================================================================
+   Counter Section Style
+   ========================================================================== */
+.booking-kare .counters {
+  background: url(../img/bg1.jpg) fixed;
+  position: relative;
+}
+.booking-kare .counters .facts-item {
+  text-align: center;
+  color: #fff;
+}
+.booking-kare .counters .facts-item .icon {
+  margin-bottom: 20px;
+}
+.booking-kare .counters .facts-item .icon i {
+  font-size: 50px;
+  color: #fff;
+}
+.booking-kare .counters .facts-item .fact-count h3 {
+  font-size: 35px;
+  color: #fff;
+  margin-bottom: 15px;
+}
+.booking-kare .counters .facts-item .fact-count h4 {
+  font-size: 20px;
+  color: #fff;
+}
+/* ==========================================================================
+   Testimonial Section Style
+   ========================================================================== */
+.booking-kare #testimonial {
+  background: #f2f2f2;
+}
+.booking-kare .testimonial-item {
+  text-align: center;
+}
+.booking-kare .testimonial-item img {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+}
+.booking-kare .testimonial-item .testimonial-text h3 {
+  font-size: 16px;
+  font-weight: 100;
+  text-transform: uppercase;
+}
+.booking-kare .testimonial-item .testimonial-text span {
+  font-size: 15px;
+  color: #999;
+}
+.booking-kare .testimonial-item .testimonial-text p {
+  font-size: 14px;
+  font-weight: 400;
+  padding: 20px 10px 20px 10px;
+  letter-spacing: 1px;
+  margin: 0;
+  line-height: 1.5;
+  color: #999;
+}
+.booking-kare .owl-theme .owl-controls .owl-page span {
+  background: #4676fa;
+}
+.booking-kare .owl-theme .owl-controls {
+  margin-top: 20px;
+}
+/* ==========================================================================
+   Download
+   ========================================================================== */
+.booking-kare #download {
+  background-image: linear-gradient(120deg, #89f7fe 0%, #4676fa 100%);
+  width: 100%;
+}
+.booking-kare #download .section-title {
+  color: #fff;
+}
+.booking-kare .btn {
+  margin: 10px;
+}
+.booking-kare .btn i {
+  margin-right: 5px;
+}
+/* ==========================================================================
+   Blog
+   ========================================================================== */
+.booking-kare #blog .blog-item-wrapper {
+  background: #fff;
+  border-radius: 0px;
+  margin-bottom: 30px;
+  box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.1);
+  -webkit-transition: transform 0.2s linear, -webkit-box-shadow 0.2s linear;
+  -moz-transition: transform 0.2s linear, -moz-box-shadow 0.2s linear;
+  transition: transform 0.2s linear, box-shadow 0.2s linear;
+}
+.booking-kare #blog .blog-item-wrapper:hover {
+  box-shadow: 0px 0px 40px 0px rgba(0, 0, 0, 0.1);
+}
+.booking-kare #blog .blog-item-wrapper:hover .blog-item-img:before {
+  opacity: 1;
+  height: 100%;
+  width: 100%;
+}
+.booking-kare #blog .blog-item-img {
+  position: relative;
+}
+.booking-kare #blog .blog-item-img img {
+  width: 100%;
+}
+.booking-kare #blog .blog-item-img:before {
+  width: 50%;
+  height: 50%;
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background: rgba(70, 118, 250, 0.7);
+  opacity: 0;
+  -webkit-transition: all 0.3s;
+  -moz-transition: all 0.3s;
+  transition: all 0.3s;
+}
+.booking-kare #blog .blog-item-text {
+  border: 1px solid #f1f1f1;
+  padding: 20px;
+}
+.booking-kare #blog .blog-item-text .meta-tags {
+  margin-bottom: 10px;
+}
+.booking-kare #blog .blog-item-text .meta-tags span {
+  color: #999;
+  margin-right: 10px;
+}
+.booking-kare #blog .blog-item-text .meta-tags span i {
+  margin-right: 5px;
+}
+.booking-kare #blog .blog-item-text .meta-tags span a {
+  color: #999;
+}
+.booking-kare #blog .blog-item-text .meta-tags span a:hover {
+  color: #4676fa;
+}
+.booking-kare #blog .blog-item-text h3 {
+  line-height: 26px;
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+.booking-kare #blog .blog-item-text h3 a {
+  color: #333;
+}
+.booking-kare #blog .blog-item-text h3 a:hover {
+  color: #4676fa;
+}
+.booking-kare #blog .blog-item-text p {
+  line-height: 25px;
+  margin-bottom: 20px;
+}
+/* ==========================================================================
+    Contact Us
+    ========================================================================== */
+.booking-kare .form-control {
+  width: 100%;
+  margin-bottom: 20px;
+  padding: 18px;
+  color: #fff;
+  font-size: 14px;
+  border-radius: 4px;
+  -webkit-transition: all 0.3s;
+  -moz-transition: all 0.3s;
+  transition: all 0.3s;
+  font-family: 'Lato', sans-serif;
+}
+.booking-kare .form-control:focus {
+  box-shadow: none;
+  outline: none;
+}
+.booking-kare .btn.disabled,
+.booking-kare .btn:disabled {
+  opacity: 1;
+}
+.booking-kare #contact {
+  background: #f2f2f2;
+}
+.booking-kare #contact .contact-block {
+  background: #fff;
+  padding: 30px;
+  overflow: hidden;
+}
+.booking-kare #contact #contactForm {
+  margin-top: 30px;
+}
+.booking-kare .text-danger {
+  font-size: 14px;
+  margin-top: 10px;
+}
+.booking-kare .list-unstyled li {
+  color: #d9534f;
+}
+/* ==========================================================================
+    Subscribe Style
+    ========================================================================== */
+.booking-kare #subscribe form input {
+  background: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: none;
+  color: #999999;
+  height: 50px;
+  padding: 0 20px;
+  width: 100%;
+}
+.booking-kare #subscribe form input:focus {
+  border: 1px solid #4676fa;
+}
+.booking-kare #subscribe .sub_btn {
+  border: none;
+  line-height: 44px;
+  margin: 0;
+  font-size: 15px;
+  text-transform: uppercase;
+  position: absolute;
+  right: 0;
+  border-top-right-radius: 4px;
+  border-bottom-right-radius: 4px;
+  min-width: 150px;
+  color: #fff;
+  top: 0;
+  height: 50px;
+  background: #4676fa;
+  -webkit-transition: all 0.3s;
+  -moz-transition: all 0.3s;
+  transition: all 0.3s;
+  font-family: 'Lato', sans-serif;
+  cursor: pointer;
+}
+/* ==========================================================================
+   Footer Style
+   ========================================================================== */
+.booking-kare footer {
+  background: #333;
+  padding: 60px 0px 30px;
+  text-align: center;
+}
+.booking-kare .site-info p {
+  line-height: 34px;
+  color: #fff;
+}
+.booking-kare .site-info p a {
+  color: #fff;
+}
+.booking-kare .site-info p a:hover {
+  color: #4676fa;
+}
+.booking-kare .social-icons {
+  margin-bottom: 20px;
+}
+.booking-kare .social-icons ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.booking-kare .social-icons ul li {
+  display: inline;
+}
+.booking-kare .social-icons ul li a {
+  display: inline-block;
+  margin-left: 5px;
+  margin-right: 5px;
+  margin-bottom: 15px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 254, 254, 0.07);
+  line-height: 40px;
+  width: 40px;
+  height: 40px;
+  text-align: center;
+  font-size: 16px;
+}
+.booking-kare .social-icons ul li a:hover {
+  color: #ffffff;
+}
+.booking-kare .facebook a {
+  color: #4867aa;
+}
+.booking-kare .facebook a:hover {
+  background: #4867aa;
+}
+.booking-kare .twitter a {
+  color: #1da1f2;
+}
+.booking-kare .twitter a:hover {
+  background: #1da1f2;
+}
+.booking-kare .google-plus a {
+  color: #dd4d42;
+}
+.booking-kare .google-plus a:hover {
+  background: #dd4d42;
+}
+.booking-kare .youtube a {
+  color: #df2926;
+}
+.booking-kare .youtube a:hover {
+  background: #df2926;
+}
+.booking-kare .linkedin a {
+  color: #007bb6;
+}
+.booking-kare .linkedin a:hover {
+  background: #007bb6;
+}
+.booking-kare .pinterest a {
+  color: #bd081c;
+}
+.booking-kare .pinterest a:hover {
+  background: #bd081c;
+}
+.booking-kare .dribbble a {
+  color: #ea4c89;
+}
+.booking-kare .dribbble a:hover {
+  background: #ea4c89;
+}
+.booking-kare .behance a {
+  color: #0b7cff;
+}
+.booking-kare .behance a:hover {
+  background: #0b7cff;
+}
+.booking-kare .subscribe-box {
+  margin-top: 18px;
+}
+.booking-kare .subscribe-box input[type="text"] {
+  color: #444;
+  font-size: 12px;
+  padding: 6px 12px;
+  border: none;
+  background: #fff;
+  border-radius: 0px;
+  -webkit-border-radius: 0px;
+  -moz-border-radius: 0px;
+  -o-border-radius: 0px;
+  outline: none;
+}
+.booking-kare .subscribe-box input[type="submit"] {
+  display: inline-block;
+  text-decoration: none;
+  color: #fff;
+  font-size: 12px;
+  background: #4676fa;
+  text-transform: uppercase;
+  border: none;
+  padding: 7px 16px;
+  border-radius: 0px;
+  -webkit-border-radius: 0px;
+  -moz-border-radius: 0px;
+  -o-border-radius: 0px;
+  transition: all 0.2s ease-in-out;
+  -moz-transition: all 0.2s ease-in-out;
+  -webkit-transition: all 0.2s ease-in-out;
+  -o-transition: all 0.2s ease-in-out;
+  font-family: 'Lato', sans-serif;
+  cursor: pointer;
+}
+.booking-kare .back-to-top {
+  display: none;
+  position: fixed;
+  bottom: 18px;
+  right: 15px;
+}
+.booking-kare .back-to-top i {
+  display: block;
+  width: 36px;
+  height: 36px;
+  line-height: 36px;
+  color: #fff;
+  font-size: 14px;
+  text-align: center;
+  border-radius: 4px;
+  background-color: #4676fa;
+  -webkit-transition: all 0.2s linear;
+  -moz-transition: all 0.2s linear;
+  -o-transition: all 0.2s linear;
+  transition: all 0.2s linear;
+}
+.booking-kare #loader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #333;
+  z-index: 9999999999;
+}
+.booking-kare .spinner {
+  width: 40px;
+  height: 40px;
+  top: 45%;
+  position: relative;
+  margin: 0px auto;
+}
+.booking-kare .double-bounce1,
+.booking-kare .double-bounce2 {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background-color: #4676fa;
+  opacity: 0.6;
+  position: absolute;
+  top: 0;
+  left: 0;
+  -webkit-animation: sk-bounce 2s infinite ease-in-out;
+  animation: sk-bounce 2s infinite ease-in-out;
+}
+.booking-kare .double-bounce2 {
+  -webkit-animation-delay: -1s;
+  animation-delay: -1s;
+}
+@-webkit-keyframes sk-bounce {
+  0%,
+  100% {
+    -webkit-transform: scale(0);
+  }
+  50% {
+    -webkit-transform: scale(1);
+  }
+}
+@keyframes sk-bounce {
+  0%,
+  100% {
+    transform: scale(0);
+    -webkit-transform: scale(0);
+  }
+  50% {
+    transform: scale(1);
+    -webkit-transform: scale(1);
+  }
+}

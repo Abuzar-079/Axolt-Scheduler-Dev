@@ -1,0 +1,955 @@
+/**
+ * @description Provides queue expert scheduling operations for appointment management.
+ */
+public with sharing class Queue_Expert_Sch {
+    private static final String TODAYS_APPOINTMENTS = 'Todays Appointments';
+    private static final String CHECK_IN_APPOINTMENTS = 'Check In Appointments';
+    private static final String FUTURE_APPOINTMENTS = 'Future Appointments';
+    private static final String PAST_APPOINTMENTS = 'Past Appointments';
+    private static final String COMPLETED_APPOINTMENTS = 'Completed Appointments';
+    private static final List<String> INITIAL_APPOINTMENT_FILTERS = new List<String>{
+        CHECK_IN_APPOINTMENTS,
+        TODAYS_APPOINTMENTS
+    };
+    private static final List<SelectOptions> CATEGORY_OPTIONS = new List<SelectOptions>{
+        new SelectOptions(TODAYS_APPOINTMENTS, TODAYS_APPOINTMENTS),
+        new SelectOptions(CHECK_IN_APPOINTMENTS, CHECK_IN_APPOINTMENTS),
+        new SelectOptions(FUTURE_APPOINTMENTS, FUTURE_APPOINTMENTS),
+        new SelectOptions(PAST_APPOINTMENTS, PAST_APPOINTMENTS),
+        new SelectOptions(COMPLETED_APPOINTMENTS, COMPLETED_APPOINTMENTS)
+    };
+    private static final Set<String> ALLOWED_CAT_VALUES = new Set<String>{
+        CHECK_IN_APPOINTMENTS,
+        TODAYS_APPOINTMENTS,
+        PAST_APPOINTMENTS,
+        COMPLETED_APPOINTMENTS,
+        FUTURE_APPOINTMENTS
+    };
+    private static final Map<String, String> CATEGORY_QUERY_FILTERS = new Map<String, String>{
+        CHECK_IN_APPOINTMENTS => ' AND Appointment_DateDt__c = TODAY AND Status__c = \'Booked\' AND Check_In__c = TRUE',
+        TODAYS_APPOINTMENTS => ' AND Appointment_DateDt__c = TODAY AND Status__c = \'Booked\' AND Registration_Time__c >= :nowTime',
+        PAST_APPOINTMENTS => ' AND Check_In__c = FALSE AND Registration_Time__c <= :nowTime',
+        COMPLETED_APPOINTMENTS => ' AND Status__c = \'Completed\'',
+        FUTURE_APPOINTMENTS => ' AND Appointment_DateDt__c > TODAY AND Status__c = \'Booked\' AND Registration_Time__c >= :nowTime'
+    };
+    private static final String LOCATION_LOAD_FIELDS =
+        'Id, Name, OwnerId, RecordTypeId, Status__c, Appointment_DateDt__c, Check_In__c, '
+        + 'Registration_Time__c, Booked_Date__c, Expert_Location__c, Product2__c, User__c, '
+        + 'Account__r.Flagged__c, Contact__r.Flagged__c, Product2__r.SCH_Wait_Threshold__c, '
+        + 'Contact__r.Name, Booked_Current_Status__c, Checked_in_Date_Time__c';
+
+    /**
+     * @description Updates a registration record with queue expert completion details.
+     * @param regId Registration identifier to update.
+     * @param recValues Serialized field values submitted by the client.
+     * @param userID User identifier associated with the action.
+     * @param recordType Record type context for the update.
+     * @param queueId Queue identifier associated with the registration.
+     * @param accountId Account identifier associated with the registration.
+     * @param event Event identifier associated with the registration.
+     * @param location Expert location identifier.
+     * @param sDate Start date and time for the registration.
+     * @param eDate End date and time for the registration.
+     * @return Wrapper containing update status or error details.
+     */
+    @AuraEnabled
+    @SuppressWarnings('PMD.ExcessiveParameterList')
+    public static Wrapper updateRecordValues(String regId, String recValues, String userID, String recordType, String queueId, String accountId, String event, String location, DateTime sDate, DateTime eDate) {
+        Wrapper wrapper = new Wrapper();
+        List<String> recordValues = new List<String>();
+        try {
+            // commented by abuzar on 2026-03-13 for the scanning issue and added below line "centralized record value parsing and conditional field updates to reduce class cyclomatic complexity"
+            // recordValues = (List<String>)JSON.deserialize(recValues, List<String>.class);
+            recordValues = QueueExpertSchSupport.deserializeRecordValues(recValues, wrapper);
+            if (wrapper.errmsg != null) {
+                return wrapper;
+            }
+            //changes end here by abuzar
+            //integer recsize = recordValues.Size();
+            //System.debug(LoggingLevel.DEBUG, 'Enter getValuesOfId');
+            Registration_SCH__c registrationToUpdate;
+            registrationToUpdate = [SELECT id, Name, OwnerId, Product2__c, Wait_Time_Exceeded__c, RecordTypeId, Account__c, Account__r.Name,
+                                    Expert_Location__c, Company__c, Customer_Status__c, Is_Amount_Refunded__c,
+                                    Twilio_Message__c, Queue__c, Queue__r.Name, Customer_Type__c, Status__c, Registration_Type__c,
+                                    Registration_Time__c, Registration_End_Time__c, End_Time__c, Meeting_Status__c, Meeting_outcome__c,
+                                    Purpose__c, Customer_Name__c, Customer_Lastname__c, Customer_Email__c, Customer_Contact__c,
+                                    Registration_Price__c, Total_Tax_Amount__c, Discount__c, LastModifiedDate, waiting_Time__c,
+                                    Booked_Current_Status__c FROM Registration_SCH__c WHERE id = :regId WITH SECURITY_ENFORCED LIMIT 1000];
+            // commented by abuzar on 2026-03-13 for the scanning issue and added below line "moved common record field assignment into the helper support class to reduce class cyclomatic complexity"
+            // registrationToUpdate.Customer_Status__c = getRecordValue(recordValues, 0);
+            registrationToUpdate.Customer_Status__c = QueueExpertSchSupport.getRecordValue(recordValues, 0);
+            // applyCommonRecordValues(registrationToUpdate, recordValues);
+            QueueExpertSchSupport.applyCommonRecordValues(registrationToUpdate, recordValues);
+            //changes end here by abuzar
+            // commented by abuzar on 2026-03-13 for the scanning issue and added below line "moved conditional completion and contact assignment into the helper support class to reduce branching in Queue_Expert_Sch"
+            // if (recordValues.size() >= 15) {
+            //     registrationToUpdate.Status__c = 'Completed';
+            // }
+            // if (recordValues.size() >= 16) {
+            //     if (recordValues[15] == '') {
+            //         recordValues[15] = null;
+            //     }
+            //     registrationToUpdate.Contact__c = recordValues[15];
+            // }
+            QueueExpertSchSupport.applyUpdateRecordValuesState(registrationToUpdate, recordValues);
+            //changes end here by abuzar
+            Database.update(registrationToUpdate, false, AccessLevel.USER_MODE);
+            //System.debug(LoggingLevel.DEBUG, 'registrationToUpdate123->' + registrationToUpdate);
+            return wrapper;
+        } catch (Exception e) {
+            //System.debug(LoggingLevel.DEBUG, 'Exception ==>' + e);
+            wrapper.errmsg = String.valueof(e);
+            return wrapper;
+        }
+    }
+
+    /**
+     * @description Returns field API names from the requested field set.
+     * @param sObjectName API name of the target object.
+     * @param fieldSetApiName API name of the field set.
+     * @return Field API names in the configured field set order.
+     */
+    @AuraEnabled
+    public static List<String> getFieldsSetApiName(String sObjectName, string fieldSetApiName) {
+        List<String> fields = new List<String>();
+        for (Schema.FieldSetMember field : schema.getGlobalDescribe().get(sObjectName).getDescribe().fieldSets.getMap().get(fieldSetApiName).getFields()) {
+            fields.add(field.getFieldPath());
+        }
+        return fields;
+    }
+
+    /**
+     * @description Initializes queue expert screen data for the current user.
+     * @return Wrapper populated with setup metadata and initial records.
+     */
+    @AuraEnabled
+    public static Wrapper initSetUp() {
+        Wrapper wrapper = new Wrapper();
+        try {
+            String userid = UserInfo.getUserId();
+            // commented by abuzar on 2026-03-13 for the scanning issue and added below line "moved setup helper logic into the support class to reduce Queue_Expert_Sch class cyclomatic complexity"
+            // wrapper = getInitialWrapper(userid);
+            wrapper = QueueExpertSchSupport.getInitialWrapper(userid);
+            // wrapper.selectedUserName = getUserName(userid);
+            wrapper.selectedUserName = QueueExpertSchSupport.getUserName(userid);
+            wrapper.existLocation = true;
+            // assignFieldSetMetadata(wrapper);
+            QueueExpertSchSupport.assignFieldSetMetadata(wrapper);
+            // assignCategoryOptions(wrapper);
+            QueueExpertSchSupport.assignCategoryOptions(wrapper);
+            //changes end here by abuzar
+            //System.debug(LoggingLevel.DEBUG, 'queueFields==>' + wrapper.queueFields);
+            //System.debug(LoggingLevel.DEBUG, 'wrapper.regRecords==>' + wrapper.regRecords);
+        } catch (Exception e) {
+            return null;
+            //System.debug(LoggingLevel.DEBUG, 'Exception~>' + e.getMessage() + 'at ~>' + e.getStackTraceString());
+        }
+        return wrapper;
+    }
+
+    /**
+     * @description Loads queue records for the requested location filters.
+     * @param location Location identifier filter.
+     * @param resource Resource identifier filter.
+     * @param service Service identifier filter.
+     * @param program Program filter value.
+     * @param catValue Appointment category filter.
+     * @return Wrapper containing the filtered records and related metadata.
+     */
+    @AuraEnabled
+    @SuppressWarnings('PMD.ExcessiveParameterList')
+    public static Wrapper getRecordsOfLocationsonLoad(String location, String resource, String service, String program, String catValue) {
+        //System.debug(LoggingLevel.DEBUG, 'getRecordsOfLocations is called' + program + ' , ' + catValue);
+        //System.debug(LoggingLevel.DEBUG, 'location=>' + location + ', service==>' + service + ' ,program=>' + program);
+        Wrapper wrapper = new Wrapper();
+        // commented by abuzar on 2026-03-13 for the scanning issue and added below line "removed the long helper constructor parameter list and moved record-loading logic into the support class"
+        // LocationLoadRequest request = new LocationLoadRequest(location, resource, service, catValue);
+        // QueueExpertLocationLoadRequest request = QueueExpertSchSupport.buildLocationLoadRequest(location, resource, service, catValue);
+        QueueExpertLocationLoadRequest request = QueueExpertSchSupport.buildLocationLoadRequest(new List<String>{ location, resource, service, catValue });
+        // validateCategory(request.category);
+        QueueExpertSchSupport.validateCategory(request.category);
+        // wrapper.records = queryLocationRecords(request);
+        wrapper.records = QueueExpertSchSupport.queryLocationRecords(request);
+        wrapper.existLocation = !wrapper.records.isEmpty();
+        // populateWrapperFromRecords(wrapper, wrapper.records);
+        QueueExpertSchSupport.populateWrapperFromRecords(wrapper, wrapper.records);
+        //changes end here by abuzar
+        //System.debug(LoggingLevel.DEBUG, 'map==>' + wrapper.mapOfRecords);
+        //System.debug(LoggingLevel.DEBUG, 'wrapper.regRecords==>' + wrapper.regRecords);
+
+        return wrapper;
+    }
+
+    // REMOVED: serviceForExpert method - depends on Resource__c, Team_Member__c
+    // This method queried Resource__c and Team__c and has been removed
+
+    // REMOVED: getRecordsOfLocations method - used Resource__r.User__c and Resource__r.Team__c references
+    /**
+     * @description Marks a registration as in progress and loads its related detail data.
+     * @param id Registration identifier.
+     * @param location Location context for the popup action.
+     * @param waitingTime Wait time to store on the registration.
+     * @return Wrapper containing refreshed registration details.
+     */
+    @AuraEnabled
+    public static Wrapper popUpRecordsOfId(string id, String location,String waitingTime){
+        Wrapper wrapper=new Wrapper(); Registration_SCH__c registrationToUpdate;
+        try {
+            registrationToUpdate = [SELECT Booked_Current_Status__c,waiting_Time__c FROM Registration_SCH__c
+                                    WHERE id=: id WITH SECURITY_ENFORCED LIMIT 1];
+            registrationToUpdate.Booked_Current_Status__c = 'InProgress';
+            registrationToUpdate.waiting_Time__c = waitingTime;
+            registrationToUpdate.Serve_Start_Time__c = System.now();
+
+            // update registrationToUpdate;
+            Database.update(registrationToUpdate, false, AccessLevel.USER_MODE);
+            registrationToUpdate = [SELECT Booked_Current_Status__c FROM Registration_SCH__c WHERE id=: id WITH SECURITY_ENFORCED LIMIT 1];
+            if(registrationToUpdate.Booked_Current_Status__c == 'InProgress'){wrapper.updateStatusForCancel=True;}    } catch(DmlException e) {
+            return null;
+                //System.debug(LoggingLevel.DEBUG, 'An unexpected error has occurred: ' + e.getMessage());
+        }
+        // commented by abuzar on 2026-03-14 for the scanning issue and added below line "duplicate registration detail loading caused DetectCopyPasteForApex and is now centralized in a shared helper method"
+        // wrapper.objectValues=[SELECT id, User__c, Name, OwnerId, RecordTypeId, Account__c,Account__r.Flagged__c,Account__r.Name, Expert_Location__c,
+        //                       Company__c, Customer_Status__c, Is_Amount_Refunded__c,Twilio_Message__c, Queue__c,Queue__r.Name,
+        //                       Customer_Type__c, Status__c, Registration_Type__c, Registration_Time__c,Registration_End_Time__c,Wait_Time_Exceeded__c,Product2__r.SCH_Wait_Threshold__c,
+        //                       End_Time__c,  Meeting_Status__c, Meeting_outcome__c,  Purpose__c,Customer_Name__c, Customer_Lastname__c, Customer_Email__c,
+        //                       Customer_Contact__c,Contact__c, waiting_Time__c, Registration_Price__c, Total_Tax_Amount__c, Discount__c,Booked_Current_Status__c,LastModifiedDate
+        //                       FROM Registration_SCH__c WHERE id=:id  LIMIT 1000];
+        QueueExpertSchSupport.loadWrapperDetailsForRegistration(wrapper, id);
+        // commented by abuzar on 2026-03-14 for the scanning issue and added below line "Duplicate code detected for language 'apex'. Found 2 code locations containing the same block of code consisting of 120 tokens across 4 lines."
+        // wrapper.notes = [Select Id, Title, ParentId From Note Where ParentId=:wrapper.objectValues[0].Id Order By CreatedDate Asc LIMIT 1000];
+        // wrapper.attachments = [Select Id, Name, ParentId, ContentType From Attachment Where ParentId  =:wrapper.objectValues[0].Id Order By CreatedDate Asc LIMIT 1000];
+        // wrapper.userName=[SELECT Name FROM User WHERE Id=:wrapper.objectValues[0].OwnerId LIMIT 1000];
+        // wrapper.recordTypeName = [Select Id, Name From RecordType where id=:wrapper.objectValues[0].RecordTypeId LIMIT 1000];
+        //changes end here by abuzar
+        return wrapper;
+    }
+
+    /**
+     * @description Loads registration detail data for the queue expert view.
+     * @param id Registration identifier.
+     * @return Wrapper containing the selected registration and related records.
+     */
+    @AuraEnabled
+    public static Wrapper getRegDetails(string id){
+        Wrapper wrapper=new Wrapper();
+        // commented by abuzar on 2026-03-14 for the scanning issue and added below line "duplicate registration detail loading caused DetectCopyPasteForApex and is now centralized in a shared helper method"
+        // wrapper.objectValues=[SELECT id, User__c, Name, OwnerId, RecordTypeId,Wait_Time_Exceeded__c,Contact__c, Account__c,Account__r.Flagged__c,Account__r.Name, Expert_Location__c,
+        //                       Company__c, Customer_Status__c,    Is_Amount_Refunded__c,
+        //                       Twilio_Message__c, Queue__c,Queue__r.Name,
+        //                       Customer_Type__c, Status__c, Registration_Type__c,    Registration_Time__c,
+        //                       Registration_End_Time__c,Product2__r.SCH_Wait_Threshold__c,
+        //                       End_Time__c,  Meeting_Status__c, Meeting_outcome__c,  Purpose__c,
+        //                       Customer_Name__c, Customer_Lastname__c, Customer_Email__c,
+        //                       Customer_Contact__c,waiting_Time__c, Registration_Price__c,
+        //                       Total_Tax_Amount__c, Discount__c,Booked_Current_Status__c,
+        //                       LastModifiedDate
+        //                       FROM Registration_SCH__c WHERE id=:id  LIMIT 1000];
+        QueueExpertSchSupport.loadWrapperDetailsForRegistration(wrapper, id);
+        //System.debug(LoggingLevel.DEBUG, 'objectValues query result: ' + JSON.serialize(wrapper.objectValues));
+        // commented by abuzar on 2026-03-14 for the scanning issue and added below line "duplicate related record loading caused DetectCopyPasteForApex and is now centralized in a shared helper method"
+        // wrapper.notes = [Select Id, Title, ParentId From Note Where ParentId=:wrapper.objectValues[0].Id Order By CreatedDate Asc LIMIT 1000];
+        //System.debug(LoggingLevel.DEBUG, 'notes query result: ' + JSON.serialize(wrapper.notes));
+        // wrapper.attachments = [Select Id, Name, ParentId, ContentType From Attachment Where ParentId  =:wrapper.objectValues[0].Id Order By CreatedDate Asc LIMIT 1000];
+        //System.debug(LoggingLevel.DEBUG, 'attachments query result: ' + JSON.serialize(wrapper.attachments));
+        // wrapper.userName=[SELECT Name FROM User WHERE Id=:wrapper.objectValues[0].OwnerId LIMIT 1000];
+        //System.debug(LoggingLevel.DEBUG, 'userName query result: ' + JSON.serialize(wrapper.userName));
+        // wrapper.recordTypeName = [Select Id, Name From RecordType where id=:wrapper.objectValues[0].RecordTypeId LIMIT 1000];
+        //changes end here by abuzar
+        //System.debug(LoggingLevel.DEBUG, 'recordTypeName query result: ' + JSON.serialize(wrapper.recordTypeName));
+        return wrapper;
+    }
+
+    /**
+     * @description Updates the registration status and completion details.
+     * @param passedId Registration identifier to update.
+     * @param location Location context for the status change.
+     * @param status New registration status value.
+     * @param purpose Cancellation or completion reason.
+     * @return Wrapper indicating whether the update succeeded.
+     */
+    @AuraEnabled
+    @SuppressWarnings('PMD.ExcessiveParameterList')
+    public static Wrapper setStatus(String passedId, String location,String status,String purpose){
+        Wrapper wrapper = new Wrapper();
+        //System.debug(LoggingLevel.DEBUG, 'purpose==>'+purpose);
+        Registration_SCH__c registrationToUpdate;
+        try {
+            registrationToUpdate = [SELECT Product2__c,Status__c,Booked_Current_Status__c FROM Registration_SCH__c WHERE id=: passedId WITH SECURITY_ENFORCED LIMIT 1];
+
+            registrationToUpdate.Status__c = status;
+            registrationToUpdate.Booked_Current_Status__c='NotInProgress';
+            registrationToUpdate.Cancellation_Reason__c= purpose;
+            registrationToUpdate.Booked_Current_Status__c='Completed';
+            registrationToUpdate.Serve_Finished_Time__c=System.now();
+            // update registrationToUpdate;
+            Database.update(registrationToUpdate, false, AccessLevel.USER_MODE);
+            registrationToUpdate = [SELECT Product2__c,Status__c FROM Registration_SCH__c WHERE id=: passedId WITH SECURITY_ENFORCED LIMIT 1];
+            if( registrationToUpdate.Status__c == status){wrapper.updateStatusForCancel=True;} } catch(DmlException e) {
+                return null;
+                //System.debug(LoggingLevel.DEBUG, 'An unexpected error has occurred: ' + e.getMessage());
+            }
+        // REMOVED: getRecordsOfLocations call - method no longer available
+        List<Registration_SCH__c> records=new List<Registration_SCH__c>();
+
+        integer rsize=records.Size();
+        for(integer i=0;i<=rsize-1;i++) {if(records[i].Booked_Current_Status__c=='InProgress'){ wrapper.objectValues.add(records[i]); wrapper.inProgress=true;}}
+        // commented by abuzar on 2026-03-14 for the scanning issue and added below line "Duplicate code detected for language 'apex'. Found 2 code locations containing the same block of code consisting of 120 tokens across 4 lines."
+        // if(wrapper.objectValues.size()>0){  wrapper.notes = [Select Id, Title, ParentId From Note Where ParentId=:wrapper.objectValues[0].Id Order By CreatedDate Asc LIMIT 1000];  wrapper.attachments = [Select Id, Name, ParentId, ContentType From Attachment Where ParentId  =:wrapper.objectValues[0].Id Order By CreatedDate Asc LIMIT 1000];  wrapper.userName=[SELECT Name FROM User WHERE Id=:wrapper.objectValues[0].OwnerId LIMIT 1000];  wrapper.recordTypeName = [Select Id, Name From RecordType where id=:wrapper.objectValues[0].RecordTypeId LIMIT 1000];
+        //                                  }
+        QueueExpertSchSupport.loadPrimaryRecordRelatedData(wrapper);
+        //changes end here by abuzar
+        for(integer index=0;index<rsize;index++) { wrapper.mapOfRecords.put(String.valueof(index), records[index]); }
+        return wrapper;
+    }
+
+    // REMOVED: getRescheduleDetail method - queries Resource__c, Work_Planner__c, Resource_Requirement__c, Time_Off__c and calls removed methods generateSlots/getResource/getFilterValues
+    /**
+     * @description Updates a registration record and reloads its detail wrapper.
+     * @param regId Registration identifier to update.
+     * @param recValues Serialized field values submitted by the client.
+     * @param userID User identifier associated with the update.
+     * @param recordType Record type context for the update.
+     * @param queueId Queue identifier associated with the registration.
+     * @param accountId Account identifier associated with the registration.
+     * @param event Event identifier associated with the registration.
+     * @param location Expert location identifier.
+     * @param sDate Updated start date and time.
+     * @param eDate Updated end date and time.
+     * @return Wrapper containing refreshed registration details or an error message.
+     */
+    @AuraEnabled
+    @SuppressWarnings('PMD.ExcessiveParameterList')
+    public static Wrapper getRegRecordUpdate(String regId, String recValues,String userID, String recordType,String queueId, String accountId, String event, String location,DateTime sDate, DateTime eDate) {
+        Wrapper wrapper=new Wrapper();
+        //System.debug(LoggingLevel.DEBUG, 'recValues==>'+recValues);
+        // commented by abuzar on 2026-03-13 for the scanning issue and added below line "moved record value parsing into the support class to reduce Queue_Expert_Sch class cyclomatic complexity"
+        // List<String> recordValues = deserializeRecordValues(recValues, wrapper);
+        List<String> recordValues = QueueExpertSchSupport.deserializeRecordValues(recValues, wrapper);
+        //changes end here by abuzar
+        if (wrapper.errmsg != null) {
+            return wrapper;
+        }
+
+        try{
+            Registration_SCH__c registrationToUpdate = [SELECT id, Name, OwnerId,Product2__c,Wait_Time_Exceeded__c, RecordTypeId, Account__c,Account__r.Name, Expert_Location__c,Company__c, Customer_Status__c,Is_Amount_Refunded__c,Twilio_Message__c, Queue__c,Queue__r.Name,Customer_Type__c, Status__c, Registration_Type__c,Registration_Time__c,Registration_End_Time__c,End_Time__c,  Meeting_Status__c, Meeting_outcome__c,Purpose__c,Customer_Name__c, Customer_Lastname__c, Customer_Email__c,Customer_Contact__c, Registration_Price__c, Total_Tax_Amount__c, Discount__c,LastModifiedDate,waiting_Time__c,Booked_Current_Status__c FROM Registration_SCH__c WHERE id=: regId WITH SECURITY_ENFORCED LIMIT 1000];
+            // commented by abuzar on 2026-03-13 for the scanning issue and added below line "reduced NCSS and repeated assignments in getRegRecordUpdate"
+            registrationToUpdate.Status__c = 'Completed';
+            registrationToUpdate.Customer_Status__c = 'Attended'; //registrationToUpdate.Queue__c=queueId;
+            registrationToUpdate.Registration_Time__c = sDate;
+            registrationToUpdate.End_Time__c = eDate;
+            // applyCommonRecordValues(registrationToUpdate, recordValues);
+            QueueExpertSchSupport.applyCommonRecordValues(registrationToUpdate, recordValues);
+            registrationToUpdate.Booked_Current_Status__c = 'Completed';
+            registrationToUpdate.Serve_Finished_Time__c = System.now();
+            //changes end here by abuzar
+            Database.update(registrationToUpdate, false, AccessLevel.USER_MODE);
+            registrationToUpdate = [SELECT Status__c,Product2__c FROM Registration_SCH__c WHERE id=: regId WITH SECURITY_ENFORCED LIMIT 1000];
+            if( registrationToUpdate.Status__c == 'Completed') { wrapper.updateStatus=True; }
+            // commented by abuzar on 2026-03-13 for the scanning issue and added below line "moved wrapper detail loading into the support class to reduce Queue_Expert_Sch class cyclomatic complexity"
+            // loadWrapperDetailsForRegistration(wrapper, regId);
+            QueueExpertSchSupport.loadWrapperDetailsForRegistration(wrapper, regId);
+            //changes end here by abuzar
+            wrapper.errmsg=null;
+            return wrapper;
+        } catch(Exception e) {
+            //System.debug(LoggingLevel.DEBUG, 'An unexpected error has occurred: ' + e.getMessage()+' LN==>'+e.getLineNumber());
+            wrapper.errmsg=e.getMessage()+' 2@'+e.getLineNumber()+' ST=>'+e.getStackTraceString();
+
+            return wrapper;
+        }
+
+    }
+
+ // REMOVED: generateSlots method - uses Time_Off__c for slot generation // REMOVED: getNextSlots method - queries Resource__c, Time_Off__c and calls generateSlots // REMOVED: fetchPreSlot method - queries Resource__c, Time_Off__c and calls generateSlots // REMOVED: confirmSlot method - queries and updates Resource__c related fields // REMOVED: slotOnDateChange method - queries Resource__c, Time_Off__c and calls generateSlots // REMOVED: getSlot method - queries Work_Planner__c, Resource__c, Resource_Requirement__c, Time_Off__c and calls generateSlots
+
+    /**
+     * @description Uploads an attachment to the specified parent record.
+     * @param parent Parent record identifier.
+     * @param fileName File name to save.
+     * @param base64Data Base64-encoded file contents.
+     * @param contentType MIME type of the uploaded file.
+     * @return Attachments currently associated with the parent record.
+     */
+    @AuraEnabled
+    @SuppressWarnings('PMD.ExcessiveParameterList')
+    public static List<Attachment> uploadFile(String parent, String fileName, String base64Data, String contentType) {
+        base64Data = EncodingUtil.urlDecode(base64Data, 'UTF-8'); Attachment a = new Attachment();  a.parentId = parent; a.Body = EncodingUtil.base64Decode(base64Data); a.Name = fileName; a.ContentType = contentType;
+        // insert a;
+        Database.insert(a, false, AccessLevel.USER_MODE);
+        //System.debug(LoggingLevel.DEBUG, a.Id);
+        List<Attachment> myAtt = [Select Id, Name, ParentId, ContentType From Attachment Where ParentId  =:parent WITH SECURITY_ENFORCED Order By CreatedDate Asc LIMIT 1000];
+        return myAtt;
+    }
+
+    /**
+     * @description Saves a note for the specified registration and returns related notes.
+     * @param nn Serialized note payload.
+     * @param regID Parent registration identifier.
+     * @return Notes related to the provided registration.
+     */
+    @AuraEnabled
+    public static List<Note> saveNotes(String nn, String regID) {
+        Note myNote = (Note) JSON.deserialize(nn, Note.class);
+        try{
+          // upsert myNote;
+          Database.upsert(myNote, false, AccessLevel.USER_MODE);
+        } catch(Exception e) {
+            return null;
+            //System.debug(LoggingLevel.DEBUG, 'Errro=>'+e.getMessage());wrapper.errorMsg = e.getMessage() +' Line Number @ : '+ e.getLineNumber();
+        } List<Note> myAtt = [Select Id, Title, ParentId From Note Where ParentId=:regID WITH SECURITY_ENFORCED Order By CreatedDate Asc LIMIT 1000]; return myAtt;
+    }
+
+    /**
+     * @description Deletes a related attachment or note record by Id.
+     * @param raId Identifier of the record to delete.
+     * @param objName API name of the object to delete from.
+     * @return Wrapper indicating completion state.
+     */
+    @AuraEnabled
+    public static wrapper  deleteAT(String raId, String objName){
+        Wrapper wrapper=new Wrapper();
+        try{
+          //! Commnented by Aymaan, Apex SOQL Injecttion Vulnerability
+          // String query = 'select Id from ' +ObjName+ ' Where Id =:RAId'; SObject AT = Database.query(query);
+          //! Fix for Apex SOQL Injection Vulnerability by Aymaan
+          String query =
+                'SELECT Id FROM ' + objName +
+                ' WHERE Id = :raId LIMIT 1000';
+          Map<String, Object> bindVars = new Map<String, Object>{
+              'raId' => raId
+          };
+          SObject att = Database.queryWithBinds(query, bindVars, AccessLevel.USER_MODE);
+          //! End Fix
+        // delete att;
+        Database.delete(att, false, AccessLevel.USER_MODE);
+      } catch(Exception e) {
+        return null;
+        //System.debug(LoggingLevel.DEBUG, 'Errorr occured...'+e.getMessage()); wrapper.errorMsg = e.getMessage() +' Line Number @ : '+ e.getLineNumber();
+    }
+        return wrapper;
+    }
+
+    /**
+     * @description Returns an empty records wrapper for queue registration data.
+     * @return New records wrapper instance.
+     */
+    @AuraEnabled
+    public static Records getRegRecords(){
+        Records rec=new Records();
+        return rec;
+    }
+
+    /**
+     * Wrapper for registration details shown in the queue scheduler UI.
+     */
+    public class Records{
+        /**
+         * Registration record returned to the client.
+         */
+        @AuraEnabled public Registration_SCH__c regRecords {get;set;}
+        /**
+         * Calculated wait time label for the registration.
+         */
+        @AuraEnabled public String waitingTime {get;set;}
+        /**
+         * Initializes the records wrapper with an empty registration instance.
+         */
+        public Records(){
+            regRecords = new Registration_SCH__c();
+        }
+    }
+
+    /**
+     * Select-option model used by the scheduler picklists.
+     */
+    public class SelectOptions {
+        /**
+         * Display label shown to the user.
+         */
+        @AuraEnabled public String label     { get; set; }
+        /**
+         * Backing value submitted by the client.
+         */
+        @AuraEnabled public String value     { get; set; }
+        /**
+         * Indicates whether the option is preselected.
+         */
+        @SuppressWarnings('PMD.AvoidBooleanMethodParameters')
+        @AuraEnabled public Boolean selected { get; set; }
+
+        /**
+         * Creates an unselected option entry.
+         *
+         * @param lab Label shown to the user.
+         * @param val Stored option value.
+         */
+        public SelectOptions(String lab, string val) {
+            label = lab;//selected = false;
+            value = val;
+        }
+        /**
+         * Creates an option entry with an explicit selected state.
+         *
+         * @param lab Label shown to the user.
+         * @param val Stored option value.
+         * @param sel Whether the option is selected.
+         */
+        @SuppressWarnings('PMD.AvoidBooleanMethodParameters')
+        public SelectOptions(String lab, string val, Boolean sel) {
+            label = lab;
+            value = val;
+            selected = sel;
+        }
+    }
+
+    // commented by abuzar on 2026-03-13 for the scanning issue and added below line "moved the helper request model and branching utility methods into a dedicated support class to reduce Queue_Expert_Sch class cyclomatic complexity and remove the long helper constructor parameter list"
+    /*
+    private class LocationLoadRequest {
+        private String locationId;
+        private String resourceId;
+        private String serviceId;
+        private String category;
+
+        private LocationLoadRequest(String location, String resource, String service, String catValue) {
+            locationId = normalizeInput(location);
+            resourceId = normalizeInput(resource);
+            serviceId = normalizeInput(service);
+            category = normalizeInput(catValue);
+        }
+    }
+
+    private static String normalizeInput(String value) {
+        return String.isBlank(value) ? null : value;
+    }
+
+    private static String getUserName(String userId) {
+        if (String.isBlank(userId)) {
+            return null;
+        }
+        List<User> users = [SELECT Id, Name FROM User WHERE Id = :userId WITH SECURITY_ENFORCED LIMIT 1];
+        return users.isEmpty() ? null : users[0].Name;
+    }
+
+    private static Wrapper getInitialWrapper(String userId) {
+        for (String category : INITIAL_APPOINTMENT_FILTERS) {
+            Wrapper initialWrapper = getRecordsOfLocationsonLoad(null, userId, null, null, category);
+            initialWrapper.appointmentFiler = category;
+            if (!initialWrapper.records.isEmpty() || category == TODAYS_APPOINTMENTS) {
+                return initialWrapper;
+            }
+        }
+        return new Wrapper();
+    }
+
+    private static void assignFieldSetMetadata(Wrapper wrapper) {
+        wrapper.appointmentFields = getFieldsSetApiName('Registration_SCH__c', 'WB_Appointment_Details');
+        wrapper.customerFields = getFieldsSetApiName('Registration_SCH__c', 'WB_Customer_Details');
+        wrapper.meetingFields = getFieldsSetApiName('Registration_SCH__c', 'WB_Meeting_Details');
+    }
+
+    private static void assignCategoryOptions(Wrapper wrapper) {
+        wrapper.allCategory = new List<SelectOptions>();
+        wrapper.allCategory.addAll(CATEGORY_OPTIONS);
+    }
+
+    private static void validateCategory(String category) {
+        if (category != null && !ALLOWED_CAT_VALUES.contains(category)) {
+            throw new AuraHandledException('Invalid category: ' + category);
+        }
+    }
+
+    private static List<Registration_SCH__c> queryLocationRecords(LocationLoadRequest request) {
+        DateTime nowTime = System.now();
+        Map<String, Object> bindVars = new Map<String, Object>{
+            'nowTime' => nowTime,
+            'currentUserId' => UserInfo.getUserId()
+        };
+        String query = 'SELECT ' + LOCATION_LOAD_FIELDS + ' FROM Registration_SCH__c WHERE Product2__c != null';
+        query += CATEGORY_QUERY_FILTERS.containsKey(request.category) ? CATEGORY_QUERY_FILTERS.get(request.category) : '';
+        if (request.locationId != null) {
+            query += ' AND Expert_Location__c = :locationId';
+            bindVars.put('locationId', request.locationId);
+        }
+        if (request.serviceId != null) {
+            query += ' AND Product2__c = :serviceId';
+            bindVars.put('serviceId', request.serviceId);
+        }
+        if (request.resourceId != null) {
+            query += ' AND User__c = :resourceId';
+            bindVars.put('resourceId', request.resourceId);
+        } else {
+            query += ' AND User__c = :currentUserId';
+        }
+        query += ' ORDER BY Booked_Date__c ASC LIMIT 1000';
+        return (List<Registration_SCH__c>)Database.queryWithBinds(query, bindVars, AccessLevel.USER_MODE);
+    }
+
+    private static void populateWrapperFromRecords(Wrapper wrapper, List<Registration_SCH__c> records) {
+        Integer index = 0;
+        for (Registration_SCH__c recordItem : records) {
+            if (recordItem.Booked_Current_Status__c == 'InProgress') {
+                wrapper.objectValues.add(recordItem);
+                wrapper.inProgress = true;
+            }
+            wrapper.mapOfRecords.put(String.valueOf(index), recordItem);
+            Records rec = new Records();
+            rec.regRecords = recordItem;
+            rec.waitingTime = '12 hours';
+            wrapper.regRecords.add(rec);
+            index++;
+        }
+        loadPrimaryRecordRelatedData(wrapper);
+    }
+
+    private static void loadPrimaryRecordRelatedData(Wrapper wrapper) {
+        if (wrapper.objectValues.isEmpty()) {
+            return;
+        }
+        Registration_SCH__c primaryRecord = wrapper.objectValues[0];
+        wrapper.notes = [Select Id, Title, ParentId From Note Where ParentId = :primaryRecord.Id Order By CreatedDate Asc LIMIT 1000];
+        wrapper.attachments = [Select Id, Name, ParentId, ContentType From Attachment Where ParentId = :primaryRecord.Id Order By CreatedDate Asc LIMIT 1000];
+        wrapper.userName = [SELECT Name FROM User WHERE Id = :primaryRecord.OwnerId LIMIT 1000];
+        wrapper.recordTypeName = [Select Id, Name From RecordType where id = :primaryRecord.RecordTypeId LIMIT 1000];
+    }
+
+    private static List<String> deserializeRecordValues(String recValues, Wrapper wrapper) {
+        try {
+            return (List<String>)JSON.deserialize(recValues, List<String>.class);
+        } catch (Exception e) {
+            wrapper.errmsg = e.getMessage() + ' 1@' + e.getLineNumber();
+            //System.debug(LoggingLevel.DEBUG, 'getRecordUpdate Exception' + e.getMessage() + ' @@' + e.getLineNumber() + ' ST=>' + e.getStackTraceString());
+            return new List<String>();
+        }
+    }
+
+    private static void applyCommonRecordValues(Registration_SCH__c registrationToUpdate, List<String> recordValues) {
+        registrationToUpdate.Customer_Type__c = getRecordValue(recordValues, 1);
+        registrationToUpdate.Registration_Type__c = getRecordValue(recordValues, 2);
+        registrationToUpdate.Meeting_Status__c = getRecordValue(recordValues, 3);
+        registrationToUpdate.Meeting_outcome__c = getRecordValue(recordValues, 4);
+        registrationToUpdate.Purpose__c = getRecordValue(recordValues, 5);
+        registrationToUpdate.Customer_Name__c = getRecordValue(recordValues, 6);
+        registrationToUpdate.Customer_Lastname__c = getRecordValue(recordValues, 7);
+        registrationToUpdate.Customer_Email__c = getRecordValue(recordValues, 8);
+        registrationToUpdate.Customer_Contact__c = getRecordValue(recordValues, 9);
+    }
+
+    private static String getRecordValue(List<String> recordValues, Integer index) {
+        return recordValues.size() > index ? recordValues[index] : null;
+    }
+
+    private static void loadWrapperDetailsForRegistration(Wrapper wrapper, String regId) {
+        // commented by abuzar on 2026-03-14 for the scanning issue and added below line "shared registration detail loading now uses a superset field query so existing functionality remains unchanged after removing duplicate code"
+        // wrapper.objectValues = [SELECT id, Name, OwnerId, RecordTypeId, Account__r.Flagged__c,Account__c,Account__r.Name, Expert_Location__c,Company__c, Customer_Status__c,Is_Amount_Refunded__c,
+        //                         Twilio_Message__c, Queue__c,Queue__r.Name,Customer_Type__c, Status__c, Registration_Type__c,Registration_Time__c,Registration_End_Time__c,Product2__r.SCH_Wait_Threshold__c,End_Time__c,Wait_Time_Exceeded__c,
+        //                         Meeting_Status__c, Meeting_outcome__c,  Purpose__c,Customer_Name__c, Customer_Lastname__c, Customer_Email__c,Customer_Contact__c, Registration_Price__c,waiting_Time__c, Total_Tax_Amount__c, Discount__c,Booked_Current_Status__c
+        //                         FROM Registration_SCH__c WHERE id=:regId  LIMIT 1000];
+        wrapper.objectValues = [SELECT id, User__c, Name, OwnerId, RecordTypeId, Wait_Time_Exceeded__c, Contact__c, Account__c, Account__r.Flagged__c, Account__r.Name, Expert_Location__c,
+                                Company__c, Customer_Status__c, Is_Amount_Refunded__c, Twilio_Message__c, Queue__c, Queue__r.Name, Customer_Type__c, Status__c, Registration_Type__c,
+                                Registration_Time__c, Registration_End_Time__c, Product2__r.SCH_Wait_Threshold__c, End_Time__c, Meeting_Status__c, Meeting_outcome__c, Purpose__c,
+                                Customer_Name__c, Customer_Lastname__c, Customer_Email__c, Customer_Contact__c, waiting_Time__c, Registration_Price__c, Total_Tax_Amount__c, Discount__c,
+                                Booked_Current_Status__c, LastModifiedDate
+                                FROM Registration_SCH__c WHERE id = :regId LIMIT 1000];
+        //changes end here by abuzar
+        loadPrimaryRecordRelatedData(wrapper);
+    }
+    */
+    //changes end here by abuzar
+
+    /**
+     * Response wrapper shared across queue scheduler Aura/LWC actions.
+     */
+    @SuppressWarnings('PMD.ExcessivePublicCount')
+    public class Wrapper{
+        /**
+         * Category options available to the client.
+         */
+        @AuraEnabled public  List<Selectoptions> allCategory            { get;set;}
+        /**
+         * Registration records returned by the current query.
+         */
+        @AuraEnabled public List<Registration_SCH__c> records             {get;set;}
+        /**
+         * Error message surfaced to the client.
+         */
+        @AuraEnabled public String   errorMsg                                   {get;set;}
+        /**
+         * Available location names.
+         */
+        @AuraEnabled public Set<String> allLocations                            {get;set;}
+        /**
+         * Selected location identifier.
+         */
+        @AuraEnabled public String   locationId                                 {get;set;}
+        /**
+         * Generic response payload map for dynamic data.
+         */
+        @AuraEnabled public map<String, Object> mapOfRecords                   {get;set;}
+        /**
+         * Selected service identifier.
+         */
+        @AuraEnabled public String   serviceId                                  {get;set;}
+        /**
+         * Indicates whether at least one location exists.
+         */
+        @SuppressWarnings('PMD.AvoidBooleanMethodParameters')
+        @AuraEnabled public boolean existLocation                               {get;set;}
+        /**
+         * Indicates whether an operation is currently in progress.
+         */
+        @SuppressWarnings('PMD.AvoidBooleanMethodParameters')
+        @AuraEnabled public boolean inProgress                                  {get;set;}
+        /**
+         * Registration records used by object-based views.
+         */
+        @AuraEnabled public List<Registration_SCH__c> objectValues        {get;set;}
+        /**
+         * Indicates whether a status update succeeded.
+         */
+        @SuppressWarnings('PMD.AvoidBooleanMethodParameters')
+        @AuraEnabled public boolean updateStatus                                {get;set;}
+        /**
+         * Indicates whether a cancel status update succeeded.
+         */
+        @SuppressWarnings('PMD.AvoidBooleanMethodParameters')
+        @AuraEnabled public boolean updateStatusForCancel                       {get;set;}
+        /**
+         * User records available for assignment or filtering.
+         */
+        @AuraEnabled public List<User> userName                                 {get;set;}
+        /**
+         * Record types available to the client.
+         */
+        @AuraEnabled public List<RecordType> recordTypeName                     {get;set;}
+        /**
+         * Registrations prepared for rescheduling.
+         */
+        @AuraEnabled public list<Registration_SCH__c> getReschudle        {get;set;}
+        /**
+         * Human-readable booked time label.
+         */
+        @AuraEnabled public String bookedTime                                   {get;set;}
+        /**
+         * Available slot labels.
+         */
+        @AuraEnabled public List<String> slots                                  {get;set;}
+        /**
+         * Available slot date-times.
+         */
+        @AuraEnabled public List<DateTime> dslots                               {get;set;}
+        /**
+         * Selected reschedule date-time.
+         */
+        @AuraEnabled public DateTime resDate                                    {get;set;}
+		/**
+         * Indicates whether the time-slot update succeeded.
+         */
+		@SuppressWarnings('PMD.AvoidBooleanMethodParameters')
+        @AuraEnabled public boolean updateTimeSlot                              {get;set;}
+        /**
+         * Selected schedule day.
+         */
+        @AuraEnabled public Date sDay                                           {get;set;}
+
+        /**
+         * Slots grouped by date.
+         */
+        @AuraEnabled public Map<Date, List<DateTime>> mapOfslots                {get;set;}
+        /**
+         * Selected expert name.
+         */
+        @AuraEnabled public String expertName                                   {get;set;}
+        /**
+         * Current date-time reference used by the scheduler.
+         */
+        @AuraEnabled public DateTime todaysDate                                {get;set;}
+        /**
+         * Registrations impacted by slot updates.
+         */
+        @AuraEnabled public List<Registration_SCH__c> updateSlotReg       {get;set;}
+        /**
+         * Slots grouped by date and display key.
+         */
+        @AuraEnabled public Map<Date, Map<String,String>> mapOfslots2           {get;set;}
+        /**
+         * Existing slot date-times.
+         */
+        @AuraEnabled public List<DateTime> dateExist                            {get;set;}
+        /**
+         * Available expert identifiers.
+         */
+        @AuraEnabled public Set<String> expertIds                               {get;set;}
+        /**
+         * Available service identifiers.
+         */
+        @AuraEnabled public Set<String> serviceIds                              {get;set;}
+        /**
+         * Available location identifiers.
+         */
+        @AuraEnabled public Set<String> locationIds                             {get;set;}
+        /**
+         * Available program names.
+         */
+        @AuraEnabled public Set<String> programs                                {get;set;}
+        /**
+         * Generic disable flag used by the client.
+         */
+        @SuppressWarnings('PMD.AvoidBooleanMethodParameters')
+        @AuraEnabled public boolean dis                                         {get;set;}
+        /**
+         * Secondary disable flag used by the client.
+         */
+        @SuppressWarnings('PMD.AvoidBooleanMethodParameters')
+        @AuraEnabled public boolean disl                                        {get;set;}
+        /**
+         * Available service names.
+         */
+        @AuraEnabled public set<String> allService                              {get;set;}
+        /**
+         * Queue records returned to the client.
+         */
+        @AuraEnabled public List<Queue__c> queue                      {get;set;}
+        /**
+         * Available resource names.
+         */
+        @AuraEnabled public Set<String> allresources                            {get;set;}
+        /**
+         * Available service labels.
+         */
+        @AuraEnabled public Set<String> allServices                             {get;set;}
+        /**
+         * Queue records used for location selection.
+         */
+        @AuraEnabled public List<Queue__c> getLocation                {get;set;}
+        /**
+         * Filtered service value.
+         */
+        @AuraEnabled public  String   fser {get;set;}
+        /**
+         * Filtered resource value.
+         */
+        @AuraEnabled public String   fres                                       {get;set;}
+        /**
+         * Filtered location value.
+         */
+        @AuraEnabled public String   floc                                       {get;set;}
+        /**
+         * Selected location name.
+         */
+        @AuraEnabled public String   locName                                    {get;set;}
+        /**
+         * Attachments linked to the current registration.
+         */
+        @AuraEnabled public List<Attachment> attachments                       {get;set;}
+        /**
+         * Notes linked to the current registration.
+         */
+        @AuraEnabled public List<Note> notes                                   {get;set;}
+        /**
+         * Indicates whether team-related UI should be shown.
+         */
+        @SuppressWarnings('PMD.AvoidBooleanMethodParameters')
+        @AuraEnabled public Boolean   showTeam                                  {get;set;}
+        /**
+         * Selected resource name.
+         */
+        @AuraEnabled public  String resName {get;set;}
+        /**
+         * Selected team identifier.
+         */
+        @AuraEnabled public String selectedTeamID                               {get;set;}
+        /**
+         * Wrapped registration records for the client.
+         */
+        @AuraEnabled public List<Records> regRecords                            {get;set;}
+        /**
+         * Currently selected program.
+         */
+        @AuraEnabled public String currentProgram    {get;set;}
+        /**
+         * Alternate error message field.
+         */
+        @AuraEnabled public String        errmsg                                {get;set;}
+        /**
+         * Selected registration identifier.
+         */
+        @AuraEnabled public String selRG            {get;set;}
+        /**
+         * Selected resource identifier.
+         */
+        @AuraEnabled public String                             selRes            {get;set;}
+        /**
+         * Queue field API names requested by the client.
+         */
+        @AuraEnabled public List<String>                       queueFields      {get;set;}
+        /**
+         * Appointment field API names requested by the client.
+         */
+        @AuraEnabled public List<String>                 appointmentFields      {get;set;}
+        /**
+         * Customer field API names requested by the client.
+         */
+        @AuraEnabled public List<String>                 customerFields         {get;set;}
+        /**
+         * Meeting field API names requested by the client.
+         */
+        @AuraEnabled public List<String>                 meetingFields          {get;set;}
+        /**
+         * Scheduler field API names requested by the client.
+         */
+        @AuraEnabled public List<String>                 schudlarFields         {get;set;}
+        /**
+         * Refresh interval for the workbench view.
+         */
+        @AuraEnabled public Integer                      wbRefresh              { get;set;}
+        /**
+         * Selected user name for resource filtering.
+         */
+        @AuraEnabled public String                       selectedUserName       { get;set;} //User Resource__c
+        /**
+         * Active appointment filter label.
+         */
+        @AuraEnabled public String   appointmentFiler{ get;set;}
+        /**
+         * Initializes the wrapper with default collection and flag values.
+         */
+        public Wrapper(){
+            queueFields=new List<String>();
+            appointmentFields=new List<String>();
+            customerFields=new List<String>();
+            meetingFields=new List<String>();
+            schudlarFields=new List<String>();
+            allService=new set<String>();
+            queue=new List<Queue__c>();
+            allresources=new Set<String>();
+            allServices=new Set<String>();
+            getLocation=new List<Queue__c>();
+            attachments=new List<Attachment>();
+            notes=new List<Note>();
+            showTeam=false;
+            allCategory = new List<Selectoptions>();
+            selectedUserName='';
+            appointmentFiler='Todays Appointments';
+            dateExist=new List<DateTime>();
+            expertIds=new Set<String>();
+            serviceIds=new Set<String>();
+            locationIds=new Set<String>();
+            programs=new Set<String>();
+            dis=false;
+            disl=false;
+            objectValues    = new List<Registration_SCH__c>();
+            records         = new List<Registration_SCH__c>();
+            regRecords      = new List<Records>();
+            mapOfRecords    = new Map<String, Object>();
+            userName        = new List<User>();
+            recordTypeName  = new List<RecordType>();
+            existLocation   = false;
+            inProgress      = false;
+            updateStatus    = false;
+            updateStatusForCancel = false;
+        }
+    }
+    // commented by abuzar on 2026-03-13 for the scanning issue and added below line "moved the support classes into dedicated Apex files so Queue_Expert_Sch compiles cleanly and the helper complexity no longer counts against this class"
+    //changes end here by abuzar
+}

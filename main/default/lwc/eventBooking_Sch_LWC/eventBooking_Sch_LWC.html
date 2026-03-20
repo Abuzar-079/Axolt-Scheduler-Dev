@@ -1,0 +1,1432 @@
+<template>
+<div class=" bg-white">
+<template if:true={isLoading}>
+    <lightning-spinner variant="brand" size="large" alternative-text="Loading...(Waiting for response)"></lightning-spinner>
+</template>
+
+<template if:true={errorMessage}>
+    <div class="slds-notify_container slds-is-fixed">
+        <div class="slds-notify slds-notify_toast slds-theme_error" role="status">
+            <span class="slds-assistive-text">error</span>
+            <!-- commented by adnan cuz slds-icon-Utility-error is not in slds 2 -->
+            <!-- <span class="slds-icon_container slds-icon-utility-error slds-m-right_small slds-no-flex slds-align-top"> -->
+                <span class="slds-icon_container slds-icon-text-error slds-m-right_small slds-no-flex slds-align-top">
+                <lightning-icon icon-name="utility:error" variant="inverse" alternative-text="Error!" title="Error"></lightning-icon>
+            </span>
+            <div class="slds-notify__content">
+                <h2 class="slds-text-heading_x-small">{errorMessage}</h2>
+            </div>
+            <div class="slds-notify__close">    
+                <button class="slds-button" onclick={closeError}>
+                    <lightning-icon icon-name="utility:close" variant="inverse" alternative-text="close!" title="Close"></lightning-icon>
+                </button>
+            </div>
+        </div>
+    </div>
+</template>
+
+<template if:true={successMessage}>
+    <div class="slds-notify_container slds-is-fixed">
+        <div class="slds-notify slds-notify_toast slds-theme_success" role="status">
+            <span class="slds-assistive-text">success</span>
+            <span class="slds-icon_container slds-icon-utility-success slds-m-right_small slds-no-flex slds-align-top">
+                <lightning-icon icon-name="utility:success" variant="inverse" alternative-text="Success!" title="Success"></lightning-icon>
+            </span>
+            <div class="slds-notify__content">
+                <h2 class="slds-text-heading_x-small">{successMessage}</h2>
+            </div>
+            <div class="slds-notify__close">
+                <button class="slds-button" onclick={closeError}>
+                    <lightning-icon icon-name="utility:close" variant="inverse" alternative-text="close!" title="Close"></lightning-icon>
+                </button>
+            </div>
+        </div>
+    </div>
+</template>
+
+<template if:false={eventId}>
+    <div class="event_rok booking-kare">
+    <div class="container-fluid">
+        <div class="row m-0 pt-3 displaylabel">
+            <div class="controls text-left col-8">
+    <!-- Today's Events -->
+    <button class={todayButtonClass} data-val="today" onclick={searchEvent}>
+        <lightning-icon
+            icon-name="utility:date_input"
+            size="x-small"
+            class="slds-m-right_small "
+            variant={todayIconVariant}>
+        </lightning-icon>
+        Todays Events <span class="slds-m-left_small">{todaysEvents}</span>
+    </button>
+
+    <!-- This Week Events -->
+    <button class={thisWeekButtonClass} data-val="thisWeek" onclick={searchEvent}>
+        <lightning-icon
+            icon-name="utility:date_input"
+            size="x-small"
+            class="slds-m-right_small color-white"
+            variant={weekIconVariant}>
+        </lightning-icon>
+        This Week Events <span class="slds-m-left_small">{thisWeeksEvents}</span>
+    </button>
+
+    <!-- Next Week Events -->
+    <button class={nextWeekButtonClass} data-val="nextWeek" onclick={searchEvent}>
+        <lightning-icon
+            icon-name="utility:forward"
+            size="x-small"
+            class="slds-m-right_small color-white"
+            variant={nextIconVariant}>
+        </lightning-icon>
+        Next Week Events <span class="slds-m-left_small"> {nextWeeksEvents}</span>
+    </button>
+
+    <!-- Future Events -->
+    <button class={futureButtonClass} data-val="future" onclick={searchEvent}>
+        <lightning-icon
+            icon-name="utility:strategy"
+            size="x-small"
+            class="slds-m-right_small"
+            variant={futureIconVariant}>
+        </lightning-icon>
+        Future Events <span class="slds-m-left_small">{futureEvents}</span>
+    </button>
+</div>
+
+            <div class="col-3">
+                <div class="maq slds-grid slds-align-center mt-2" style="position: relative;">
+    <!-- Search with Icon -->
+    <div class="search-wrapper">
+        <lightning-icon
+
+            size="x-small"
+            class="search-icon"
+        ></lightning-icon>
+        <lightning-input
+            type="search"
+            value={filterName}
+            placeholder="Search Event..."
+            onchange={handleFilterEventsByName}
+            onkeyup={handleFilterEventsByName}
+            class="custom-search-input"
+            variant="label-hidden"
+        ></lightning-input>
+    </div>
+
+    <!-- Filter Icon Button -->
+    <div class="filter-button" onclick={toggleFilters}>
+        <lightning-icon
+            icon-name="utility:filterList"
+            size="x-small"
+            alternative-text="Filter"
+            class="filter-icon"
+        ></lightning-icon>
+    </div>
+
+    <!-- Floating Filter Popover -->
+    <template if:true={showFilterOptions}>
+        <div class="filter-popover">
+            <lightning-combobox
+                name="locationId"
+                value={filterLocation}
+                options={locationList}
+                onchange={handleLocationChange}
+            ></lightning-combobox>
+            <lightning-combobox
+                name="typeOfEventId"
+                value={filterType}
+                options={typeOfEventList}
+                onchange={handleTypeChange}
+            ></lightning-combobox>
+        </div>
+    </template>
+</div>
+
+            </div>
+
+          <div class="view-toggle">
+    <div class="toggle-container">
+        <div
+            class={gridClass}
+            data-tab="grid"
+            onclick={changeView}
+            title="Grid View"
+        >
+            <lightning-icon
+                icon-name="utility:tile_card_list"
+                size="x-small"
+            ></lightning-icon>
+        </div>
+        <div
+            class={listClass}
+            data-tab="list"
+            onclick={changeView}
+            title="List View"
+        >
+            <lightning-icon
+                icon-name="utility:picklist_type"
+                size="x-small"
+            ></lightning-icon>
+        </div>
+    </div>
+</div>
+
+
+
+        </div>
+    </div>
+    </div>
+
+    <template if:true={isGridView}>
+        <div class="slds-grid slds-wrap">
+    <div class="slds-col slds-size_1-of-1 slds-m-bottom_large">
+        <div class="slds-grid slds-wrap">
+
+            <!-- No Events -->
+            <template if:false={eventListWP.length}>
+                <div class="slds-col slds-size_1-of-1 slds-m-bottom_large">
+                    <div class="slds-notify_container slds-is-relative slds-m-top_x-large">
+                        <div class="slds-notify slds-notify_toast slds-theme_warning" role="status">
+                            <!-- <span class="slds-icon_container slds-icon-utility-warning slds-m-right_small slds-no-flex slds-align-top"> commented by adnan cuz slds utility is not in slds 2-->
+                                <span class="slds-icon_container slds-icon-text-warning slds-m-right_small slds-no-flex slds-align-top">
+                                <lightning-icon icon-name="utility:warning" size="small" alternative-text="warning"></lightning-icon>
+                            </span>
+                            <div class="slds-notify__content">
+                                <div class="slds-text-heading_small">Sorry, No Events Available.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Event Cards -->
+            <template for:each={eventListWithExtras} for:item="event" for:index="eventIndex">
+                <div key={event.EVT.Id} class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_small">
+
+                    <!-- Full Registration Message -->
+                    <template if:true={event.showFull}>
+                        <div class="maq-fade slds-theme_warning slds-p-around_small slds-text-align_center">
+                            <lightning-icon icon-name="utility:warning" class="slds-m-right_x-small" size="x-small"></lightning-icon>
+                            <span>This Event's Registrations are full</span>
+                        </div>
+                    </template>
+
+                    <!-- Card -->
+                    <div class="slds-card shadow-custom slds-m-bottom_small b-radius-eb">
+                        <div class="slds-card__body slds-p-horizontal_small">
+
+                            <!-- Registration Full -->
+                            <template if:false={event.EVT.Available_Registrations__c}>
+                                <!-- <div class="slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_warning maq-fade" role="alert"> commented by adnan cuz tag not in slds 2 -->
+                                    <div class="slds-notify slds-notify_alert slds-theme_warning maq-fade" role="alert">
+                                    <lightning-icon icon-name="utility:warning" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                                    <span>This Event Registrations are full</span>
+                                </div>
+                            </template>
+
+                            <div class="slds-grid slds-wrap slds-gutters">
+
+                                <!-- Default Image -->
+                                <template if:false={event.EVT.Picture__c}>
+                                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
+                                    <img class="slds-image" alt="Event image" src="https://axolt.com/wp-content/uploads/2025/07/Axolt_CPQ_16xdh516xdh516xd-1250x700.jpg" />
+                                </div>
+                                </template>
+
+                                <!-- Conditional Event Image -->
+                                <template if:true={event.EVT.Picture__c}>
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
+                                        <img class="slds-image" alt="Event image2" src={event.EVT.Picture__c} />
+                                    </div>
+                                </template>
+
+                                <!-- Event Info -->
+                                <div class="slds-col slds-size_1-of-1 slds-medium-size_2-of-3">
+                                    <div class="scroll-bar-wrap">
+                                        <div class="scroll-box">
+                                            <h4 class="slds-text-heading_small slds-m-bottom_small">
+                                                <a href={event.url} target="_blank">{event.EVT.Name}</a>
+                                            </h4>
+                                        </div>
+                                    </div>
+
+                                    <!-- Date Range -->
+                                    <div class="slds-grid slds-align_absolute-left slds-m-bottom_xx-small">
+                                        <lightning-icon icon-name="utility:contract_doc" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                                        <div class="slds-text-body_small">
+                                            <lightning-formatted-date-time value={event.EVT.Start_Date__c} time-zone={timezone}></lightning-formatted-date-time>
+                                            &nbsp;–&nbsp;
+                                            <lightning-formatted-date-time value={event.EVT.End_Date__c} time-zone={timezone}></lightning-formatted-date-time>
+                                        </div>
+                                    </div>
+
+                                    <!-- Time Range -->
+                                    <div class="slds-grid slds-align_absolute-left slds-m-bottom_xx-small">
+                                        <lightning-icon icon-name="utility:clock" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                                        <div class="slds-text-body_small">
+                                            <lightning-formatted-date-time value={event.EVT.Start_Date__c} hour="2-digit" minute="2-digit" time-zone={timezone}></lightning-formatted-date-time>
+                                            &nbsp;–&nbsp;
+                                            <lightning-formatted-date-time value={event.EVT.End_Date__c} hour="2-digit" minute="2-digit" time-zone={timezone}></lightning-formatted-date-time>
+                                        </div>
+                                    </div>
+
+                                    <!-- Age Range -->
+                                    <template if:true={event.EVT.Age_Range__c}>
+                                        <div class="slds-grid slds-align_absolute-left slds-m-bottom_xx-small">
+                                            <lightning-icon icon-name="utility:user" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                                            <span class="slds-text-body_small">{event.EVT.Age_Range__c}</span>
+                                        </div>
+                                    </template>
+
+                                    <!-- Location -->
+                                    <template if:true={event.EVT.Event_Location__c}>
+                                        <div class="slds-grid slds-align_absolute-left slds-m-bottom_xx-small">
+                                            <lightning-icon icon-name="utility:location" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                                            <span class="slds-text-body_small">{event.EVT.Event_Location__r.Name}</span>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <!-- Weekdays & Button -->
+                            <div class="slds-grid slds-wrap slds-m-top_medium slds-align_absolute-center">
+                                <div class="slds-col slds-size_2-of-3">
+                                    <div class="slds-grid slds-wrap">
+                                        <template for:each={event.evtWeekDays} for:item="eventWD">
+                                            <div key={eventWD} class="eb45 slds-m-right_x-small slds-text-body_small">{eventWD}</div>
+                                        </template>
+                                    </div>
+                                </div>
+                                <div class="slds-col slds-size_1-of-3 slds-text-align_right">
+                                    <a class="slds-button slds-button_neutral" onclick={selectEvent} data-record-id={event.EVT.Id} data-index={eventIndex}>
+                                        Apply to attend
+                                    </a>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+</div>
+
+    </template>
+    <template if:true={isListView}>
+        <div class="card shadow-custom slds-m-around_small">
+            <div class="card-body">
+                <template if:false={eventListWP.length}>
+                    <div class="col-lg-12 mb-5 mb-lg-0">
+                        <div class="slds-notify_container slds-is-relative mt-7">
+                            <div class="slds-notify slds-notify_toast slds-theme_warning" role="status">
+                                <!-- <span class="slds-icon_container slds-icon-utility-warning slds-m-right_small slds-no-flex slds-align-top"> commented by adnan-->
+                                    <span class="slds-icon_container slds-icon-text-warning slds-m-right_small slds-no-flex slds-align-top">
+                                    <lightning-icon icon-name="utility:warning" size="small" alternative-text="warning"></lightning-icon>
+                                </span>
+                                <div class="slds-notify__content">
+                                    <div class="slds-text-heading_small">Sorry, No Events Available.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+                <div class="table-responsive" tabindex="0">
+                  <table class="slds-table slds-table_bordered slds-table_cell-buffer slds-table_striped">
+                            <thead>
+                                <tr>
+                                    <th scope="col" width="16.66666666666667%">Name</th>
+                                    <th scope="col" width="16.66666666666667%">Timeline</th>
+                                    <th scope="col" width="16.66666666666667%">Location</th>
+                                    <th scope="col" width="16.66666666666667%">Type</th>
+                                    <th scope="col" width="16.66666666666667%">Organiser</th>
+                                    <th scope="col" width="16.66666666666667%">Available Registrations</th>
+                                    <th scope="col" width="16.66666666666667%"></th>
+                                </tr>
+                            </thead>
+                    <template for:each={eventListWithIndex} for:item="event" for:index="eventIndex">
+
+                            <tbody  key={event.EVT.Id} >
+                                <tr>
+                                    <td>
+                                        {event.displayIndex}. <a href={event.url} target="_blank">{event.EVT.Name}</a>
+                                    </td>
+                                    <td>
+                                        <div class="startime-maq">
+                                            <strong>
+                                                <lightning-formatted-date-time
+                                                    value={event.EVT.Start_Date__c}
+                                                    month="short"
+                                                    day="2-digit"
+                                                    hour="2-digit"
+                                                    minute="2-digit"
+                                                    time-zone={timezone}
+                                                ></lightning-formatted-date-time>
+                                            </strong>
+                                        </div>
+                                        <div class="endime-maq">
+                                            <strong>
+                                                <lightning-formatted-date-time
+                                                    value={event.EVT.End_Date__c}
+                                                    month="short"
+                                                    day="2-digit"
+                                                    hour="2-digit"
+                                                    minute="2-digit"
+                                                    time-zone={timezone}
+                                                ></lightning-formatted-date-time>
+                                            </strong>
+                                        </div>
+                                    </td>
+                                    <td>{event.EVT.Event_Location__r.Name}</td>
+                                    <td>{event.EVT.Event_Type__c}</td>
+                                    <td>{event.EVT.User__r.Name}</td>
+                                    <td>{event.EVT.Available_Registrations__c}</td>
+                                    <td>
+                                        <a
+                                            onclick={selectEvent}
+                                            data-record-id={event.EVT.Id}
+                                            data-index={eventIndex}
+                                            class="slds-pill custom-pill"
+                                        >
+                                            <span class="slds-pill__label">Apply to Attend</span>
+                                            <lightning-icon
+                                                icon-name="utility:chevronright"
+                                                size="xxx-small"
+                                                class="slds-pill__icon_container" variant="inverse"
+                                            ></lightning-icon>
+                                        </a>
+                                    </td>
+                                </tr>
+                            </tbody>
+
+                        </template>
+                 </table>
+
+                    </div>
+            </div>
+        </div>
+    </template>
+</template>
+
+<template if:true={showDateColumns}>
+
+    <div class="slds-grid slds-wrap slds-p-around_none">
+        <div class="slds-col slds-size_12-of-12">
+        <div class="slds-page-header slds-page-header_record-home" style="background:#ffffff;">
+                    <div class="slds-page-header__row">
+                        <div class="slds-page-header__title slds-truncate">
+                        <div class="slds-media">
+                            <div class="slds-media__figure">
+                            <lightning-icon
+                                icon-name="action:new_event"
+                                size="small"
+                                alternative-text="Scheduled Days">
+                            </lightning-icon>
+                            </div>
+                            <div class="slds-media__body">
+                            <div class="slds-page-header__title slds-truncate slds-m-top_x-small" title="Scheduled Days">
+                                Scheduled Days
+                            </div>
+                            </div>
+                        </div>
+                        </div>
+                    </div>
+                    </div>
+        </div>
+        <div class="slds-col slds-size_1-of-1">
+            <div class="slds-grid slds-wrap">
+                <!-- Left section: Event Image and Details -->
+                <div class="slds-col slds-size_1-of-3 slds-p-around_small">
+                    <div class="slds-box slds-box1" style="">
+                    <template if:true={event.Picture__c}>
+                        <img src={event.Picture__c} alt="Event Image" class="slds-image" />
+                    </template>
+
+                    <h3 class="slds-text-heading_small slds-m-top_small">{event.Name}</h3>
+
+                    <template if:true={hasMultipleLocOptions}>
+                        <div class="slds-m-top_medium">
+                            <lightning-combobox
+                                label="Event Location"
+                                variant="label-hidden"
+                                value={selectedDcLOC}
+                                options={locOptions}
+                                onchange={changeDcLOC}
+                            ></lightning-combobox>
+                        </div>
+                    </template>
+
+                    <template if:true={event.Description__c}>
+                        <div class="slds-m-top_medium slds-scrollable_y" style="max-height: 80vh;">
+                            {event.Description__c}
+                        </div>
+                    </template>
+                    </div>
+                </div>
+                <!-- Right section: Schedule Cards -->
+                <div class="slds-col slds-size_2-of-3">
+
+
+                    <div class="slds-m-bottom_medium">
+                        <div class="slds-scrollable_y" style="max-height: 600px;">
+                            <div class="slds-grid slds-wrap">
+
+                                <template for:each={newDateColumnListWithClasses} for:item="slot" for:index="count">
+                                    <template if:true={slot.Zone}>
+                                        <div key={slot.Zone.Id} class="slds-col slds-size_1-of-2 slds-p-around_x-small">
+                                            <div
+                                                class={slot.cardClass}
+                                                onclick={selectSchedule}
+                                                data-type="singleSelect"
+                                                data-location={slot.Zone.Event_Zone_Location__c}
+                                                data-accesskey={slot.storeDT}
+                                                data-name={slot.AvailableDate1}
+                                                data-et={slot.AvailableDate2}
+                                                data-record-id={slot.Zone.Id}
+                                                data-index={count}
+                                            >
+                                                <div class="slds-box slds-theme_default b-radius-eb-timeslots">
+                                                    <div class="slds-grid slds-wrap">
+                                                        <div class="slds-col slds-size_11-of-12">
+                                                            <div class="slds-truncate">
+                                                                <lightning-icon icon-name="utility:location" size="x-small" class="slds-m-right_xx-small"></lightning-icon>
+                                                                <strong>
+                                                                    <template if:true={slot.Zone.Event_Zone_Location__c}>
+                                                                        {slot.Zone.Event_Zone_Location__r.Name}
+                                                                    </template>
+                                                                    <template if:false={slot.Zone.Event_Zone_Location__c}>
+                                                                        {slot.Zone.Name}
+                                                                    </template>
+                                                                </strong>
+                                                            </div>
+
+                                                            <div class="slds-m-top_xx-small">
+                                                                <lightning-formatted-date-time
+                                                                    value={slot.AvailableDate1}
+                                                                    weekday="long"
+                                                                    month="short"
+                                                                    day="2-digit"
+                                                                    year="numeric"
+                                                                    time-zone={timezone}
+                                                                ></lightning-formatted-date-time>
+                                                                <br />
+                                                                <lightning-formatted-date-time
+                                                                    value={slot.AvailableDate1}
+                                                                    hour="2-digit"
+                                                                    minute="2-digit"
+                                                                    time-zone={timezone}
+                                                                ></lightning-formatted-date-time>
+                                                                -
+                                                                <lightning-formatted-date-time
+                                                                    value={slot.AvailableDate2}
+                                                                    hour="2-digit"
+                                                                    minute="2-digit"
+                                                                    time-zone={timezone}
+                                                                ></lightning-formatted-date-time>
+                                                            </div>
+
+                                                            <template if:true={slot.showQuantities}>
+                                                                <div class="slds-grid slds-m-top_small">
+                                                                    <div class="slds-col slds-size_1-of-2">
+                                                                        <lightning-icon icon-name="utility:user" size="xx-small" class="slds-m-right_xx-small"></lightning-icon>
+                                                                        Booked <strong>{slot.BookedQuantity}</strong>
+                                                                    </div>
+                                                                    <div class="slds-col slds-size_1-of-2">
+                                                                        <lightning-icon icon-name="utility:user" size="xx-small" class="slds-m-right_xx-small"></lightning-icon>
+                                                                        Available <strong>{slot.AvailableQuantity}</strong>
+                                                                    </div>
+                                                                </div>
+                                                            </template>
+                                                        </div>
+                                                        <div class="slds-col slds-size_1-of-12 slds-text-align_right">
+                                                            <lightning-icon icon-name="utility:chevronright" size="x-small"></lightning-icon>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </template>
+
+                                    <template if:false={slot.Zone}>
+                                        <div key={slot.Event.Id} class="slds-col slds-size_1-of-2 slds-p-around_x-small">
+                                            <div
+                                                class={slot.cardClass}
+                                                onclick={selectSchedule}
+                                                data-type="singleSelect"
+                                                data-location={slot.Event.Event_Location__c}
+                                                data-accesskey={slot.storeDT}
+                                                data-name={slot.AvailableDate1}
+                                                data-et={slot.AvailableDate2}
+                                                data-record-id={slot.Event.Id}
+                                                data-index={count}
+                                            >
+                                                <div class="slds-box slds-theme_default b-radius-eb-timeslots">
+                                                    <div class="slds-grid slds-wrap">
+                                                        <div class="slds-col slds-size_11-of-12">
+                                                            <div class="slds-truncate">
+                                                                <lightning-icon icon-name="utility:location" size="x-small" class="slds-m-right_xx-small"></lightning-icon>
+                                                                <strong>
+                                                                    <template if:true={slot.Event.Event_Location__c}>
+                                                                        {slot.Event.Event_Location__r.Name}
+                                                                    </template>
+                                                                    <template if:false={slot.Event.Event_Location__c}>
+                                                                        {slot.Event.Name}
+                                                                    </template>
+                                                                </strong>
+                                                            </div>
+
+                                                            <div class="slds-m-top_xx-small">
+                                                                <lightning-formatted-date-time
+                                                                    value={slot.AvailableDate1}
+                                                                    weekday="long"
+                                                                    month="short"
+                                                                    day="2-digit"
+                                                                    year="numeric"
+                                                                    time-zone={timezone}
+                                                                ></lightning-formatted-date-time>
+                                                                <br />
+                                                                <lightning-formatted-date-time
+                                                                    value={slot.AvailableDate1}
+                                                                    hour="2-digit"
+                                                                    minute="2-digit"
+                                                                    time-zone={timezone}
+                                                                ></lightning-formatted-date-time>
+                                                                -
+                                                                <lightning-formatted-date-time
+                                                                    value={slot.AvailableDate2}
+                                                                    hour="2-digit"
+                                                                    minute="2-digit"
+                                                                    time-zone={timezone}
+                                                                ></lightning-formatted-date-time>
+                                                            </div>
+
+                                                            <template if:true={slot.showQuantities}>
+                                                                <div class="slds-grid slds-m-top_small">
+                                                                    <div class="slds-col slds-size_1-of-2">
+                                                                        <lightning-icon icon-name="utility:user" size="xx-small" class="slds-m-right_xx-small"></lightning-icon>
+                                                                        Booked <strong>{slot.BookedQuantity}</strong>
+                                                                    </div>
+                                                                    <div class="slds-col slds-size_1-of-2">
+                                                                        <lightning-icon icon-name="utility:user" size="xx-small" class="slds-m-right_xx-small"></lightning-icon>
+                                                                        Available <strong>{slot.AvailableQuantity}</strong>
+                                                                    </div>
+                                                                </div>
+                                                            </template>
+                                                        </div>
+                                                        <div class="slds-col slds-size_1-of-12 slds-text-align_right">
+                                                            <lightning-icon icon-name="utility:chevronright" size="x-small"></lightning-icon>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+            </div>
+        </div>
+    </div>
+
+
+    </template>
+
+    <template if:true={noshowDateColumns}>
+        <div class="slds-grid slds-wrap">
+  <!-- Left Column: Event Details -->
+  <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
+    <div class="slds-card full-height slds-m-around_small">
+      <div class="slds-card__header slds-grid slds-border_bottom slds-p-around_small">
+        <div class="slds-media slds-media_center slds-has-flexi-truncate">
+          <div class="slds-media__figure">
+            <lightning-icon icon-name="standard:contact" size="small"></lightning-icon>
+          </div>
+          <div class="slds-media__body">
+            <div class="slds-card__header-title slds-text-heading_small slds-truncate">Registration</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="slds-card__body slds-p-around_medium">
+       <div class="slds-form-element">
+  <label class="slds-form-element__label" for="clientLookup">Search Client</label>
+  <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon_right">
+    <input
+      type="text"
+      id="clientLookup"
+      class="slds-input"
+      placeholder="Search client..."
+      value={searchClientString}
+      oninput={handleClientSearch}
+    />
+    <template if:true={searchClientString}>
+      <button
+        class="slds-button slds-button_icon slds-input__icon slds-input__icon_right"
+        onclick={clearSearch}
+        title="Clear"
+      >
+        <lightning-icon icon-name="utility:close" size="x-small"></lightning-icon>
+      </button>
+    </template>
+    <template if:false={searchClientString}>
+      <lightning-icon
+        icon-name="utility:search"
+        size="x-small"
+        class="slds-input__icon slds-input__icon_right"
+      ></lightning-icon>
+    </template>
+  </div>
+</div>
+
+
+       <div class="slds-form-element" style="position: relative;">
+  <!-- Client Lookup Input -->
+  <!-- your input field and icons here -->
+
+  <!-- Lookup Results Floating Panel -->
+  <template if:true={showSearchPanelSection}>
+    <div
+      class="slds-box slds-theme_default  slds-m-top_xx-small "
+      style="position: absolute; top: 100%; left: 0; right: 0; z-index: 10;"
+    >
+      <div class="slds-grid slds-grid_align-end">
+        <button onclick={closeSearchPanel} class="slds-button slds-button_icon">
+          <lightning-icon icon-name="utility:close" size="x-small"></lightning-icon>
+        </button>
+      </div>
+      <template for:each={srList} for:item="w" for:index="index">
+        <div
+          key={w.Id}
+          class="slds-box slds-m-top_x-small slds-box_link"
+          data-index={index}
+          onclick={setRecord}
+          title={w.Name}
+        >
+          <div class="slds-grid slds-wrap">
+            <div class="slds-col slds-size_1-of-1">
+              <strong>{w.Name}</strong>
+            </div>
+            <template if:true={w.Family}>
+              <div class="slds-col slds-size_1-of-1">
+                <lightning-icon icon-name="utility:group" size="xx-small"></lightning-icon> {w.Family}
+              </div>
+            </template>
+            <template if:true={w.Email}>
+              <div class="slds-col slds-size_1-of-1">
+                <lightning-icon icon-name="utility:email" size="xx-small"></lightning-icon> {w.Email}
+              </div>
+            </template>
+            <template if:true={w.Phone}>
+              <div class="slds-col slds-size_1-of-1">
+                <lightning-icon icon-name="utility:phone_portrait" size="xx-small"></lightning-icon> {w.Phone}
+              </div>
+            </template>
+          </div>
+        </div>
+      </template>
+    </div>
+  </template>
+</div>
+
+
+        <!-- Primary Attendee -->
+        <lightning-input class="slds-m-top_medium" type="text" value={createReg.Customer_Name__c} placeholder="First Name*" data-field="Customer_Name__c" onchange={nameChange}></lightning-input>
+        <lightning-input class="slds-m-top_small" type="text" value={createReg.Customer_Lastname__c} data-field="Customer_Lastname__c" placeholder="Last Name*" onchange={nameChange}></lightning-input>
+        <lightning-input class="slds-m-top_small" type="email" value={createReg.Customer_Email__c} data-field="Customer_Email__c" placeholder="Email*" onchange={nameChange}></lightning-input>
+        <lightning-input class="slds-m-top_small" type="tel" value={createReg.Customer_Contact__c} data-field="Customer_Contact__c" placeholder="Mobile*" onchange={nameChange}></lightning-input>
+
+        <!-- Quantity -->
+        <template if:true={quantityList.length}>
+          <lightning-combobox class="slds-m-top_medium" name="locationId" value={regQuantity} options={quantityList} onchange={changeRegQty} label="Quantity"></lightning-combobox>
+        </template>
+
+        <!-- Additional Registrations -->
+        <template for:each={newRegistrations} for:item="reg" for:index="regIndex">
+          <div key={reg.Id} class="slds-m-top_medium">
+            <p class="slds-text-title_caps">Additional Attendee {regIndex}</p>
+            <lightning-input type="text" value={reg.Customer_Name__c} placeholder="First Name" data-id={regIndex} onchange={handleInputChange}></lightning-input>
+            <lightning-input class="slds-m-top_small" type="text" value={reg.Customer_Lastname__c} placeholder="Last Name*" data-id={regIndex} onchange={handleInputChange}></lightning-input>
+            <lightning-input class="slds-m-top_small" type="email" value={reg.Customer_Email__c} placeholder="Email*" data-id={regIndex} onchange={handleInputChange}></lightning-input>
+            <lightning-input class="slds-m-top_small" type="tel" value={reg.Customer_Contact__c} placeholder="Mobile*" data-id={regIndex} onchange={handleInputChange}></lightning-input>
+          </div>
+        </template>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Right Column: Registration Area -->
+  <div class="slds-col slds-size_1-of-1 slds-medium-size_2-of-3">
+    <div class="slds-card full-height slds-m-around_small">
+      <div class="slds-card__header slds-grid slds-border_bottom slds-p-around_small">
+        <div class="slds-media slds-media_center slds-has-flexi-truncate">
+          <div class="slds-media__figure">
+            <lightning-icon icon-name="standard:event" size="small"></lightning-icon>
+          </div>
+          <div class="slds-media__body">
+            <div class="slds-card__header-title slds-text-heading_small slds-truncate">Event Details</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="slds-card__body slds-p-around_medium">
+        <div class="slds-grid slds-wrap slds-gutters">
+          <!-- Time -->
+          <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+            <div class="slds-box slds-theme_default slds-p-around_small b-radius-eb" style="border: 1px solid #ddd;">
+              <div class="slds-media">
+                <div class="slds-media__figure">
+                  <lightning-icon icon-name="utility:clock" size="x-small"></lightning-icon>
+                </div>
+                <div class="slds-media__body">
+                  <h5 class="slds-text-title_caps slds-m-bottom_xx-small">Time</h5>
+                  <template if:false={isSlot}>
+                  <p>{startDateFormatted} ,&nbsp;
+                    <lightning-formatted-date-time value={event.Start_Date__c} hour="2-digit" minute="2-digit" time-zone={timezone}></lightning-formatted-date-time>
+                        &nbsp;-&nbsp;
+                    <lightning-formatted-date-time value={event.End_Date__c} hour="2-digit" minute="2-digit" time-zone={timezone}></lightning-formatted-date-time>
+                  </p>
+                  </template>
+                  <template if:true={isSlot}>
+                    <p>{showDate} </p>
+                  </template>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Venue -->
+          <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+            <div class="slds-box slds-theme_default slds-p-around_small b-radius-eb" style="border: 1px solid #ddd;">
+              <div class="slds-media">
+                <div class="slds-media__figure">
+                  <lightning-icon icon-name="utility:location" size="x-small"></lightning-icon>
+                </div>
+                <div class="slds-media__body">
+                  <h5 class="slds-text-title_caps slds-m-bottom_xx-small">Venue</h5>
+                  <p>
+                    <template if:true={location.Address__c}>{location.Address__c}, </template>
+                    <template if:true={location.City__c}>{location.City__c}, </template>
+                    <template if:true={location.Province_State__c}>{location.Province_State__c}, </template>
+                    <template if:true={location.Zip_Code__c}>{location.Zip_Code__c}, </template>
+                    <template if:true={location.Country__c}>{location.Country__c}</template>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Event Title & Description -->
+        <div class="slds-m-top_medium">
+          <h2 class="slds-text-heading_medium slds-text-color_brand slds-m-bottom_small">
+            <a href={event.Id} target="_blank">{event.Name}</a>
+          </h2>
+          <lightning-formatted-rich-text value={event.Description__c}></lightning-formatted-rich-text>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+        <div class="displaylabel slds-hide">
+            <lightning-card>
+                <div class="row m-0">
+                    <div class="col-md-7 mt-1">
+                        <lightning-tabset>
+                            <lightning-tab label="Event Details">
+                                <div class="row m-0">
+                                    <div class="col-md-4 mt-1 mb-2 pr-0">
+                                        <div class="content-right text-left">
+                                            <div class="item-boxes">
+                                                <div class="slds-grid">
+                                                    <lightning-icon icon-name="utility:reminder" size="x-small"></lightning-icon>
+                                                    <h4>Time</h4>
+                                                </div>
+                                                <div class="slds-grid">
+                                                    <p>
+                                                        <lightning-formatted-date-time
+                                                            value={event.Start_Date__c}
+                                                            hour="2-digit"
+                                                            minute="2-digit"
+                                                            time-zone={timezone}
+                                                        ></lightning-formatted-date-time>
+                                                        <lightning-icon icon-name="utility:chevronright"></lightning-icon>
+                                                        <lightning-formatted-date-time
+                                                            value={event.End_Date__c}
+                                                            hour="2-digit"
+                                                            minute="2-digit"
+                                                            time-zone={timezone}
+                                                        ></lightning-formatted-date-time>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 mt-1 mb-2 pr-0">
+                                        <div class="content-right text-left">
+                                            <div class="item-boxes">
+                                                <div class="slds-grid">
+                                                    <lightning-icon icon-name="utility:location" size="x-small"></lightning-icon>
+                                                    <h4>Venue</h4>
+                                                </div>
+                                                <div class="slds-grid">
+                                                    <p>
+                                                        <template if:true={location.Address__c}>{location.Address__c}, </template>
+                                                        <template if:true={location.City__c}>{location.City__c}, </template>
+                                                        <template if:true={location.Province_State__c}>{location.Province_State__c}, </template>
+                                                        <template if:true={location.Zip_Code__c}>{location.Zip_Code__c}, </template>
+                                                        <template if:true={location.Country__c}>{location.Country__c}</template>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 mt-1 mb-2 pr-0">
+                                        <div class="content-right text-left">
+                                            <div class="item-boxes">
+                                                <div class="slds-grid">
+                                                    <div class="Service-Description maq">
+                                                        <div class="scroll-bar-wrap">
+                                                            <div class="scroll-box">
+
+                                                                <template if:true={event.Allow_override_duplicate_registration__c}>
+                                                                    <div class="row">
+                                                                        <div class="col-md-12 slds-m-top_small">
+                                                                            <div class="slds-grid">
+                                                                                <div class="slds-col">
+                                                                                    <lightning-input
+                                                                                        type="toggle"
+                                                                                        checked={createReg.Override_duplicate_registration__c}
+                                                                                        label="Override Duplicate"
+                                                                                        message-toggle-active=""
+                                                                                        message-toggle-inactive=""
+                                                                                    ></lightning-input>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </template>
+                                                                <template if:true={event.Instant_CheckIn__c}>
+                                                                    <div class="row">
+                                                                        <div class="col-md-12 slds-m-top_small">
+                                                                            <div class="slds-grid">
+                                                                                <div class="slds-col">
+                                                                                    <lightning-input
+                                                                                        type="toggle"
+                                                                                        checked={regCheckIn}
+                                                                                        label="Check-In"
+                                                                                        message-toggle-active=""
+                                                                                        message-toggle-inactive=""
+                                                                                    ></lightning-input>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </template>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="scroll-box">
+                                            <h3>
+                                                <a href={event.Id} target="_blank">{event.Name}</a>
+                                            </h3>
+                                            <lightning-formatted-rich-text value={event.Description__c}></lightning-formatted-rich-text>
+                                        </div>
+                                    </div>
+                                </div>
+                            </lightning-tab>
+                            <template if:true={agendaList}>
+                            <template if:true={agendaList.length}>
+                                <lightning-tab label="Agenda">
+                                    <div class="col-md-9">
+                                        <lightning-accordion allow-multiple-sections-open>
+                                            <template for:each={agendaList} for:item="a">
+                                                <lightning-accordion-section key={a.Id} name={a.Id} label={a.Name}>
+                                                    <div slot="actions">
+                                                        <strong>
+                                                            <lightning-formatted-date-time
+                                                                value={a.Start_Time__c}
+                                                                hour="2-digit"
+                                                                minute="2-digit"
+                                                                time-zone={timezone}
+                                                            ></lightning-formatted-date-time>
+                                                            <lightning-icon icon-name="utility:chevronright"></lightning-icon>
+                                                            <lightning-formatted-date-time
+                                                                value={a.End_Time__c}
+                                                                hour="2-digit"
+                                                                minute="2-digit"
+                                                                time-zone={timezone}
+                                                            ></lightning-formatted-date-time>
+                                                        </strong>
+                                                    </div>
+                                                    <lightning-formatted-rich-text value={a.Description__c}></lightning-formatted-rich-text>
+                                                </lightning-accordion-section>
+                                            </template>
+                                        </lightning-accordion>
+                                    </div>
+                                </lightning-tab>
+                            </template>
+                            </template>
+                            <template if:true={sponsorList}>
+                            <template if:true={sponsorList.length}>
+                                <lightning-tab label="Sponsors">
+                                    <div class="col-md-9">
+                                        <lightning-accordion allow-multiple-sections-open>
+                                            <template for:each={sponsorList} for:item="s">
+                                                <lightning-accordion-section key={s.Id} name={s.Id} label={s.Name}>
+                                                    <div slot="actions">
+                                                        <template if:true={s.Sponsor_Account__r.Sponsorship_Logo__c}>
+                                                            <lightning-avatar
+                                                                src={s.Sponsor_Account__r.Sponsorship_Logo__c}
+                                                                fallback-icon-name="standard:individual"
+                                                                alternative-text="Bob Wilson"
+                                                            ></lightning-avatar>
+                                                        </template>
+                                                    </div>
+                                                    <lightning-formatted-rich-text value={s.Description__c}></lightning-formatted-rich-text>
+                                                </lightning-accordion-section>
+                                            </template>
+                                        </lightning-accordion>
+                                    </div>
+                                </lightning-tab>
+                            </template>
+                            </template>
+                            <template if:true={speakerList}>
+                            <template if:true={speakerList.length}>
+                                <lightning-tab label="Speakers">
+                                    <div class="col-md-9">
+                                        <lightning-accordion allow-multiple-sections-open>
+                                            <template for:each={speakerList} for:item="s">
+                                                <lightning-accordion-section key={s.Id} name={s.Id} label={s.Name}>
+                                                    <div slot="actions">
+                                                        <template if:true={s.Image_Url__c}>
+                                                            <lightning-avatar
+                                                                src={s.Image_Url__c}
+                                                                fallback-icon-name="standard:avatar"
+                                                                alternative-text={s.Name}
+                                                            ></lightning-avatar>
+                                                        </template>
+                                                        <template if:false={s.Image_Url__c}>
+
+                                                        </template>
+                                                    </div>
+                                                    <lightning-formatted-rich-text value={s.Description__c}></lightning-formatted-rich-text>
+                                                </lightning-accordion-section>
+                                            </template>
+                                        </lightning-accordion>
+                                    </div>
+                                </lightning-tab>
+                            </template>
+                            </template>
+                        </lightning-tabset>
+                    </div>
+                    <div class="col-md-5">
+                        <div class="row">
+                            <div class="col-md-5 slds-m-top_medium">
+                                <h5>Registration</h5>
+                            </div>
+                            <div class="col-md-7 slds-m-top_small">
+                                <!-- Booking type toggle removed for simplicity -->
+                            </div>
+                        </div>
+                        <div class="form-element__group">
+                            <div class="slds-form-element">
+                                <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon_right">
+                                    <div class="slds-icon slds-input__icon slds-input__icon_right slds-icon-text-default">
+                                        <template if:true={searchClientString}>
+                                            <button onclick={clearSearch}>
+                                                <lightning-icon icon-name="utility:close" size="x-small"></lightning-icon>
+                                            </button>
+                                        </template>
+                                        <template if:false={searchClientString}>
+                                            <lightning-icon icon-name="utility:search" size="x-small"></lightning-icon>
+                                        </template>
+                                    </div>
+                                    <lightning-input
+                                        type="text"
+                                        value={searchClientString}
+                                        onchange={displayRecords}
+                                        onkeyup={displayRecords}
+                                        placeholder="Search client..."
+                                        maxlength="30"
+                                    ></lightning-input>
+                                </div>
+                            </div>
+                            <template if:true={showSearchPanelSection}>
+                                <div class="disabledField form-group">
+                                    <div class="records-area-maq">
+                                        <div class="Service-Description maq">
+                                            <div class="scroll-bar-wrap">
+                                                <div class="scroll-box">
+                                                    <div onclick={closeSearchPanel}>
+                                                        <lightning-icon icon-name="utility:close"></lightning-icon>
+                                                    </div>
+                                                    <template for:each={srList} for:item="w" for:index="index">
+                                                        <div
+                                                            key={w.Id}
+                                                            data-index={index}
+                                                            onclick={setRecord}
+                                                            title={w.Name}
+                                                            class="eb113"
+                                                        >
+                                                            <div class="card">
+                                                                <div class="courses-container">
+                                                                    <div class="course maq-row">
+                                                                        <div class="course-preview">
+                                                                            <div class="slds-grid">
+                                                                                <div class="col-auto p-0 pt-1">
+                                                                                    <lightning-icon icon-name="utility:user"></lightning-icon>
+                                                                                </div>
+                                                                                <div class="col-11">
+                                                                                    <h2 class="eb116">
+                                                                                        <template if:true={w.Name}>
+                                                                                            <div class="slds-truncate" title={w.Name}>{w.Name}</div>
+                                                                                        </template>
+                                                                                    </h2>
+                                                                                    <template if:true={w.Family}>
+                                                                                        <a href="javascript:void(0);">
+                                                                                            <div class="slds-truncate" title={w.Family}>
+                                                                                                <lightning-icon icon-name="utility:group"></lightning-icon>
+                                                                                                {w.Family}
+                                                                                            </div>
+                                                                                        </a>
+                                                                                    </template>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="course-info">
+                                                                            <h6>
+                                                                                <template if:true={w.Email}>
+                                                                                    <div class="slds-truncate" title={w.Email}>
+                                                                                        <lightning-icon icon-name="utility:email"></lightning-icon>
+                                                                                        {w.Email}
+                                                                                    </div>
+                                                                                </template>
+                                                                                <template if:true={w.Phone}>
+                                                                                    <div class="slds-truncate" title={w.Phone}>
+                                                                                        <lightning-icon icon-name="utility:phone_portrait"></lightning-icon>
+                                                                                        {w.Phone}
+                                                                                    </div>
+                                                                                </template>
+                                                                            </h6>
+                                                                            <h2>
+                                                                                <template if:true={w.Phone}>
+                                                                                    <div class="slds-truncate" title={w.Phone}>
+                                                                                        <lightning-icon icon-name="utility:phone_portrait"></lightning-icon>
+                                                                                        {w.Phone}
+                                                                                    </div>
+                                                                                </template>
+                                                                            </h2>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                            <div class="row">
+                                <div class="col-md-5 slds-m-top_medium">
+                                    <template if:true={quantityList.length}>
+                                        <lightning-combobox
+                                            name="locationId"
+                                            value={regQuantity}
+                                            options={quantityList}
+                                            onchange={changeRegQty}
+                                            label="Quantity"
+                                        ></lightning-combobox>
+                                    </template>
+                                </div>
+                                <div class="Service-Description maq">
+                                    <div class="scroll-bar-wrap">
+                                        <div class="scroll-box">
+                                            <div class="col-md-12 slds-m-top_medium">
+                                                <lightning-input
+                                                    type="text"
+                                                    value={createReg.Customer_Name__c}
+                                                    disabled={disableForm}
+                                                    placeholder="First Name"
+                                                    data-id="clientFN"
+                                                    onchange={handleInputChange}
+                                                ></lightning-input>
+                                            </div>
+                                            <div class="col-md-12 slds-m-top_medium">
+                                                <lightning-input
+                                                    type="text"
+                                                    value={createReg.Customer_Lastname__c}
+                                                    disabled={disableForm}
+                                                    placeholder="Last Name*"
+                                                    data-id="clientLN"
+                                                    onchange={handleInputChange}
+                                                ></lightning-input>
+                                            </div>
+                                            <div class="col-md-12 slds-m-top_medium">
+                                                <lightning-input
+                                                    type="email"
+                                                    value={createReg.Customer_Email__c}
+                                                    disabled={disableForm}
+                                                    placeholder="Email*"
+                                                    data-id="clientE"
+                                                    onchange={handleInputChange}
+                                                ></lightning-input>
+                                            </div>
+                                            <div class="col-md-12 slds-m-top_medium">
+                                                <lightning-input
+                                                    type="tel"
+                                                    value={createReg.Customer_Contact__c}
+                                                    disabled={disableForm}
+                                                    placeholder="Mobile*"
+                                                    data-id="clientP"
+                                                    onchange={handleInputChange}
+                                                ></lightning-input>
+                                            </div>
+                                           <template for:each={newRegistrations} for:item="reg" for:index="regIndex">
+    <div key={reg.Id}>
+        <div class="col-md-12 slds-m-top_xx-large">
+            <strong>Enter Details of other Person: </strong>{regIndex}
+        </div>
+
+        <div class="col-md-12">
+            <lightning-input
+                type="text"
+                value={reg.Customer_Name__c}
+                placeholder="First Name"
+                data-id={regIndex}
+                onchange={handleInputChange}>
+            </lightning-input>
+        </div>
+
+    <div class="col-md-12 slds-m-top_medium">
+        <lightning-input
+            type="text"
+            value={reg.Customer_Lastname__c}
+            placeholder="Last Name*"
+            data-id={regIndex}
+            class={reg.classLastname}
+            onchange={handleInputChange}>
+        </lightning-input>
+    </div>
+
+    <div class="col-md-12 slds-m-top_medium">
+        <lightning-input
+            type="email"
+            value={reg.Customer_Email__c}
+            placeholder="Email*"
+            data-id={regIndex}
+            class={reg.classEmail}
+            onchange={handleInputChange}>
+        </lightning-input>
+    </div>
+
+    <div class="col-md-12 slds-m-top_medium">
+        <lightning-input
+            type="tel"
+            value={reg.Customer_Contact__c}
+            placeholder="Mobile*"
+            data-id={regIndex}
+            class={reg.classPhone}
+            onchange={handleInputChange}>
+        </lightning-input>
+    </div>
+    </div>
+</template>
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </lightning-card>
+        </div>
+
+    </template>
+
+    <div class="booking-kare slds-docked-form-footer">
+         <template if:true={eventId}>
+        <template if:true={noshowDateColumns}>
+            <lightning-button label="Previous" icon-name="utility:chevronleft"  class="slds-m-right_small" onclick={goToSchedules}></lightning-button>
+        </template>
+        <template if:false={noshowDateColumns}>
+            <lightning-button label="Previous" icon-name="utility:chevronleft" onclick={goHome}></lightning-button>
+        </template>
+        <template if:false={showDateColumns}>
+            <lightning-button
+                label="Confirm Booking"
+                variant="brand"
+                icon-name="utility:success"
+                name="free"
+                onclick={createRegistrations}
+            ></lightning-button>
+        </template>
+        </template>
+    </div>
+
+    <template if:true={bookingSuccess}>
+        <section role="dialog" aria-label="Registration Success Modal" class="slds-modal slds-modal_large slds-fade-in-open">
+    <div class="slds-modal__container">
+        <header class="slds-modal__header slds-modal__header_empty">
+            <div class="slds-m-top_xx-small slds-m-bottom_small slds-p-vertical_small slds-text-align_center">
+                <lightning-icon icon-name="utility:check" class="eb124"></lightning-icon>
+                <h1 class="slds-text-heading_medium">Your booking was successful.</h1>
+            </div>
+        </header>
+        <div class="slds-modal__content slds-p-around_medium">
+            <template if:true={result.length}>
+                <div class="slds-scrollable_x" tabindex="0">
+                    <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_col-bordered">
+                        <thead>
+                            <tr class="slds-line-height_reset">
+                                <th scope="col"><div class="slds-truncate">Registration No.</div></th>
+                                <th scope="col"><div class="slds-truncate">Event</div></th>
+                                <th scope="col"><div class="slds-truncate">Date</div></th>
+                                <th scope="col"><div class="slds-truncate">Zone</div></th>
+                                <th scope="col"><div class="slds-truncate">Address</div></th>
+                                <th scope="col"><div class="slds-truncate">Number of Other people</div></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={result} for:item="res">
+                                <tr key={res.Id}>
+                                    <td><div class="slds-truncate">{res.Name}</div></td>
+                                    <td><div class="slds-truncate">{res.Event__r.Name}</div></td>
+                                    <td>
+                                        <lightning-formatted-date-time
+                                            value={res.Registration_Time__c}
+                                            time-zone={timezone}
+                                        ></lightning-formatted-date-time>
+                                    </td>
+                                    <td><div class="slds-truncate">{res.Event_Zone__r.Name}</div></td>
+                                    <td><div class="slds-truncate">{res.Expert_Location__r.Name}</div></td>
+                                    <td><div class="slds-truncate">{res.Number_of_other_persons__c}</div></td>
+                                    <td>
+
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </template>
+
+            <template if:false={result.length}>
+                <div class="slds-grid slds-wrap slds-m-top_small">
+                    <template if:true={resultReg.Name}>
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3">
+                            <div class="slds-box slds-theme_default slds-p-around_medium slds-m-around_x-small">
+                                <div class="slds-media">
+                                    <div class="slds-media__figure">
+                                        <lightning-icon icon-name="utility:file"></lightning-icon>
+                                    </div>
+                                    <div class="slds-media__body">
+                                        <h4 class="slds-text-title_caps">Registration Number</h4>
+                                        <p>{resultReg.Name}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <template if:true={resultReg.Event__r}>
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3">
+                            <div class="slds-box slds-theme_default slds-p-around_medium slds-m-around_x-small">
+                                <div class="slds-media">
+                                    <div class="slds-media__figure">
+                                        <lightning-icon icon-name="utility:event"></lightning-icon>
+                                    </div>
+                                    <div class="slds-media__body">
+                                        <h4 class="slds-text-title_caps">Event</h4>
+                                        <p>{resultReg.Event__r.Name}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <template if:true={resultReg.Event_Zone__r}>
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3">
+                            <div class="slds-box slds-theme_default slds-p-around_medium slds-m-around_x-small">
+                                <div class="slds-media">
+                                    <div class="slds-media__figure">
+                                        <lightning-icon icon-name="utility:field_date_time_calc"></lightning-icon>
+                                    </div>
+                                    <div class="slds-media__body">
+                                        <h4 class="slds-text-title_caps">Event Zone</h4>
+                                        <p>{resultReg.Event_Zone__r.Name}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <template if:true={resultReg.Registration_Time__c}>
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3">
+                            <div class="slds-box slds-theme_default slds-p-around_medium slds-m-around_x-small">
+                                <div class="slds-media">
+                                    <div class="slds-media__figure">
+                                        <lightning-icon icon-name="utility:date_input"></lightning-icon>
+                                    </div>
+                                    <div class="slds-media__body">
+                                        <h4 class="slds-text-title_caps">Event Date</h4>
+                                        <p>
+                                            <lightning-formatted-date-time
+                                                value={resultReg.Registration_Time__c}
+                                                time-zone={timezone}
+                                            ></lightning-formatted-date-time>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <template if:true={resultReg.Expert_Location__r}>
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3">
+                            <div class="slds-box slds-theme_default slds-p-around_medium slds-m-around_x-small">
+                                <div class="slds-media">
+                                    <div class="slds-media__figure">
+                                        <lightning-icon icon-name="utility:checkin"></lightning-icon>
+                                    </div>
+                                    <div class="slds-media__body">
+                                        <h4 class="slds-text-title_caps">Address</h4>
+                                        <p>{resultReg.Expert_Location__r.Name}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </template>
+        </div>
+
+        <footer class="slds-modal__footer slds-text-align_center">
+            <lightning-button variant="brand" label="Home" icon-name="utility:home" onclick={goHome}></lightning-button>
+        </footer>
+    </div>
+</section>
+<!-- 🔹 Required Backdrop -->
+<div class="slds-backdrop slds-backdrop_open"></div>
+
+        </template>
+        </div>
+        </template>
