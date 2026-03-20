@@ -5,6 +5,7 @@
 @SuppressWarnings('PMD.NcssCount,PMD.CognitiveComplexity,PMD.CyclomaticComplexity,PMD.ExcessivePublicCount')
 public with sharing class EventBooking_Sch {
 
+    
     /** @description Stores the event allocation record type identifier. */
     @AuraEnabled public static Id evallocRecType {get;set;}
     /** @description Stores the event allocation records returned to the client. */
