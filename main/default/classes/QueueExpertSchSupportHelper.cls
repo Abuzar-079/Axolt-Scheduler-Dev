@@ -3,7 +3,7 @@
 /**
  * @description Utility helpers shared by queue expert scheduler support classes.
  */
-public inherited sharing class QueueExpertSchSupportHelper {
+public with sharing class QueueExpertSchSupportHelper {
     /**
      * @description Adds the location filter to a dynamic registration query when present.
      * @param query Base query string.

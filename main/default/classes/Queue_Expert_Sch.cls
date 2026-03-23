@@ -374,8 +374,25 @@ public with sharing class Queue_Expert_Sch {
     @AuraEnabled
     @SuppressWarnings('PMD.ExcessiveParameterList')
     public static List<Attachment> uploadFile(String parent, String fileName, String base64Data, String contentType) {
-        base64Data = EncodingUtil.urlDecode(base64Data, 'UTF-8'); Attachment a = new Attachment();  a.parentId = parent; a.Body = EncodingUtil.base64Decode(base64Data); a.Name = fileName; a.ContentType = contentType;
-        // insert a;
+        if (String.isBlank(parent)) {
+            throw new AuraHandledException('Parent record id is required.');
+        }
+        if (
+            !Schema.sObjectType.Attachment.isCreateable() ||
+            !Schema.sObjectType.Attachment.fields.ParentId.isCreateable() ||
+            !Schema.sObjectType.Attachment.fields.Body.isCreateable() ||
+            !Schema.sObjectType.Attachment.fields.Name.isCreateable() ||
+            !Schema.sObjectType.Attachment.fields.ContentType.isCreateable()
+        ) {
+            throw new AuraHandledException('Insufficient access to upload attachments.');
+        }
+
+        base64Data = EncodingUtil.urlDecode(base64Data, 'UTF-8');
+        Attachment a = new Attachment();
+        a.ParentId = parent;
+        a.Body = EncodingUtil.base64Decode(base64Data);
+        a.Name = fileName;
+        a.ContentType = contentType;
         Database.insert(a, false, AccessLevel.USER_MODE);
         //System.debug(LoggingLevel.DEBUG, a.Id);
         List<Attachment> myAtt = [Select Id, Name, ParentId, ContentType From Attachment Where ParentId  =:parent WITH SECURITY_ENFORCED Order By CreatedDate Asc LIMIT 1000];
