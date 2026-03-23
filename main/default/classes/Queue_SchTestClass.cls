@@ -249,8 +249,13 @@ public class Queue_SchTestClass {
     static void testUpdateCancelReg() {
         System.runAs(getRunAsUser()) {
             Registration_SCH__c reg = [SELECT Id FROM Registration_SCH__c WHERE Customer_Email__c = 'jane.smith@test.com' LIMIT 1];
+            // commented by abuzar on 2026-03-23 for DML Statements Inside Loops issue.
+            /*
             List<Queue_Sch_SelectOption> reasons = Queue_Sch_Support.getCancellationReasons();
             String validReason = reasons.size() > 1 ? reasons[1].value : null;
+            */
+            List<Schema.PicklistEntry> reasons = Registration_SCH__c.Cancellation_Reasons__c.getDescribe().getPicklistValues();
+            String validReason = reasons.isEmpty() ? null : reasons[0].getValue();
             Test.startTest();
             Queue_Sch_Wrapper result = Queue_Sch_Support.updateCancelReg(reg.Id, validReason);
             Test.stopTest();
