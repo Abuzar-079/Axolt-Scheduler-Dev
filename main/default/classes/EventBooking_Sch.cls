@@ -13,9 +13,9 @@ public with sharing class EventBooking_Sch {
     /** @description Stores the current event allocation record. */
     @AuraEnabled public static Event_Allocation__c eventAllocs {get; set;}
     /** @description Stores city filter options for the scheduler UI. */
-    @AuraEnabled public static List<SelectOption> cityOptions {get; set;}
+    @AuraEnabled public static List<OptionWrapper> cityOptions {get; set;}
     /** @description Stores event type filter options for the scheduler UI. */
-    @AuraEnabled public static List<SelectOption> typeOptions {get; set;}
+    @AuraEnabled public static List<OptionWrapper> typeOptions {get; set;}
     /** @description Stores the active events currently available for scheduling. */
     @AuraEnabled public static List<Event__c> activeEventsList {get;set;}
     /** @description Stores wrapped allocation pricebook entries for the client. */
@@ -1498,12 +1498,12 @@ public with sharing class EventBooking_Sch {
      * @return Event type select options.
      */
     @AuraEnabled
-    public static List<SelectOption> getFitlerTypes() {
-        typeOptions = new List<SelectOption>();
-        typeOptions.add(new SelectOption('', '- All Types -'));
+    public static List<OptionWrapper> getFitlerTypes() {
+        typeOptions = new List<OptionWrapper>();
+        typeOptions.add(new OptionWrapper('', '- All Types -'));
         List<Schema.PicklistEntry> pickListValues = Schema.sObjectType.Event__c.Fields.Type_Of_Event__c.getPickListValues();
         for (Schema.PicklistEntry a : pickListValues) {
-            typeOptions.add(new SelectOption(a.getValue(), a.getLabel()));
+            typeOptions.add(new OptionWrapper(a.getValue(), a.getLabel()));
         }
         return typeOptions;
     }
@@ -1534,10 +1534,10 @@ public with sharing class EventBooking_Sch {
      * @return Location select options.
      */
     @AuraEnabled
-    public static List<SelectOption> getLocations() {
-        List<SelectOption> options = new List<SelectOption>();
+    public static List<OptionWrapper> getLocations() {
+        List<OptionWrapper> options = new List<OptionWrapper>();
         evallocRecType = Schema.SObjectType.Event_Allocation__c.getRecordTypeInfosByDeveloperName().get('Event').getRecordTypeId();
-        options.add(new SelectOption('', '--All Regions--'));
+        options.add(new OptionWrapper('', '--All Regions--'));
         if (Schema.sObjectType.Event_Allocation__c.isAccessible()) {
             for (Event_Allocation__c loc : [
                 SELECT Id, Name, Location__r.Province_State__c, Event_Type__c, Event__r.Name,
@@ -1546,7 +1546,7 @@ public with sharing class EventBooking_Sch {
                 FROM Event_Allocation__c
                 WHERE Active__c = true AND RecordTypeId = :evallocRecType LIMIT 1000
             ]) {
-                options.add(new SelectOption(loc.Id, loc.Location__r.Name));
+                options.add(new OptionWrapper(String.valueOf(loc.Id), loc.Location__r.Name));
             }
         }
         return options;
@@ -4317,6 +4317,8 @@ public with sharing class EventBooking_Sch {
                 if (!existingContacts.isEmpty()) {
                     pr.Contact__c = existingContacts[0].Id;
                 } else {
+                    // commented by Abuzar on 2026-03-23 for the Checkmarkx issue and added below line "FLS Create result path issue because Contact.LastName was populated from Registration_SCH__c.Customer_Lastname__c and Contact was inserted without field-level/object-level create checks."
+                    [legacy contact insert removed for FLS-safe version]
                     Contact newContact = new Contact(
                         FirstName = pr.Customer_Name__c,
                         LastName = pr.Customer_Lastname__c,
@@ -4326,8 +4328,46 @@ public with sharing class EventBooking_Sch {
                     );
                     insert newContact;
                     pr.Contact__c = newContact.Id;
-                }
             }
+                    [end legacy contact insert]
+                    Boolean canCreateContact = Schema.sObjectType.Contact.isCreateable();
+                    Boolean canReadCustomerName = canAccessCreateAndUpdateRegistrationField(Schema.sObjectType.Registration_SCH__c.fields.Customer_Name__c);
+                    Boolean canReadCustomerLastName = canAccessCreateAndUpdateRegistrationField(Schema.sObjectType.Registration_SCH__c.fields.Customer_Lastname__c);
+                    Boolean canReadCustomerEmail = canAccessCreateAndUpdateRegistrationField(Schema.sObjectType.Registration_SCH__c.fields.Customer_Email__c);
+                    Boolean canReadCustomerContact = canAccessCreateAndUpdateRegistrationField(Schema.sObjectType.Registration_SCH__c.fields.Customer_Contact__c);
+                    Boolean canSetFirstName = canAccessCreateAndUpdateContactField(Schema.sObjectType.Contact.fields.FirstName);
+                    Boolean canSetLastName = canAccessCreateAndUpdateContactField(Schema.sObjectType.Contact.fields.LastName);
+                    Boolean canSetEmail = canAccessCreateAndUpdateContactField(Schema.sObjectType.Contact.fields.Email);
+                    Boolean canSetMobilePhone = canAccessCreateAndUpdateContactField(Schema.sObjectType.Contact.fields.MobilePhone);
+                    Boolean canSetPhone = canAccessCreateAndUpdateContactField(Schema.sObjectType.Contact.fields.Phone);
+
+                    if (canCreateContact && canReadCustomerLastName && canSetLastName) {
+                        Contact newContact = new Contact();
+                        if (canReadCustomerName && canSetFirstName && String.isNotBlank(pr.Customer_Name__c)) {
+                            newContact.FirstName = pr.Customer_Name__c;
+                        }
+                        if (String.isNotBlank(pr.Customer_Lastname__c)) {
+                            newContact.LastName = pr.Customer_Lastname__c;
+                        }
+                        if (canReadCustomerEmail && canSetEmail && String.isNotBlank(pr.Customer_Email__c)) {
+                            newContact.Email = pr.Customer_Email__c;
+                        }
+                        if (canReadCustomerContact && String.isNotBlank(pr.Customer_Contact__c)) {
+                            if (canSetMobilePhone) {
+                                newContact.MobilePhone = pr.Customer_Contact__c;
+                            }
+                            if (canSetPhone) {
+                                newContact.Phone = pr.Customer_Contact__c;
+                            }
+                        }
+                        if (String.isNotBlank(newContact.LastName)) {
+                            insert newContact;
+                            pr.Contact__c = newContact.Id;
+                        }
+                    }
+                    //changes end here by Abuzar
+                }
+            
 
             if (Schema.sObjectType.Registration_SCH__c.isCreateable()) {
                 insert parentRegs;
@@ -4706,7 +4746,7 @@ public with sharing class EventBooking_Sch {
         /** @description Stores the list of events in the response. */
         @AuraEnabled public List<Event__c> events { get; set; }
         /** @description Stores available event type filter options. */
-        @AuraEnabled public List<SelectOption> eventTypes { get; set; }
+        @AuraEnabled public List<OptionWrapper> eventTypes { get; set; }
         /** @description Stores the total number of events. */
         @AuraEnabled public Integer eventSize { get; set; }
         /** @description Stores the event filter criteria record. */
@@ -4740,7 +4780,7 @@ public with sharing class EventBooking_Sch {
             event = new Event__c();
             events = new List<Event__c>();
             filter = new Event__c();
-            eventTypes = new List<SelectOption>();
+            eventTypes = new List<OptionWrapper>();
             registration = new Registration_SCH__c();
             contact = new Contact();
             zone = new Event_Zone__c();
@@ -4910,6 +4950,26 @@ public with sharing class EventBooking_Sch {
          * @param label Option label.
          */
         public SelectOptionQty(Integer value, Integer label) {
+            this.value = value;
+            this.label = label;
+        }
+    }
+
+    /**
+     * @description Aura-safe option wrapper for label/value pairs.
+     */
+    public class OptionWrapper {
+        /** @description Stores the value submitted by the client. */
+        @AuraEnabled public String value { get; set; }
+        /** @description Stores the label shown in the UI. */
+        @AuraEnabled public String label { get; set; }
+
+        /**
+         * @description Creates an option wrapper instance.
+         * @param value Option value.
+         * @param label Option label.
+         */
+        public OptionWrapper(String value, String label) {
             this.value = value;
             this.label = label;
         }
