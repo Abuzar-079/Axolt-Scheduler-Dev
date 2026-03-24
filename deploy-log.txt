@@ -1,40 +1,59 @@
 {
-  "status": 0,
+  "status": 1,
   "result": {
     "checkOnly": false,
-    "completedDate": "2026-03-24T13:25:31.000Z",
+    "completedDate": "2026-03-24T15:17:32.000Z",
     "createdBy": "005dM00000XiF8P",
     "createdByName": "Abu zar",
-    "createdDate": "2026-03-24T13:25:29.000Z",
+    "createdDate": "2026-03-24T15:17:24.000Z",
     "details": {
+      "componentFailures": [
+        {
+          "changed": false,
+          "columnNumber": 49,
+          "componentType": "ApexClass",
+          "created": false,
+          "createdDate": "2026-03-24T15:17:31.000Z",
+          "deleted": false,
+          "fileName": "classes/EventBooking_SchTestClass.cls",
+          "fullName": "EventBooking_SchTestClass",
+          "lineNumber": 280,
+          "problem": "Illegal assignment from List<EventBooking_Sch.OptionWrapper> to List<EventBooking_Sch.SelectOption>",
+          "problemType": "Error",
+          "success": false
+        },
+        {
+          "changed": false,
+          "columnNumber": 49,
+          "componentType": "ApexClass",
+          "created": false,
+          "createdDate": "2026-03-24T15:17:31.000Z",
+          "deleted": false,
+          "fileName": "classes/EventBooking_SchTestClass.cls",
+          "fullName": "EventBooking_SchTestClass",
+          "lineNumber": 303,
+          "problem": "Illegal assignment from List<EventBooking_Sch.OptionWrapper> to List<EventBooking_Sch.SelectOption>",
+          "problemType": "Error",
+          "success": false
+        }
+      ],
       "componentSuccesses": [
         {
           "changed": true,
           "componentType": "ApexClass",
           "created": false,
-          "createdDate": "2026-03-24T13:25:30.000Z",
+          "createdDate": "2026-03-24T15:17:31.000Z",
           "deleted": false,
-          "fileName": "classes/QueueExpertSchSupport.cls",
-          "fullName": "QueueExpertSchSupport",
-          "id": "01pdM00000TRgdgQAD",
-          "success": true
-        },
-        {
-          "changed": true,
-          "componentType": "ApexClass",
-          "created": false,
-          "createdDate": "2026-03-24T13:25:31.000Z",
-          "deleted": false,
-          "fileName": "classes/Queue_Expert_Sch.cls",
-          "fullName": "Queue_Expert_Sch",
-          "id": "01pdM00000TRgdiQAD",
+          "fileName": "classes/EventBooking_Sch.cls",
+          "fullName": "EventBooking_Sch",
+          "id": "01pdM00000TRgdZQAT",
           "success": true
         },
         {
           "changed": true,
           "componentType": "",
           "created": false,
-          "createdDate": "2026-03-24T13:25:31.000Z",
+          "createdDate": "2026-03-24T15:17:31.000Z",
           "deleted": false,
           "fileName": "package.xml",
           "fullName": "package.xml",
@@ -51,54 +70,61 @@
         "flowCoverage": [],
         "flowCoverageWarnings": [],
         "successes": []
-      },
-      "componentFailures": []
+      }
     },
     "done": true,
-    "id": "0AfdM00000XPG1lSAH",
+    "id": "0AfdM00000XP3qxSAD",
     "ignoreWarnings": false,
-    "lastModifiedDate": "2026-03-24T13:25:31.000Z",
-    "numberComponentErrors": 0,
-    "numberComponentsDeployed": 2,
-    "numberComponentsTotal": 2,
+    "lastModifiedDate": "2026-03-24T15:17:32.000Z",
+    "numberComponentErrors": 2,
+    "numberComponentsDeployed": 1,
+    "numberComponentsTotal": 3,
     "numberFiles": "6",
     "numberTestErrors": 0,
     "numberTestsCompleted": 0,
     "numberTestsTotal": 0,
     "rollbackOnError": true,
     "runTestsEnabled": false,
-    "startDate": "2026-03-24T13:25:29.000Z",
-    "status": "Succeeded",
-    "success": true,
-    "zipSize": 15859,
+    "startDate": "2026-03-24T15:17:30.000Z",
+    "status": "Failed",
+    "success": false,
+    "zipSize": 48468,
     "files": [
       {
-        "fullName": "QueueExpertSchSupport",
+        "fullName": "EventBooking_Sch",
         "type": "ApexClass",
         "state": "Changed",
-        "filePath": "/Users/abuzar/Documents/Axolt/Scheduler dev/force-app/main/default/classes/QueueExpertSchSupport.cls"
+        "filePath": "/Users/abuzar/Documents/Axolt/Scheduler dev/force-app/main/default/classes/EventBooking_Sch.cls"
       },
       {
-        "fullName": "QueueExpertSchSupport",
+        "fullName": "EventBooking_Sch",
         "type": "ApexClass",
         "state": "Changed",
-        "filePath": "/Users/abuzar/Documents/Axolt/Scheduler dev/force-app/main/default/classes/QueueExpertSchSupport.cls-meta.xml"
+        "filePath": "/Users/abuzar/Documents/Axolt/Scheduler dev/force-app/main/default/classes/EventBooking_Sch.cls-meta.xml"
       },
       {
-        "fullName": "Queue_Expert_Sch",
+        "fullName": "EventBooking_SchTestClass",
         "type": "ApexClass",
-        "state": "Changed",
-        "filePath": "/Users/abuzar/Documents/Axolt/Scheduler dev/force-app/main/default/classes/Queue_Expert_Sch.cls"
+        "state": "Failed",
+        "problemType": "Error",
+        "filePath": "/Users/abuzar/Documents/Axolt/Scheduler dev/force-app/main/default/classes/EventBooking_SchTestClass.cls",
+        "lineNumber": 303,
+        "columnNumber": 49,
+        "error": "Illegal assignment from List<EventBooking_Sch.OptionWrapper> to List<EventBooking_Sch.SelectOption> (303:49)"
       },
       {
-        "fullName": "Queue_Expert_Sch",
+        "fullName": "EventBooking_SchTestClass",
         "type": "ApexClass",
-        "state": "Changed",
-        "filePath": "/Users/abuzar/Documents/Axolt/Scheduler dev/force-app/main/default/classes/Queue_Expert_Sch.cls-meta.xml"
+        "state": "Failed",
+        "problemType": "Error",
+        "filePath": "/Users/abuzar/Documents/Axolt/Scheduler dev/force-app/main/default/classes/EventBooking_SchTestClass.cls",
+        "lineNumber": 280,
+        "columnNumber": 49,
+        "error": "Illegal assignment from List<EventBooking_Sch.OptionWrapper> to List<EventBooking_Sch.SelectOption> (280:49)"
       }
     ],
     "zipFileCount": 5,
-    "deployUrl": "https://orgfarm-2a16d57383-dev-ed.develop.my.salesforce.com/lightning/setup/DeployStatus/page?address=%2Fchangemgmt%2FmonitorDeploymentsDetails.apexp%3FasyncId%3D0AfdM00000XPG1lSAH%26retURL%3D%252Fchangemgmt%252FmonitorDeployment.apexp"
+    "deployUrl": "https://orgfarm-2a16d57383-dev-ed.develop.my.salesforce.com/lightning/setup/DeployStatus/page?address=%2Fchangemgmt%2FmonitorDeploymentsDetails.apexp%3FasyncId%3D0AfdM00000XP3qxSAD%26retURL%3D%252Fchangemgmt%252FmonitorDeployment.apexp"
   },
   "warnings": []
 }

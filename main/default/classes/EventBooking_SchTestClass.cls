@@ -2,7 +2,10 @@
 public class EventBooking_SchTestClass {
 
     private static User getRunAsUser() {
-        return [SELECT Id FROM User WHERE Id = :UserInfo.getUserId()];
+        // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+        // return [SELECT Id FROM User WHERE Id = :UserInfo.getUserId()];
+        return [SELECT Id FROM User WHERE Id = :UserInfo.getUserId() WITH USER_MODE];
+        //changes end here by Abuzar
     }
 
     @TestSetup
@@ -160,7 +163,10 @@ public class EventBooking_SchTestClass {
             @IsTest
             static void testFetchEventList() {
                 System.runAs(getRunAsUser()) {
-                    Event__c evt = [SELECT Id, Name, Event_Location__c FROM Event__c LIMIT 1];
+                    // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+                    // Event__c evt = [SELECT Id, Name, Event_Location__c FROM Event__c LIMIT 1];
+                    Event__c evt = [SELECT Id, Name, Event_Location__c FROM Event__c WITH USER_MODE LIMIT 1];
+                    //changes end here by Abuzar
 
                     Test.startTest();
                     try {
@@ -188,9 +194,18 @@ public class EventBooking_SchTestClass {
     @IsTest
     static void testGetEventDetail() {
         System.runAs(getRunAsUser()) {
-            Event__c evt = [SELECT Id FROM Event__c LIMIT 1];
-            Event_Zone__c zone = [SELECT Id FROM Event_Zone__c LIMIT 1];
-            Expert_Location__c loc = [SELECT Id FROM Expert_Location__c LIMIT 1];
+            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+            // Event__c evt = [SELECT Id FROM Event__c LIMIT 1];
+            Event__c evt = [SELECT Id FROM Event__c WITH USER_MODE LIMIT 1];
+            //changes end here by Abuzar
+            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+            // Event_Zone__c zone = [SELECT Id FROM Event_Zone__c LIMIT 1];
+            Event_Zone__c zone = [SELECT Id FROM Event_Zone__c WITH USER_MODE LIMIT 1];
+            //changes end here by Abuzar
+            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+            // Expert_Location__c loc = [SELECT Id FROM Expert_Location__c LIMIT 1];
+            Expert_Location__c loc = [SELECT Id FROM Expert_Location__c WITH USER_MODE LIMIT 1];
+            //changes end here by Abuzar
 
             Test.startTest();
             EventBooking_Sch result = EventBooking_Sch.getEventDetail(evt.Id, zone.Id, loc.Id);
@@ -205,8 +220,14 @@ public class EventBooking_SchTestClass {
     @IsTest
     static void testGetEventDetailWithNullZone() {
         System.runAs(getRunAsUser()) {
-            Event__c evt = [SELECT Id FROM Event__c LIMIT 1];
-            Expert_Location__c loc = [SELECT Id FROM Expert_Location__c LIMIT 1];
+            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+            // Event__c evt = [SELECT Id FROM Event__c LIMIT 1];
+            Event__c evt = [SELECT Id FROM Event__c WITH USER_MODE LIMIT 1];
+            //changes end here by Abuzar
+            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+            // Expert_Location__c loc = [SELECT Id FROM Expert_Location__c LIMIT 1];
+            Expert_Location__c loc = [SELECT Id FROM Expert_Location__c WITH USER_MODE LIMIT 1];
+            //changes end here by Abuzar
 
             Test.startTest();
             EventBooking_Sch result = EventBooking_Sch.getEventDetail(evt.Id, null, loc.Id);
@@ -219,8 +240,14 @@ public class EventBooking_SchTestClass {
     @IsTest
     static void testGetAllDaysCon() {
         System.runAs(getRunAsUser()) {
-            Event__c evt = [SELECT Id FROM Event__c LIMIT 1];
-            Registration_SCH__c reg = [SELECT Id FROM Registration_SCH__c LIMIT 1];
+            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+            // Event__c evt = [SELECT Id FROM Event__c LIMIT 1];
+            Event__c evt = [SELECT Id FROM Event__c WITH USER_MODE LIMIT 1];
+            //changes end here by Abuzar
+            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+            // Registration_SCH__c reg = [SELECT Id FROM Registration_SCH__c LIMIT 1];
+            Registration_SCH__c reg = [SELECT Id FROM Registration_SCH__c WITH USER_MODE LIMIT 1];
+            //changes end here by Abuzar
 
             Test.startTest();
             EventBooking_Sch.Container result = EventBooking_Sch.getAllDaysCon(evt.Id, reg.Id);
@@ -233,7 +260,10 @@ public class EventBooking_SchTestClass {
     @IsTest
     static void testGetAllDaysConWithNullReg() {
         System.runAs(getRunAsUser()) {
-            Event__c evt = [SELECT Id FROM Event__c LIMIT 1];
+            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+            // Event__c evt = [SELECT Id FROM Event__c LIMIT 1];
+            Event__c evt = [SELECT Id FROM Event__c WITH USER_MODE LIMIT 1];
+            //changes end here by Abuzar
 
             Test.startTest();
             EventBooking_Sch.Container result = EventBooking_Sch.getAllDaysCon(evt.Id, '');
@@ -247,7 +277,7 @@ public class EventBooking_SchTestClass {
     static void testGetFitlerTypes() {
         System.runAs(getRunAsUser()) {
             Test.startTest();
-            List<EventBooking_Sch.SelectOption> result = EventBooking_Sch.getFitlerTypes();
+            List<EventBooking_Sch.OptionWrapper> result = EventBooking_Sch.getFitlerTypes();
             Test.stopTest();
 
             System.assertNotEquals(null, result, 'Result should not be null');
@@ -270,7 +300,7 @@ public class EventBooking_SchTestClass {
     static void testGetLocations() {
         System.runAs(getRunAsUser()) {
             Test.startTest();
-            List<EventBooking_Sch.SelectOption> result = EventBooking_Sch.getLocations();
+            List<EventBooking_Sch.OptionWrapper> result = EventBooking_Sch.getLocations();
             Test.stopTest();
 
             System.assertNotEquals(null, result, 'Result should not be null');
@@ -292,7 +322,10 @@ public class EventBooking_SchTestClass {
     @IsTest
     static void testGetEvent() {
         System.runAs(getRunAsUser()) {
-            Event__c evt = [SELECT Id FROM Event__c LIMIT 1];
+            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+            // Event__c evt = [SELECT Id FROM Event__c LIMIT 1];
+            Event__c evt = [SELECT Id FROM Event__c WITH USER_MODE LIMIT 1];
+            //changes end here by Abuzar
 
             Test.startTest();
             Event__c result = EventBooking_Sch.getEvent(evt.Id);
@@ -306,7 +339,10 @@ public class EventBooking_SchTestClass {
     @IsTest
     static void testGetWEAEvent() {
         System.runAs(getRunAsUser()) {
-            Event__c evt = [SELECT Id FROM Event__c LIMIT 1];
+            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+            // Event__c evt = [SELECT Id FROM Event__c LIMIT 1];
+            Event__c evt = [SELECT Id FROM Event__c WITH USER_MODE LIMIT 1];
+            //changes end here by Abuzar
 
             Test.startTest();
             Event__c result = EventBooking_Sch.getWEAEvent(evt.Id);
@@ -320,9 +356,18 @@ public class EventBooking_SchTestClass {
     @IsTest
     static void testGetAllocations() {
         System.runAs(getRunAsUser()) {
-            Event__c evt = [SELECT Id FROM Event__c LIMIT 1];
-            Expert_Location__c loc = [SELECT Id FROM Expert_Location__c LIMIT 1];
-            Event_Zone__c zone = [SELECT Id FROM Event_Zone__c LIMIT 1];
+            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+            // Event__c evt = [SELECT Id FROM Event__c LIMIT 1];
+            Event__c evt = [SELECT Id FROM Event__c WITH USER_MODE LIMIT 1];
+            //changes end here by Abuzar
+            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+            // Expert_Location__c loc = [SELECT Id FROM Expert_Location__c LIMIT 1];
+            Expert_Location__c loc = [SELECT Id FROM Expert_Location__c WITH USER_MODE LIMIT 1];
+            //changes end here by Abuzar
+            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+            // Event_Zone__c zone = [SELECT Id FROM Event_Zone__c LIMIT 1];
+            Event_Zone__c zone = [SELECT Id FROM Event_Zone__c WITH USER_MODE LIMIT 1];
+            //changes end here by Abuzar
 
             // Ensure an Event_Allocation__c exists so getAllocations has data to return
             Id allocRecordTypeId = Schema.SObjectType.Event_Allocation__c.getRecordTypeInfosByDeveloperName().get('Event').getRecordTypeId();
@@ -358,7 +403,10 @@ public class EventBooking_SchTestClass {
     @IsTest
     static void testGetRegDetails() {
         System.runAs(getRunAsUser()) {
-            Registration_SCH__c reg = [SELECT Id FROM Registration_SCH__c LIMIT 1];
+            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+            // Registration_SCH__c reg = [SELECT Id FROM Registration_SCH__c LIMIT 1];
+            Registration_SCH__c reg = [SELECT Id FROM Registration_SCH__c WITH USER_MODE LIMIT 1];
+            //changes end here by Abuzar
 
             Test.startTest();
             Registration_SCH__c result = EventBooking_Sch.getRegDetails(reg.Id);
@@ -372,7 +420,10 @@ public class EventBooking_SchTestClass {
     @IsTest
     static void testCheckAvailability() {
         System.runAs(getRunAsUser()) {
-            Event_Zone__c zone = [SELECT Id FROM Event_Zone__c LIMIT 1];
+            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+            // Event_Zone__c zone = [SELECT Id FROM Event_Zone__c LIMIT 1];
+            Event_Zone__c zone = [SELECT Id FROM Event_Zone__c WITH USER_MODE LIMIT 1];
+            //changes end here by Abuzar
 
             Test.startTest();
             Boolean result = EventBooking_Sch.checkAvailability(zone.Id);
@@ -396,10 +447,22 @@ public class EventBooking_SchTestClass {
     @IsTest
     static void testBookReg3D() {
         System.runAs(getRunAsUser()) {
-            Event__c evt = [SELECT Id FROM Event__c LIMIT 1];
-            Event_Zone__c zone = [SELECT Id FROM Event_Zone__c LIMIT 1];
-            Expert_Location__c loc = [SELECT Id FROM Expert_Location__c LIMIT 1];
-            Contact con = [SELECT Id FROM Contact LIMIT 1];
+            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+            // Event__c evt = [SELECT Id FROM Event__c LIMIT 1];
+            Event__c evt = [SELECT Id FROM Event__c WITH USER_MODE LIMIT 1];
+            //changes end here by Abuzar
+            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+            // Event_Zone__c zone = [SELECT Id FROM Event_Zone__c LIMIT 1];
+            Event_Zone__c zone = [SELECT Id FROM Event_Zone__c WITH USER_MODE LIMIT 1];
+            //changes end here by Abuzar
+            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+            // Expert_Location__c loc = [SELECT Id FROM Expert_Location__c LIMIT 1];
+            Expert_Location__c loc = [SELECT Id FROM Expert_Location__c WITH USER_MODE LIMIT 1];
+            //changes end here by Abuzar
+            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+            // Contact con = [SELECT Id FROM Contact LIMIT 1];
+            Contact con = [SELECT Id FROM Contact WITH USER_MODE LIMIT 1];
+            //changes end here by Abuzar
 
             Registration_SCH__c testReg = new Registration_SCH__c(
                 Event__c = evt.Id,
@@ -434,8 +497,14 @@ public class EventBooking_SchTestClass {
     @IsTest
     static void testCheckQuantityValidationForFree() {
         System.runAs(getRunAsUser()) {
-            Event__c evt = [SELECT Id FROM Event__c LIMIT 1];
-            Event_Zone__c zone = [SELECT Id FROM Event_Zone__c LIMIT 1];
+            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+            // Event__c evt = [SELECT Id FROM Event__c LIMIT 1];
+            Event__c evt = [SELECT Id FROM Event__c WITH USER_MODE LIMIT 1];
+            //changes end here by Abuzar
+            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+            // Event_Zone__c zone = [SELECT Id FROM Event_Zone__c LIMIT 1];
+            Event_Zone__c zone = [SELECT Id FROM Event_Zone__c WITH USER_MODE LIMIT 1];
+            //changes end here by Abuzar
 
             Test.startTest();
             Integer result1 = EventBooking_Sch.checkQuantityValidationForFree(evt.Id, null, 5);
@@ -450,7 +519,10 @@ public class EventBooking_SchTestClass {
     @IsTest
     static void testUpdateFilledEvent() {
         System.runAs(getRunAsUser()) {
-            Event__c evt = [SELECT Id, Name, Description__c FROM Event__c LIMIT 1];
+            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+            // Event__c evt = [SELECT Id, Name, Description__c FROM Event__c LIMIT 1];
+            Event__c evt = [SELECT Id, Name, Description__c FROM Event__c WITH USER_MODE LIMIT 1];
+            //changes end here by Abuzar
             evt.Description__c = 'Updated Description';
             String eventJSON = JSON.serialize(evt);
 
@@ -477,9 +549,18 @@ public class EventBooking_SchTestClass {
     @IsTest
     static void testCreateEventBookings() {
         System.runAs(getRunAsUser()) {
-            Event__c evt = [SELECT Id FROM Event__c LIMIT 1];
-            Event_Zone__c zone = [SELECT Id FROM Event_Zone__c LIMIT 1];
-            Expert_Location__c loc = [SELECT Id FROM Expert_Location__c LIMIT 1];
+            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+            // Event__c evt = [SELECT Id FROM Event__c LIMIT 1];
+            Event__c evt = [SELECT Id FROM Event__c WITH USER_MODE LIMIT 1];
+            //changes end here by Abuzar
+            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+            // Event_Zone__c zone = [SELECT Id FROM Event_Zone__c LIMIT 1];
+            Event_Zone__c zone = [SELECT Id FROM Event_Zone__c WITH USER_MODE LIMIT 1];
+            //changes end here by Abuzar
+            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+            // Expert_Location__c loc = [SELECT Id FROM Expert_Location__c LIMIT 1];
+            Expert_Location__c loc = [SELECT Id FROM Expert_Location__c WITH USER_MODE LIMIT 1];
+            //changes end here by Abuzar
 
             //Id eventRecordTypeId = Schema.SObjectType.Registration_SCH__c.getRecordTypeInfosByDeveloperName().get('Event').getRecordTypeId();
 
@@ -525,7 +606,10 @@ public class EventBooking_SchTestClass {
     @IsTest
     static void testGetAllEventDetailsCon() {
         System.runAs(getRunAsUser()) {
-            Event__c evt = [SELECT Id FROM Event__c LIMIT 1];
+            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+            // Event__c evt = [SELECT Id FROM Event__c LIMIT 1];
+            Event__c evt = [SELECT Id FROM Event__c WITH USER_MODE LIMIT 1];
+            //changes end here by Abuzar
 
             Test.startTest();
             EventBooking_Sch.Container result = EventBooking_Sch.getAllEventDetailsCon(evt.Id);
@@ -614,9 +698,18 @@ public class EventBooking_SchTestClass {
     @IsTest
     static void testCreateEventBookingsWithExistingContact() {
         System.runAs(getRunAsUser()) {
-            Event__c evt = [SELECT Id FROM Event__c LIMIT 1];
-            Event_Zone__c zone = [SELECT Id FROM Event_Zone__c LIMIT 1];
-            Expert_Location__c loc = [SELECT Id FROM Expert_Location__c LIMIT 1];
+            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+            // Event__c evt = [SELECT Id FROM Event__c LIMIT 1];
+            Event__c evt = [SELECT Id FROM Event__c WITH USER_MODE LIMIT 1];
+            //changes end here by Abuzar
+            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+            // Event_Zone__c zone = [SELECT Id FROM Event_Zone__c LIMIT 1];
+            Event_Zone__c zone = [SELECT Id FROM Event_Zone__c WITH USER_MODE LIMIT 1];
+            //changes end here by Abuzar
+            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+            // Expert_Location__c loc = [SELECT Id FROM Expert_Location__c LIMIT 1];
+            Expert_Location__c loc = [SELECT Id FROM Expert_Location__c WITH USER_MODE LIMIT 1];
+            //changes end here by Abuzar
 
             List<Registration_SCH__c> parentRegs = new List<Registration_SCH__c>();
             Registration_SCH__c parentReg = new Registration_SCH__c(
@@ -646,8 +739,14 @@ public class EventBooking_SchTestClass {
     @IsTest
     static void testGetCreateAccountAndContacts() {
         System.runAs(getRunAsUser()) {
-            Event__c evt = [SELECT Id FROM Event__c LIMIT 1];
-            Expert_Location__c loc = [SELECT Id FROM Expert_Location__c LIMIT 1];
+            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+            // Event__c evt = [SELECT Id FROM Event__c LIMIT 1];
+            Event__c evt = [SELECT Id FROM Event__c WITH USER_MODE LIMIT 1];
+            //changes end here by Abuzar
+            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+            // Expert_Location__c loc = [SELECT Id FROM Expert_Location__c LIMIT 1];
+            Expert_Location__c loc = [SELECT Id FROM Expert_Location__c WITH USER_MODE LIMIT 1];
+            //changes end here by Abuzar
 
             // Create a fresh registration with all required fields to avoid
             // "inaccessible field" errors in fetchRegistrationForAccountAndContact
@@ -674,7 +773,10 @@ public class EventBooking_SchTestClass {
             System.assertEquals(null, result, 'Should return null on success');
 
             // Verify contact was created/updated
-            Registration_SCH__c updatedReg = [SELECT Id, Contact__c FROM Registration_SCH__c WHERE Id = :freshReg.Id LIMIT 1];
+            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+            // Registration_SCH__c updatedReg = [SELECT Id, Contact__c FROM Registration_SCH__c WHERE Id = :freshReg.Id LIMIT 1];
+            Registration_SCH__c updatedReg = [SELECT Id, Contact__c FROM Registration_SCH__c WHERE Id = :freshReg.Id WITH USER_MODE LIMIT 1];
+            //changes end here by Abuzar
             System.assertNotEquals(null, updatedReg.Contact__c, 'Contact should be assigned');
         }
     }
@@ -682,12 +784,21 @@ public class EventBooking_SchTestClass {
     @IsTest
     static void testBookingEvents() {
         System.runAs(getRunAsUser()) {
-            Event__c evt = [SELECT Id FROM Event__c LIMIT 1];
-            Expert_Location__c loc = [SELECT Id FROM Expert_Location__c LIMIT 1];
+            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+            // Event__c evt = [SELECT Id FROM Event__c LIMIT 1];
+            Event__c evt = [SELECT Id FROM Event__c WITH USER_MODE LIMIT 1];
+            //changes end here by Abuzar
+            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+            // Expert_Location__c loc = [SELECT Id FROM Expert_Location__c LIMIT 1];
+            Expert_Location__c loc = [SELECT Id FROM Expert_Location__c WITH USER_MODE LIMIT 1];
+            //changes end here by Abuzar
 
             // Create Event Allocation for testing
             Id allocRecordTypeId = Schema.SObjectType.Event_Allocation__c.getRecordTypeInfosByDeveloperName().get('Event').getRecordTypeId();
-            Event_Zone__c zone = [SELECT Id FROM Event_Zone__c LIMIT 1];
+            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+            // Event_Zone__c zone = [SELECT Id FROM Event_Zone__c LIMIT 1];
+            Event_Zone__c zone = [SELECT Id FROM Event_Zone__c WITH USER_MODE LIMIT 1];
+            //changes end here by Abuzar
 
             Event_Allocation__c alloc = new Event_Allocation__c(
                 Event__c = evt.Id,
@@ -710,7 +821,10 @@ public class EventBooking_SchTestClass {
     @IsTest
     static void testGetCreateRecord() {
         System.runAs(getRunAsUser()) {
-            Registration_SCH__c reg = [SELECT Id FROM Registration_SCH__c LIMIT 1];
+            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+            // Registration_SCH__c reg = [SELECT Id FROM Registration_SCH__c LIMIT 1];
+            Registration_SCH__c reg = [SELECT Id FROM Registration_SCH__c WITH USER_MODE LIMIT 1];
+            //changes end here by Abuzar
 
             List<Registration_SCH__c> personList = new List<Registration_SCH__c>();
             Registration_SCH__c person = new Registration_SCH__c(
@@ -745,7 +859,10 @@ public class EventBooking_SchTestClass {
     @IsTest
     static void testGetCreateRecordNonIndividual() {
         System.runAs(getRunAsUser()) {
-            Registration_SCH__c reg = [SELECT Id FROM Registration_SCH__c LIMIT 1];
+            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+            // Registration_SCH__c reg = [SELECT Id FROM Registration_SCH__c LIMIT 1];
+            Registration_SCH__c reg = [SELECT Id FROM Registration_SCH__c WITH USER_MODE LIMIT 1];
+            //changes end here by Abuzar
 
             List<Registration_SCH__c> personList = new List<Registration_SCH__c>();
             Registration_SCH__c person = new Registration_SCH__c(
@@ -780,8 +897,14 @@ public class EventBooking_SchTestClass {
     @IsTest
     static void testGetCreateContact() {
         System.runAs(getRunAsUser()) {
-            Event__c evt = [SELECT Id FROM Event__c LIMIT 1];
-            Expert_Location__c loc = [SELECT Id FROM Expert_Location__c LIMIT 1];
+            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+            // Event__c evt = [SELECT Id FROM Event__c LIMIT 1];
+            Event__c evt = [SELECT Id FROM Event__c WITH USER_MODE LIMIT 1];
+            //changes end here by Abuzar
+            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+            // Expert_Location__c loc = [SELECT Id FROM Expert_Location__c LIMIT 1];
+            Expert_Location__c loc = [SELECT Id FROM Expert_Location__c WITH USER_MODE LIMIT 1];
+            //changes end here by Abuzar
 
             // Use a unique email that has no existing Contact so the method will create one
             String uniqueEmail = 'newcontact_' + System.currentTimeMillis() + '@testdomain.com';
@@ -806,11 +929,18 @@ public class EventBooking_SchTestClass {
 
             // Re-query so serialized JSON contains all fields (Customer_Email__c etc.)
             // Serializing the inserted SObject directly can produce nulls for unqueried fields
+            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+            // Registration_SCH__c requeried = [
+            //     SELECT Id, Event__c, Expert_Location__c, Customer_Name__c, Customer_Lastname__c,
+            //            Customer_Email__c, Customer_Contact__c, Status__c, Registration_Type__c
+            //     FROM Registration_SCH__c WHERE Id = :newReg.Id LIMIT 1
+            // ];
             Registration_SCH__c requeried = [
                 SELECT Id, Event__c, Expert_Location__c, Customer_Name__c, Customer_Lastname__c,
                        Customer_Email__c, Customer_Contact__c, Status__c, Registration_Type__c
-                FROM Registration_SCH__c WHERE Id = :newReg.Id LIMIT 1
+                FROM Registration_SCH__c WHERE Id = :newReg.Id WITH USER_MODE LIMIT 1
             ];
+            //changes end here by Abuzar
             regList.add(requeried);
 
             String regJSON = JSON.serialize(regList);
@@ -822,7 +952,10 @@ public class EventBooking_SchTestClass {
             System.assertNotEquals(null, result, 'Should return registration ID');
 
             // Verify contact was created
-            Registration_SCH__c updatedReg = [SELECT Id, Contact__c FROM Registration_SCH__c WHERE Id = :newReg.Id LIMIT 1];
+            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+            // Registration_SCH__c updatedReg = [SELECT Id, Contact__c FROM Registration_SCH__c WHERE Id = :newReg.Id LIMIT 1];
+            Registration_SCH__c updatedReg = [SELECT Id, Contact__c FROM Registration_SCH__c WHERE Id = :newReg.Id WITH USER_MODE LIMIT 1];
+            //changes end here by Abuzar
             System.assertNotEquals(null, updatedReg.Contact__c, 'Contact should be created');
         }
     }
@@ -830,9 +963,18 @@ public class EventBooking_SchTestClass {
     @IsTest
     static void testGetCreateContactWithExisting() {
         System.runAs(getRunAsUser()) {
-            Contact existingContact = [SELECT Id FROM Contact LIMIT 1];
-            Event__c evt = [SELECT Id FROM Event__c LIMIT 1];
-            Expert_Location__c loc = [SELECT Id FROM Expert_Location__c LIMIT 1];
+            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+            // Contact existingContact = [SELECT Id FROM Contact LIMIT 1];
+            Contact existingContact = [SELECT Id FROM Contact WITH USER_MODE LIMIT 1];
+            //changes end here by Abuzar
+            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+            // Event__c evt = [SELECT Id FROM Event__c LIMIT 1];
+            Event__c evt = [SELECT Id FROM Event__c WITH USER_MODE LIMIT 1];
+            //changes end here by Abuzar
+            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+            // Expert_Location__c loc = [SELECT Id FROM Expert_Location__c LIMIT 1];
+            Expert_Location__c loc = [SELECT Id FROM Expert_Location__c WITH USER_MODE LIMIT 1];
+            //changes end here by Abuzar
 
             List<Registration_SCH__c> regList = new List<Registration_SCH__c>();
             Registration_SCH__c newReg = new Registration_SCH__c(
@@ -877,7 +1019,10 @@ public class EventBooking_SchTestClass {
     @IsTest
     static void testGetUpdateReg() {
         System.runAs(getRunAsUser()) {
-            Registration_SCH__c reg = [SELECT Id FROM Registration_SCH__c LIMIT 1];
+            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+            // Registration_SCH__c reg = [SELECT Id FROM Registration_SCH__c LIMIT 1];
+            Registration_SCH__c reg = [SELECT Id FROM Registration_SCH__c WITH USER_MODE LIMIT 1];
+            //changes end here by Abuzar
 
             Test.startTest();
             Registration_SCH__c result = EventBooking_Sch.getUpdateReg(reg.Id);
@@ -886,7 +1031,10 @@ public class EventBooking_SchTestClass {
             System.assertEquals(null, result, 'Should return null');
 
             // Verify status was updated
-            Registration_SCH__c updatedReg = [SELECT Id, Status__c FROM Registration_SCH__c WHERE Id = :reg.Id LIMIT 1];
+            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+            // Registration_SCH__c updatedReg = [SELECT Id, Status__c FROM Registration_SCH__c WHERE Id = :reg.Id LIMIT 1];
+            Registration_SCH__c updatedReg = [SELECT Id, Status__c FROM Registration_SCH__c WHERE Id = :reg.Id WITH USER_MODE LIMIT 1];
+            //changes end here by Abuzar
             System.assertEquals('Cancelled', updatedReg.Status__c, 'Status should be Cancelled');
         }
     }
@@ -894,8 +1042,14 @@ public class EventBooking_SchTestClass {
     @IsTest
     static void testCreateReg() {
         System.runAs(getRunAsUser()) {
-            Event__c evt = [SELECT Id FROM Event__c LIMIT 1];
-            Expert_Location__c loc = [SELECT Id FROM Expert_Location__c LIMIT 1];
+            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+            // Event__c evt = [SELECT Id FROM Event__c LIMIT 1];
+            Event__c evt = [SELECT Id FROM Event__c WITH USER_MODE LIMIT 1];
+            //changes end here by Abuzar
+            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+            // Expert_Location__c loc = [SELECT Id FROM Expert_Location__c LIMIT 1];
+            Expert_Location__c loc = [SELECT Id FROM Expert_Location__c WITH USER_MODE LIMIT 1];
+            //changes end here by Abuzar
             EventBooking_Sch.RegRequest req = new EventBooking_Sch.RegRequest();
             req.fname = 'NewFirst';
             req.lname = 'NewLast';
