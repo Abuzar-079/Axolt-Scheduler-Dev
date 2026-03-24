@@ -1,3 +1,1 @@
-main/.DS_Store
-main/default/.DS_Store
 main/default/classes/Queue_Sch_Support.cls

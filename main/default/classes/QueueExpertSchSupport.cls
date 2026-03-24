@@ -72,7 +72,10 @@ public inherited sharing class QueueExpertSchSupport {
         if (String.isBlank(userId)) {
             return null;
         }
-        List<User> users = [SELECT Id, Name FROM User WHERE Id = :userId WITH SECURITY_ENFORCED LIMIT 1];
+        // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+        // List<User> users = [SELECT Id, Name FROM User WHERE Id = :userId WITH SECURITY_ENFORCED LIMIT 1];
+        List<User> users = [SELECT Id, Name FROM User WHERE Id = :userId WITH USER_MODE LIMIT 1];
+        //changes end here by Abuzar
         return users.isEmpty() ? null : users[0].Name;
     }
 
@@ -233,12 +236,20 @@ public inherited sharing class QueueExpertSchSupport {
         //                         Twilio_Message__c, Queue__c,Queue__r.Name,Customer_Type__c, Status__c, Registration_Type__c,Registration_Time__c,Registration_End_Time__c,Product2__r.SCH_Wait_Threshold__c,End_Time__c,Wait_Time_Exceeded__c,
         //                         Meeting_Status__c, Meeting_outcome__c,  Purpose__c,Customer_Name__c, Customer_Lastname__c, Customer_Email__c,Customer_Contact__c, Registration_Price__c,waiting_Time__c, Total_Tax_Amount__c, Discount__c,Booked_Current_Status__c
         //                         FROM Registration_SCH__c WHERE id=:regId LIMIT 1000];
+        // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+        // wrapper.objectValues = [SELECT id, User__c, Name, OwnerId, RecordTypeId, Wait_Time_Exceeded__c, Contact__c, Account__c, Account__r.Flagged__c, Account__r.Name, Expert_Location__c,
+        //                         Company__c, Customer_Status__c, Is_Amount_Refunded__c, Twilio_Message__c, Queue__c, Queue__r.Name, Customer_Type__c, Status__c, Registration_Type__c,
+        //                         Registration_Time__c, Registration_End_Time__c, Product2__r.SCH_Wait_Threshold__c, End_Time__c, Meeting_Status__c, Meeting_outcome__c, Purpose__c,
+        //                         Customer_Name__c, Customer_Lastname__c, Customer_Email__c, Customer_Contact__c, waiting_Time__c, Registration_Price__c, Total_Tax_Amount__c, Discount__c,
+        //                         Booked_Current_Status__c, LastModifiedDate
+        //                         FROM Registration_SCH__c WHERE id = :regId LIMIT 1000];
         wrapper.objectValues = [SELECT id, User__c, Name, OwnerId, RecordTypeId, Wait_Time_Exceeded__c, Contact__c, Account__c, Account__r.Flagged__c, Account__r.Name, Expert_Location__c,
                                 Company__c, Customer_Status__c, Is_Amount_Refunded__c, Twilio_Message__c, Queue__c, Queue__r.Name, Customer_Type__c, Status__c, Registration_Type__c,
                                 Registration_Time__c, Registration_End_Time__c, Product2__r.SCH_Wait_Threshold__c, End_Time__c, Meeting_Status__c, Meeting_outcome__c, Purpose__c,
                                 Customer_Name__c, Customer_Lastname__c, Customer_Email__c, Customer_Contact__c, waiting_Time__c, Registration_Price__c, Total_Tax_Amount__c, Discount__c,
                                 Booked_Current_Status__c, LastModifiedDate
-                                FROM Registration_SCH__c WHERE id = :regId LIMIT 1000];
+                                FROM Registration_SCH__c WHERE id = :regId WITH USER_MODE LIMIT 1000];
+        //changes end here by Abuzar
         //changes end here by abuzar
         loadPrimaryRecordRelatedData(wrapper);
     }
