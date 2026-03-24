@@ -196,7 +196,10 @@ public with sharing class Queue_Sch_Support {
         if (!Schema.sObjectType.Product2.isAccessible()) {
             throw new AuraHandledException('Insufficient permissions to access Product2.');
         }
-        List<Product2> allServices = [SELECT Id, Name FROM Product2 WITH SECURITY_ENFORCED LIMIT 10];
+        // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+        // List<Product2> allServices = [SELECT Id, Name FROM Product2 WITH SECURITY_ENFORCED LIMIT 10];
+        List<Product2> allServices = [SELECT Id, Name FROM Product2 WITH USER_MODE LIMIT 10];
+        //changes end here by Abuzar
         for(Product2 service : allServices){
             wrapper.allServices.add(service.Id);
         }
@@ -396,7 +399,10 @@ public with sharing class Queue_Sch_Support {
     }
 
     private static Integer getWorkbenchRefreshValue(){
-        List<SystemCode__c> sysWB = [SELECT Workbench_Refresh__c FROM SystemCode__c WITH SECURITY_ENFORCED LIMIT 1];
+        // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+        // List<SystemCode__c> sysWB = [SELECT Workbench_Refresh__c FROM SystemCode__c WITH SECURITY_ENFORCED LIMIT 1];
+        List<SystemCode__c> sysWB = [SELECT Workbench_Refresh__c FROM SystemCode__c WITH USER_MODE LIMIT 1];
+        //changes end here by Abuzar
         if(sysWB.isEmpty()){
             return 0;
         }
@@ -404,7 +410,10 @@ public with sharing class Queue_Sch_Support {
     }
 
     private static Set<Id> getActiveLocationIds(){
-        List<Queue__c> queueLocations = [SELECT Id, Location__c, Location__r.Name FROM Queue__c WHERE Status__c = 'Active' WITH SECURITY_ENFORCED LIMIT 1000];
+        // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+        // List<Queue__c> queueLocations = [SELECT Id, Location__c, Location__r.Name FROM Queue__c WHERE Status__c = 'Active' WITH SECURITY_ENFORCED LIMIT 1000];
+        List<Queue__c> queueLocations = [SELECT Id, Location__c, Location__r.Name FROM Queue__c WHERE Status__c = 'Active' WITH USER_MODE LIMIT 1000];
+        //changes end here by Abuzar
         Set<Id> locationIds = new Set<Id>();
         for(Queue__c queueLocation : queueLocations){
             locationIds.add(queueLocation.Location__c);
