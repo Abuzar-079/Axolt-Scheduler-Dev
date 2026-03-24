@@ -920,23 +920,13 @@ public with sharing class EventBooking_Sch {
             return null;
         }
 
-        // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
-        // List<Expert_Location__c> locationList = [
-        //     SELECT Id, Name, Address__c, City__c, Province_State__c,
-        //            Country__c, Zip_Code__c
-        //     FROM Expert_Location__c
-        //     WHERE Id = :locId
-        //     LIMIT 1
-        // ];
         List<Expert_Location__c> locationList = [
             SELECT Id, Name, Address__c, City__c, Province_State__c,
                    Country__c, Zip_Code__c
             FROM Expert_Location__c
             WHERE Id = :locId
-            WITH USER_MODE
             LIMIT 1
         ];
-        //changes end here by Abuzar
         return locationList.isEmpty() ? null : locationList[0];
     }
 
@@ -967,10 +957,7 @@ public with sharing class EventBooking_Sch {
     }
 
     private static Contact fetchCurrentUserContact() {
-        // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
-        // User lu = [SELECT Id, Name, ContactId FROM User WHERE Id = :UserInfo.getUserId() WITH SECURITY_ENFORCED LIMIT 1];
-        User lu = [SELECT Id, Name, ContactId FROM User WHERE Id = :UserInfo.getUserId() WITH USER_MODE LIMIT 1];
-        //changes end here by Abuzar
+        User lu = [SELECT Id, Name, ContactId FROM User WHERE Id = :UserInfo.getUserId() WITH SECURITY_ENFORCED LIMIT 1];
         if (lu.ContactId == null) {
             return null;
         }
@@ -1552,22 +1539,13 @@ public with sharing class EventBooking_Sch {
         evallocRecType = Schema.SObjectType.Event_Allocation__c.getRecordTypeInfosByDeveloperName().get('Event').getRecordTypeId();
         options.add(new OptionWrapper('', '--All Regions--'));
         if (Schema.sObjectType.Event_Allocation__c.isAccessible()) {
-            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
-            // for (Event_Allocation__c loc : [
-            //     SELECT Id, Name, Location__r.Province_State__c, Event_Type__c, Event__r.Name,
-            //            Location__r.Show_Experts__c, Event__r.Description__c, Expert__c, Location__c,
-            //            Location__r.Name, Location__r.City__c, Event__r.End_Date__c, Event__r.Start_Date__c
-            //     FROM Event_Allocation__c
-            //     WHERE Active__c = true AND RecordTypeId = :evallocRecType LIMIT 1000
-            // ]) {
             for (Event_Allocation__c loc : [
                 SELECT Id, Name, Location__r.Province_State__c, Event_Type__c, Event__r.Name,
                        Location__r.Show_Experts__c, Event__r.Description__c, Expert__c, Location__c,
                        Location__r.Name, Location__r.City__c, Event__r.End_Date__c, Event__r.Start_Date__c
                 FROM Event_Allocation__c
-                WHERE Active__c = true AND RecordTypeId = :evallocRecType WITH USER_MODE LIMIT 1000
+                WHERE Active__c = true AND RecordTypeId = :evallocRecType LIMIT 1000
             ]) {
-                //changes end here by Abuzar
                 options.add(new OptionWrapper(String.valueOf(loc.Id), loc.Location__r.Name));
             }
         }
@@ -1585,24 +1563,6 @@ public with sharing class EventBooking_Sch {
     public static EventBooking_Sch getEvents() {
         List<Event__c> evList = new List<Event__c>();
         if (Schema.sObjectType.Event__c.isAccessible()) {
-            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
-            // evList = [
-            //     SELECT Id, Name, Picture__c, Type_Of_Event__c, Organisers__c, Organisers__r.Name,
-            //            Start_Date__c, Description__c, Event_Location__r.Name, Event_Location__c,
-            //            End_Date__c, Registration_Start_Date__c, Registration_End_Date__c,
-            //            Expert_Location__c, Event_Type__c, Event_Status__c,
-            //            RecordType.DeveloperName, Event_Location__r.Address__c,
-            //            Event_Location__r.City__c, Event_Location__r.Province_State__c,
-            //            Is_Expert_Required__c, Event_Location__r.Zip_Code__c,
-            //            Event_Location__r.Country__c, Active__c, Event_Location__r.Show_Experts__c,
-            //            Booked_Registrations__c, Available_Registrations__c
-            //     FROM Event__c
-            //     WHERE Event_Location__c != null
-            //     AND Event_Status__c = 'Active'
-            //     AND (Allow_Waiting_List__c = true OR Available_Registrations__c > 0)
-            //     AND End_Date__c >= TODAY
-            //     ORDER BY Start_Date__c LIMIT 1000
-            // ];
             evList = [
                 SELECT Id, Name, Picture__c, Type_Of_Event__c, Organisers__c, Organisers__r.Name,
                        Start_Date__c, Description__c, Event_Location__r.Name, Event_Location__c,
@@ -1618,10 +1578,8 @@ public with sharing class EventBooking_Sch {
                 AND Event_Status__c = 'Active'
                 AND (Allow_Waiting_List__c = true OR Available_Registrations__c > 0)
                 AND End_Date__c >= TODAY
-                WITH USER_MODE
                 ORDER BY Start_Date__c LIMIT 1000
             ];
-            //changes end here by Abuzar
         }
         for (Integer i = 0; i < evList.size(); i++) {
             evList[i].Active__c = true;
@@ -1635,20 +1593,12 @@ public with sharing class EventBooking_Sch {
         if (evList.size() > 0) {
             eb.eventList = evList;
         }
-        // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
-        // List<Document> docList = [
-        //     SELECT Id, Name, ContentType FROM Document
-        //     WHERE Name LIKE :'%EventPic%'
-        //     AND ContentType IN ('image/png', 'image/jpeg', 'image/gif')
-        //     WITH SECURITY_ENFORCED LIMIT 1
-        // ];
         List<Document> docList = [
             SELECT Id, Name, ContentType FROM Document
             WHERE Name LIKE :'%EventPic%'
             AND ContentType IN ('image/png', 'image/jpeg', 'image/gif')
-            WITH USER_MODE LIMIT 1
+            WITH SECURITY_ENFORCED LIMIT 1
         ];
-        //changes end here by Abuzar
         if (docList.size() > 0) {
             eb.fileImageId = docList[0].Id;
         }
@@ -1667,18 +1617,6 @@ public with sharing class EventBooking_Sch {
     public static Event__c getEvent(String eId) {
         Event__c evt = new Event__c();
         if (Schema.sObjectType.Event__c.isAccessible()) {
-            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
-            // evt = [
-            //     SELECT Id, Name, Type_Of_Event__c, Organisers__c, Organisers__r.Name,
-            //            Start_Date__c, Description__c, Event_Location__r.Name, Event_Location__c,
-            //            End_Date__c, Registration_Start_Date__c, Registration_End_Date__c,
-            //            Expert_Location__c, Event_Type__c, Event_Status__c,
-            //            RecordType.DeveloperName, Event_Location__r.Address__c,
-            //            Event_Location__r.City__c, Event_Location__r.Province_State__c,
-            //            Event_Location__r.Zip_Code__c, Event_Location__r.Country__c,
-            //            Active__c, Event_Location__r.Show_Experts__c
-            //     FROM Event__c WHERE Id = :eId LIMIT 1
-            // ];
             evt = [
                 SELECT Id, Name, Type_Of_Event__c, Organisers__c, Organisers__r.Name,
                        Start_Date__c, Description__c, Event_Location__r.Name, Event_Location__c,
@@ -1688,9 +1626,8 @@ public with sharing class EventBooking_Sch {
                        Event_Location__r.City__c, Event_Location__r.Province_State__c,
                        Event_Location__r.Zip_Code__c, Event_Location__r.Country__c,
                        Active__c, Event_Location__r.Show_Experts__c
-                FROM Event__c WHERE Id = :eId WITH USER_MODE LIMIT 1
+                FROM Event__c WHERE Id = :eId LIMIT 1
             ];
-            //changes end here by Abuzar
         }
         if (evt.Registration_Start_Date__c < System.now()) {
             evt.Active__c = true;
@@ -1712,18 +1649,6 @@ public with sharing class EventBooking_Sch {
     public static Event__c getWEAEvent(String eventId) {
         Event__c ev = new Event__c();
         if (Schema.sObjectType.Event__c.isAccessible()) {
-            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
-            // ev = [
-            //     SELECT Id, Name, Type_Of_Event__c, Organisers__c, Organisers__r.Name,
-            //            Start_Date__c, Description__c, Event_Location__r.Name, Event_Location__c,
-            //            End_Date__c, Registration_Start_Date__c, Registration_End_Date__c,
-            //            Expert_Location__c, Event_Type__c, Event_Status__c,
-            //            RecordType.DeveloperName, Event_Location__r.Address__c,
-            //            Event_Location__r.City__c, Event_Location__r.Province_State__c,
-            //            Event_Location__r.Zip_Code__c, Event_Location__r.Country__c,
-            //            Active__c, Event_Location__r.Show_Experts__c
-            //     FROM Event__c WHERE Id = :eventId LIMIT 1
-            // ];
             ev = [
                 SELECT Id, Name, Type_Of_Event__c, Organisers__c, Organisers__r.Name,
                        Start_Date__c, Description__c, Event_Location__r.Name, Event_Location__c,
@@ -1733,9 +1658,8 @@ public with sharing class EventBooking_Sch {
                        Event_Location__r.City__c, Event_Location__r.Province_State__c,
                        Event_Location__r.Zip_Code__c, Event_Location__r.Country__c,
                        Active__c, Event_Location__r.Show_Experts__c
-                FROM Event__c WHERE Id = :eventId WITH USER_MODE LIMIT 1
+                FROM Event__c WHERE Id = :eventId LIMIT 1
             ];
-            //changes end here by Abuzar
         }
         return ev;
     }
@@ -1823,18 +1747,6 @@ public with sharing class EventBooking_Sch {
             evallocRecType = Schema.SObjectType.Event_Allocation__c.getRecordTypeInfosByDeveloperName().get('Event').getRecordTypeId();
         }
         if (Schema.sObjectType.Event_Allocation__c.isAccessible()) {
-            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
-            // eventAllocList = [
-            //     SELECT Id, Name, Event_Zone__c, Event_Zone__r.Name, Location__c, Location__r.Name,
-            //            Location__r.Address__c, Location__r.City__c, Location__r.Province_State__c,
-            //            Location__r.Country__c, Location__r.Zip_Code__c,
-            //            Event_Zone__r.Start_Date__c, Event_Zone__r.End_Date__c,
-            //            Event_Zone__r.Available_Registrations__c,
-            //            Event__c, Event__r.Description__c, Event__r.Name
-            //     FROM Event_Allocation__c
-            //     WHERE Id = :eAllocId AND Event__c = :eventId AND Location__c = :locationId
-            //     LIMIT 1
-            // ];
             eventAllocList = [
                 SELECT Id, Name, Event_Zone__c, Event_Zone__r.Name, Location__c, Location__r.Name,
                        Location__r.Address__c, Location__r.City__c, Location__r.Province_State__c,
@@ -1844,10 +1756,8 @@ public with sharing class EventBooking_Sch {
                        Event__c, Event__r.Description__c, Event__r.Name
                 FROM Event_Allocation__c
                 WHERE Id = :eAllocId AND Event__c = :eventId AND Location__c = :locationId
-                WITH USER_MODE
                 LIMIT 1
             ];
-            //changes end here by Abuzar
         }
         return eventAllocList;
     }
@@ -2232,10 +2142,7 @@ public with sharing class EventBooking_Sch {
     public static Boolean checkAvailability(String zoneId) {
         Event_Zone__c zn = new Event_Zone__c();
         if (Schema.sObjectType.Event_Zone__c.isAccessible()) {
-            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
-            // zn = [SELECT Id, Name, Available_Registrations__c FROM Event_Zone__c WHERE Id = :zoneId WITH SECURITY_ENFORCED LIMIT 1];
-            zn = [SELECT Id, Name, Available_Registrations__c FROM Event_Zone__c WHERE Id = :zoneId WITH USER_MODE LIMIT 1];
-            //changes end here by Abuzar
+            zn = [SELECT Id, Name, Available_Registrations__c FROM Event_Zone__c WHERE Id = :zoneId WITH SECURITY_ENFORCED LIMIT 1];
         }
         if (Integer.valueOf(zn.Available_Registrations__c) > 0) {
             return true;
@@ -2493,21 +2400,12 @@ public with sharing class EventBooking_Sch {
             return new Event__c();
         }
 
-        // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
-        // return [
-        //     SELECT Id, Name, Start_Date__c, End_Date__c
-        //     FROM Event__c
-        //     WHERE Id = :eventId
-        //     LIMIT 1
-        // ];
         return [
             SELECT Id, Name, Start_Date__c, End_Date__c
             FROM Event__c
             WHERE Id = :eventId
-            WITH USER_MODE
             LIMIT 1
         ];
-        //changes end here by Abuzar
     }
 
     private static void applyBookRegTimeFields(
@@ -2621,25 +2519,6 @@ public with sharing class EventBooking_Sch {
     }
 
     private static Registration_SCH__c fetchBookedRegistration(String regisId) {
-        // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
-        // return [
-        //     SELECT Id, Name, LastModified__c, Account__c, Category_of_registration__c,
-        //            Customer_Email__c, Customer_Name__c, Customer_Lastname__c, Customer_Contact__c,
-        //            Customer_Status__c, Customer_Type__c, Event__c, Event__r.Name,
-        //            Event__r.RecordType.DeveloperName, Event_Zone__c, Event_Zone__r.Name,
-        //            Expert_Location__c, Meeting_Status__c, Membership_Points__c, Product2__c,
-        //            Registration_DateD__c, Registration_End_Time__c, Registration_DateT__c,
-        //            Registration_Type__c, Registration_Time__c, End_Time__c, Status__c,
-        //            Event_Zone__r.Event_Zone_Location__c, Event_Zone__r.Event_Zone_Location__r.Name,
-        //            Expert_Location__r.Show_Experts__c, Expert_Location__r.Name,
-        //            Expert_Location__r.Address__c, Expert_Location__r.City__c,
-        //            Expert_Location__r.Province_State__c, Expert_Location__r.Country__c,
-        //            Expert_Location__r.Zip_Code__c, Event__r.Start_Date__c, Event__r.End_Date__c,
-        //            Event__r.Description__c, Event__r.Event_Type__c
-        //     FROM Registration_SCH__c
-        //     WHERE Id = :regisId
-        //     LIMIT 1
-        // ];
         return [
             SELECT Id, Name, LastModified__c, Account__c, Category_of_registration__c,
                    Customer_Email__c, Customer_Name__c, Customer_Lastname__c, Customer_Contact__c,
@@ -2656,10 +2535,8 @@ public with sharing class EventBooking_Sch {
                    Event__r.Description__c, Event__r.Event_Type__c
             FROM Registration_SCH__c
             WHERE Id = :regisId
-            WITH USER_MODE
             LIMIT 1
         ];
-        //changes end here by Abuzar
     }
 
     private static String parseBookRegException(Exception ex) {
@@ -2686,26 +2563,16 @@ public with sharing class EventBooking_Sch {
     public static Integer checkQuantityValidationForFree(String eventId, String zoneId, Integer quantity) {
         Integer quantityValMsg = 0;
         if (String.isNotEmpty(zoneId)) {
-            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
-            // Event_Zone__c zone = [
-            //     SELECT Id, Name, Available_Registrations__c FROM Event_Zone__c WHERE Id = :zoneId LIMIT 1
-            // ];
             Event_Zone__c zone = [
-                SELECT Id, Name, Available_Registrations__c FROM Event_Zone__c WHERE Id = :zoneId WITH USER_MODE LIMIT 1
+                SELECT Id, Name, Available_Registrations__c FROM Event_Zone__c WHERE Id = :zoneId LIMIT 1
             ];
-            //changes end here by Abuzar
             if (Integer.valueOf(zone.Available_Registrations__c) < Integer.valueOf(quantity)) {
                 quantityValMsg = Integer.valueOf(zone.Available_Registrations__c);
             }
         } else if (String.isNotEmpty(eventId)) {
-            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
-            // Event__c evt = [
-            //     SELECT Id, Name, Available_Registrations__c FROM Event__c WHERE Id = :eventId LIMIT 1
-            // ];
             Event__c evt = [
-                SELECT Id, Name, Available_Registrations__c FROM Event__c WHERE Id = :eventId WITH USER_MODE LIMIT 1
+                SELECT Id, Name, Available_Registrations__c FROM Event__c WHERE Id = :eventId LIMIT 1
             ];
-            //changes end here by Abuzar
             if (Integer.valueOf(evt.Available_Registrations__c) < Integer.valueOf(quantity)) {
                 quantityValMsg = Integer.valueOf(evt.Available_Registrations__c);
             }
@@ -3767,10 +3634,7 @@ public with sharing class EventBooking_Sch {
         if (firstReg.Id == null || String.isEmpty(contactId)) {
             return true;
         }
-        // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
-        // Registration_SCH__c existing = [SELECT Id, Contact__c FROM Registration_SCH__c WHERE Id = :firstReg.Id LIMIT 1];
-        Registration_SCH__c existing = [SELECT Id, Contact__c FROM Registration_SCH__c WHERE Id = :firstReg.Id WITH USER_MODE LIMIT 1];
-        //changes end here by Abuzar
+        Registration_SCH__c existing = [SELECT Id, Contact__c FROM Registration_SCH__c WHERE Id = :firstReg.Id LIMIT 1];
         return existing.Contact__c == null;
     }
 
@@ -4079,25 +3943,14 @@ public with sharing class EventBooking_Sch {
     @AuraEnabled
     public static List<RecordWrp> getSearchRecords(String searchString) {
         Set<RecordWrp> rwSet = new Set<RecordWrp>();
-        // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
-        // for (Contact c : [
-        //     SELECT Id, Name, FirstName, LastName, Email, Phone, MobilePhone, AccountId
-        //     FROM Contact
-        //     WHERE Name LIKE :('%' + searchString + '%')
-        //     OR Email LIKE :('%' + searchString + '%')
-        //     OR MobilePhone LIKE :('%' + searchString + '%')
-        //     ORDER BY LastModifiedDate LIMIT 5
-        // ]) {
         for (Contact c : [
             SELECT Id, Name, FirstName, LastName, Email, Phone, MobilePhone, AccountId
             FROM Contact
             WHERE Name LIKE :('%' + searchString + '%')
             OR Email LIKE :('%' + searchString + '%')
             OR MobilePhone LIKE :('%' + searchString + '%')
-            WITH USER_MODE
             ORDER BY LastModifiedDate LIMIT 5
         ]) {
-            //changes end here by Abuzar
             RecordWrp w = new RecordWrp();
             w.id = c.Id;
             w.name = c.Name;
@@ -4262,41 +4115,21 @@ public with sharing class EventBooking_Sch {
     private static Contact findExistingContact(RegRequest req) {
         List<Contact> cons;
         if (String.isNotEmpty(req.phone)) {
-            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
-            // cons = [
-            //     SELECT Id, FirstName, LastName, Phone, MobilePhone, Email
-            //     FROM Contact
-            //     WHERE MobilePhone = :req.phone OR Email = :req.email
-            //     ORDER BY LastModifiedDate DESC
-            //     LIMIT 1000
-            // ];
             cons = [
                 SELECT Id, FirstName, LastName, Phone, MobilePhone, Email
                 FROM Contact
                 WHERE MobilePhone = :req.phone OR Email = :req.email
-                WITH USER_MODE
                 ORDER BY LastModifiedDate DESC
                 LIMIT 1000
             ];
-            //changes end here by Abuzar
         } else {
-            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
-            // cons = [
-            //     SELECT Id, FirstName, LastName, Phone, MobilePhone, Email
-            //     FROM Contact
-            //     WHERE Email = :req.email
-            //     ORDER BY LastModifiedDate DESC
-            //     LIMIT 1000
-            // ];
             cons = [
                 SELECT Id, FirstName, LastName, Phone, MobilePhone, Email
                 FROM Contact
                 WHERE Email = :req.email
-                WITH USER_MODE
                 ORDER BY LastModifiedDate DESC
                 LIMIT 1000
             ];
-            //changes end here by Abuzar
         }
         return cons.isEmpty() ? new Contact() : cons[0];
     }
@@ -4650,25 +4483,14 @@ public with sharing class EventBooking_Sch {
 
         
         Registration_SCH__c pr = parentRegs[0];
-        // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
-        // List<Contact> existingContacts = [
-        //     SELECT Id FROM Contact
-        //     WHERE FirstName = :pr.Customer_Name__c
-        //     AND LastName = :pr.Customer_Lastname__c
-        //     AND Email = :pr.Customer_Email__c
-        //     AND (MobilePhone = :pr.Customer_Contact__c OR Phone = :pr.Customer_Contact__c)
-        //     LIMIT 1
-        // ];
         List<Contact> existingContacts = [
             SELECT Id FROM Contact
             WHERE FirstName = :pr.Customer_Name__c
             AND LastName = :pr.Customer_Lastname__c
             AND Email = :pr.Customer_Email__c
             AND (MobilePhone = :pr.Customer_Contact__c OR Phone = :pr.Customer_Contact__c)
-            WITH USER_MODE
             LIMIT 1
         ];
-        //changes end here by Abuzar
 
         if (!existingContacts.isEmpty()) {
             pr.Contact__c = existingContacts[0].Id;
@@ -4762,18 +4584,11 @@ public with sharing class EventBooking_Sch {
             regIds.add(reg.Id);
         }
 
-        // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
-        // return [
-        //     SELECT Id, Name, Registration_Time__c, End_Time__c, Event__r.Name,
-        //            Event_Zone__r.Name, Expert_Location__r.Name, Number_of_other_persons__c
-        //     FROM Registration_SCH__c WHERE Id IN :regIds LIMIT 1000
-        // ];
         return [
             SELECT Id, Name, Registration_Time__c, End_Time__c, Event__r.Name,
                    Event_Zone__r.Name, Expert_Location__r.Name, Number_of_other_persons__c
-            FROM Registration_SCH__c WHERE Id IN :regIds WITH USER_MODE LIMIT 1000
+            FROM Registration_SCH__c WHERE Id IN :regIds LIMIT 1000
         ];
-        //changes end here by Abuzar
     }
     //changes end here by abuzar
 
@@ -4979,10 +4794,7 @@ public with sharing class EventBooking_Sch {
             errMsg = '';
             dateColumnList = new List<DateColumn>();
             this.portalUser = false;
-            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
-            // User lu = [SELECT Id, Name, ContactId FROM User WHERE Id = :UserInfo.getUserId() WITH SECURITY_ENFORCED LIMIT 1];
-            User lu = [SELECT Id, Name, ContactId FROM User WHERE Id = :UserInfo.getUserId() WITH USER_MODE LIMIT 1];
-            //changes end here by Abuzar
+            User lu = [SELECT Id, Name, ContactId FROM User WHERE Id = :UserInfo.getUserId() WITH SECURITY_ENFORCED LIMIT 1];
             if (lu.ContactId != null) {
                 this.portalUser = true;
             }
