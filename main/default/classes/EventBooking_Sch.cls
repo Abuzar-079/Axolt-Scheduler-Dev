@@ -4480,6 +4480,8 @@ public with sharing class EventBooking_Sch {
 
 
         
+
+        
         Registration_SCH__c pr = parentRegs[0];
         List<Contact> existingContacts = [
             SELECT Id FROM Contact
