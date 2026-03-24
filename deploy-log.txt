@@ -1,0 +1,81 @@
+{
+  "status": 0,
+  "result": {
+    "checkOnly": false,
+    "completedDate": "2026-03-24T12:39:09.000Z",
+    "createdBy": "005dM00000XiF8P",
+    "createdByName": "Abu zar",
+    "createdDate": "2026-03-24T12:39:08.000Z",
+    "details": {
+      "componentSuccesses": [
+        {
+          "changed": true,
+          "componentType": "ApexClass",
+          "created": false,
+          "createdDate": "2026-03-24T12:39:09.000Z",
+          "deleted": false,
+          "fileName": "classes/Queue_Sch_Support.cls",
+          "fullName": "Queue_Sch_Support",
+          "id": "01pdM00000TRgduQAD",
+          "success": true
+        },
+        {
+          "changed": true,
+          "componentType": "",
+          "created": false,
+          "createdDate": "2026-03-24T12:39:09.000Z",
+          "deleted": false,
+          "fileName": "package.xml",
+          "fullName": "package.xml",
+          "success": true
+        }
+      ],
+      "runTestResult": {
+        "numFailures": 0,
+        "numTestsRun": 0,
+        "totalTime": 0,
+        "codeCoverage": [],
+        "codeCoverageWarnings": [],
+        "failures": [],
+        "flowCoverage": [],
+        "flowCoverageWarnings": [],
+        "successes": []
+      },
+      "componentFailures": []
+    },
+    "done": true,
+    "id": "0AfdM00000XP5r8SAD",
+    "ignoreWarnings": false,
+    "lastModifiedDate": "2026-03-24T12:39:09.000Z",
+    "numberComponentErrors": 0,
+    "numberComponentsDeployed": 1,
+    "numberComponentsTotal": 1,
+    "numberFiles": "4",
+    "numberTestErrors": 0,
+    "numberTestsCompleted": 0,
+    "numberTestsTotal": 0,
+    "rollbackOnError": true,
+    "runTestsEnabled": false,
+    "startDate": "2026-03-24T12:39:08.000Z",
+    "status": "Succeeded",
+    "success": true,
+    "zipSize": 5287,
+    "files": [
+      {
+        "fullName": "Queue_Sch_Support",
+        "type": "ApexClass",
+        "state": "Changed",
+        "filePath": "/Users/abuzar/Documents/Axolt/Scheduler dev/force-app/main/default/classes/Queue_Sch_Support.cls"
+      },
+      {
+        "fullName": "Queue_Sch_Support",
+        "type": "ApexClass",
+        "state": "Changed",
+        "filePath": "/Users/abuzar/Documents/Axolt/Scheduler dev/force-app/main/default/classes/Queue_Sch_Support.cls-meta.xml"
+      }
+    ],
+    "zipFileCount": 3,
+    "deployUrl": "https://orgfarm-2a16d57383-dev-ed.develop.my.salesforce.com/lightning/setup/DeployStatus/page?address=%2Fchangemgmt%2FmonitorDeploymentsDetails.apexp%3FasyncId%3D0AfdM00000XP5r8SAD%26retURL%3D%252Fchangemgmt%252FmonitorDeployment.apexp"
+  },
+  "warnings": []
+}
