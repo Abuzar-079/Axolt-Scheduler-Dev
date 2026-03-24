@@ -1,0 +1,116 @@
+{
+  "status": 0,
+  "result": {
+    "checkOnly": false,
+    "completedDate": "2026-03-24T07:47:32.000Z",
+    "createdBy": "005dM00000XiF8P",
+    "createdByName": "Abu zar",
+    "createdDate": "2026-03-24T07:47:26.000Z",
+    "details": {
+      "componentSuccesses": [
+        {
+          "changed": true,
+          "componentType": "ApexClass",
+          "created": false,
+          "createdDate": "2026-03-24T07:47:28.000Z",
+          "deleted": false,
+          "fileName": "classes/EventBooking_Sch.cls",
+          "fullName": "EventBooking_Sch",
+          "id": "01pdM00000TRgdZQAT",
+          "success": true
+        },
+        {
+          "changed": true,
+          "componentType": "LightningComponentBundle",
+          "created": false,
+          "createdDate": "2026-03-24T07:47:31.000Z",
+          "deleted": false,
+          "fileName": "lwc/eventBooking_Sch_LWC",
+          "fullName": "eventBooking_Sch_LWC",
+          "id": "0RbdM000005ZvLWSA0",
+          "success": true
+        },
+        {
+          "changed": true,
+          "componentType": "",
+          "created": false,
+          "createdDate": "2026-03-24T07:47:31.000Z",
+          "deleted": false,
+          "fileName": "package.xml",
+          "fullName": "package.xml",
+          "success": true
+        }
+      ],
+      "runTestResult": {
+        "numFailures": 0,
+        "numTestsRun": 0,
+        "totalTime": 0,
+        "codeCoverage": [],
+        "codeCoverageWarnings": [],
+        "failures": [],
+        "flowCoverage": [],
+        "flowCoverageWarnings": [],
+        "successes": []
+      },
+      "componentFailures": []
+    },
+    "done": true,
+    "id": "0AfdM00000XOHG1SAP",
+    "ignoreWarnings": false,
+    "lastModifiedDate": "2026-03-24T07:47:32.000Z",
+    "numberComponentErrors": 0,
+    "numberComponentsDeployed": 2,
+    "numberComponentsTotal": 2,
+    "numberFiles": "10",
+    "numberTestErrors": 0,
+    "numberTestsCompleted": 0,
+    "numberTestsTotal": 0,
+    "rollbackOnError": true,
+    "runTestsEnabled": false,
+    "startDate": "2026-03-24T07:47:26.000Z",
+    "status": "Succeeded",
+    "success": true,
+    "zipSize": 61674,
+    "files": [
+      {
+        "fullName": "EventBooking_Sch",
+        "type": "ApexClass",
+        "state": "Changed",
+        "filePath": "/Users/abuzar/Documents/Axolt/Scheduler dev/force-app/main/default/classes/EventBooking_Sch.cls"
+      },
+      {
+        "fullName": "EventBooking_Sch",
+        "type": "ApexClass",
+        "state": "Changed",
+        "filePath": "/Users/abuzar/Documents/Axolt/Scheduler dev/force-app/main/default/classes/EventBooking_Sch.cls-meta.xml"
+      },
+      {
+        "fullName": "eventBooking_Sch_LWC",
+        "type": "LightningComponentBundle",
+        "state": "Changed",
+        "filePath": "/Users/abuzar/Documents/Axolt/Scheduler dev/force-app/main/default/lwc/eventBooking_Sch_LWC/eventBooking_Sch_LWC.css"
+      },
+      {
+        "fullName": "eventBooking_Sch_LWC",
+        "type": "LightningComponentBundle",
+        "state": "Changed",
+        "filePath": "/Users/abuzar/Documents/Axolt/Scheduler dev/force-app/main/default/lwc/eventBooking_Sch_LWC/eventBooking_Sch_LWC.html"
+      },
+      {
+        "fullName": "eventBooking_Sch_LWC",
+        "type": "LightningComponentBundle",
+        "state": "Changed",
+        "filePath": "/Users/abuzar/Documents/Axolt/Scheduler dev/force-app/main/default/lwc/eventBooking_Sch_LWC/eventBooking_Sch_LWC.js"
+      },
+      {
+        "fullName": "eventBooking_Sch_LWC",
+        "type": "LightningComponentBundle",
+        "state": "Changed",
+        "filePath": "/Users/abuzar/Documents/Axolt/Scheduler dev/force-app/main/default/lwc/eventBooking_Sch_LWC/eventBooking_Sch_LWC.js-meta.xml"
+      }
+    ],
+    "zipFileCount": 7,
+    "deployUrl": "https://orgfarm-2a16d57383-dev-ed.develop.my.salesforce.com/lightning/setup/DeployStatus/page?address=%2Fchangemgmt%2FmonitorDeploymentsDetails.apexp%3FasyncId%3D0AfdM00000XOHG1SAP%26retURL%3D%252Fchangemgmt%252FmonitorDeployment.apexp"
+  },
+  "warnings": []
+}
