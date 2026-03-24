@@ -9,16 +9,13 @@ export default class SearchComponent extends LightningElement {
 	  @track searchRecordsempty = false;
       @api hideLabel = false;
     @api valueName;
-    @api objName = 'Account';
     @api iconName = 'standard:account';
     @api labelName;
     @api readOnly = false;
     @api currentRecordId;
     @api placeholder = 'Search';
     @api createRecord;
-    @api fields = ['Name'];
     @api displayFields = 'Name, Rating, AccountNumber';
-    @api filter = '';
     @track error;
     @api id;
     @api required = false;
@@ -34,9 +31,36 @@ export default class SearchComponent extends LightningElement {
     field;
     field1;
     field2;
+    _fields = ['Name'];
+    _filter = '';
+    _objName = 'Account';
 
     ICON_URL = '/apexpages/slds/latest/assets/icons/{0}-sprite/svg/symbols.svg#{1}';
 _valueId;
+
+@api
+get fields() {
+    return this._fields;
+}
+set fields(value) {
+    this._fields = this.normalizeFields(value);
+}
+
+@api
+get filter() {
+    return this._filter;
+}
+set filter(value) {
+    this._filter = typeof value === 'string' ? value : '';
+}
+
+@api
+get objName() {
+    return this._objName;
+}
+set objName(value) {
+    this._objName = typeof value === 'string' && value.trim() !== '' ? value : 'Account';
+}
 
 @api
 get valueId() {
@@ -49,18 +73,32 @@ set valueId(val) {
     }
 }
 get isRequired() {
-    console.log('this.required:',this.required);
     return this.required === true;
 }
+normalizeFields(value) {
+    if (Array.isArray(value)) {
+        return value;
+    }
+    if (typeof value === 'string' && value.trim() !== '') {
+        return value.split(',').map(item => item.trim()).filter(Boolean);
+    }
+    return ['Name'];
+}
+getSearchFieldValue() {
+    return this._fields.join(',');
+}
+getQueryFilterValue() {
+    return this._filter;
+}
 fetchInitialRecord(recordId) { //adnan changed to Camel case ObjectName and SearchField
-  fetchLookUpValueById({ objectName: this.objName, searchField: this.fields.toString(), recordId: recordId })
-    .then(result => {
-        if (result && result.Id && result.Name) {
-            this.selectedRecord = { Id: result.Id, Name: result.Name, FIELD1: result.Name };
+  fetchLookUpValueById({ objectName: this.objName, searchField: this.getSearchFieldValue(), recordId: recordId })
+    .then(serverRecord => {
+        if (serverRecord && serverRecord.Id && serverRecord.Name) {
+            this.selectedRecord = { Id: serverRecord.Id, Name: serverRecord.Name, FIELD1: serverRecord.Name };
             this.searchTerm = '';
             this.isDropdownOpen = false;
         } else {
-            console.warn('Invalid result from fetchLookUpValueById:', result);
+            console.warn('Invalid record returned from fetchLookUpValueById');
         }
     })
     .catch(error => {
@@ -69,7 +107,6 @@ fetchInitialRecord(recordId) { //adnan changed to Camel case ObjectName and Sear
 }
 
     connectedCallback(){
-        console.log('Connected call back called');
         const icons           = this.iconName.split(':');
         this.ICON_URL       = this.ICON_URL.replace('{0}',icons[0]);
         this.ICON_URL       = this.ICON_URL.replace('{1}',icons[1]);
@@ -79,9 +116,7 @@ fetchInitialRecord(recordId) { //adnan changed to Camel case ObjectName and Sear
         }else{
             this.objectLabel = this.objName;
         }
-        console.log(this.objectLabel);
         this.objectLabel    = this.titleCase(this.objectLabel);
-        console.log(this.objectLabel);
         let fieldList;
         if( !Array.isArray(this.displayFields)){
             fieldList       = this.displayFields.split(',');
@@ -102,22 +137,15 @@ fetchInitialRecord(recordId) { //adnan changed to Camel case ObjectName and Sear
                 combinedFields.push( field.trim() );
             }
         });
-        console.log('valueId : ',this.valueId);
-        console.log('objName : ',this.objName);
-        console.log('fields : ',this.fields);
-        console.log('recordId : ',this.recordId);
         if(this.valueId != null && this.valueId != ''){
             fetchLookUpValueById({ // adnan changed to camel case OjectName and SearchField
                 objectName : this.objName,
-                searchField     : this.fields.toString(),
+                searchField     : this.getSearchFieldValue(),
                 recordId : this.valueId
             })
-            .then(result => {
-                //let stringResult = JSON.stringify(result);
-                //let allResult    = JSON.parse(stringResult);
-                console.log(result);
-                if(result != null || result != ''){
-                    this.selectedRecord = {Id : result.Id, Name : result.Name,FIELD1 : result.Name};
+            .then(serverRecord => {
+                if(serverRecord != null || serverRecord != ''){
+                    this.selectedRecord = {Id : serverRecord.Id, Name : serverRecord.Name,FIELD1 : serverRecord.Name};
 														if(this.selectedRecord != null && this.selectedRecord != '' && this.selectedRecord != undefined) {
                                                             this.searchRecordsempty = false;
                                                             this.message = '';
@@ -138,41 +166,24 @@ fetchInitialRecord(recordId) { //adnan changed to Camel case ObjectName and Sear
     handleInputChange(event){
         window.clearTimeout(this.delayTimeout);
         let searchKey = event.target.value;
-        console.log(searchKey);
-        console.log('this. filte : ',this.filter);
         if(searchKey == '' || searchKey == null || searchKey == undefined) searchKey = '';
 
         //this.isLoading = true;
         this.delayTimeout = setTimeout(() => {
-            //if(searchKey.length >= 2){
-                // fetchLookUpValues({
-                //     searchKeyWord : searchKey,
-                //     ObjectName : this.objName,
-                //     queryFilter : this.filter,
-                //     SearchField     : this.fields.toString(),
-
-                // })
-                // commented by abuzar on 13-03-2026 for the scanning issue and added below line "ExcessiveParameterList issue fixed by moving fetchLookUpValues inputs into a single request wrapper"
-                // fetchLookUpValues({
-                //     searchKeyWord : searchKey,
-                //     objectName : this.objName,
-                //     queryFilter : this.filter,
-                //     searchField : this.fields.toString(),
-                // })
                 fetchLookUpValues({
                     request : {
                         searchKeyWord : searchKey,
                         objectName : this.objName, //adnan changed to camel case
-                        queryFilter : this.filter,
-                        searchField : this.fields.toString()   //adnan changed to camel case
+                        queryFilter : this.getQueryFilterValue(),
+                        searchField : this.getSearchFieldValue()   //adnan changed to camel case
                     }
                 })
                 //changes end here by abuzar
-                .then(result => {
-                    const stringResult = JSON.stringify(result);
-                    const allResult    = JSON.parse(stringResult);
-                    console.log(allResult);
-                    allResult.forEach( record => {
+                .then(serverRecords => {
+                    const records = Array.isArray(serverRecords)
+                        ? serverRecords.map(record => ({ ...record }))
+                        : [];
+                    records.forEach( record => {
                         record.FIELD1 = record[this.Name];
                         if(this.field2){
                             record.FIELD2 = record[this.field1];
@@ -186,7 +197,7 @@ fetchInitialRecord(recordId) { //adnan changed to Camel case ObjectName and Sear
                             record.FIELD3 = '';
                         }
                     });
-                    this.searchRecords = allResult;
+                    this.searchRecords = records;
                     if(this.searchRecords.length == 0){this.searchRecordsempty = true; this.message = 'No Records To display';}else {this.searchRecordsempty = false; this.message = '';}
                 })
                 .catch(error => {
@@ -201,7 +212,6 @@ fetchInitialRecord(recordId) { //adnan changed to Camel case ObjectName and Sear
 
    handleSelect(event) {
     const recordId = event.currentTarget.dataset.recordId;
-    console.log('handleSelect recordId:', recordId);
     if (!recordId || recordId === '' || recordId === undefined) {
         console.warn('Invalid recordId in handleSelect');
         return;
@@ -211,7 +221,6 @@ fetchInitialRecord(recordId) { //adnan changed to Camel case ObjectName and Sear
         this.selectedRecord = selectRecord;
         this.searchRecordsempty = false;
         this.message = '';
-        console.log('handleSelect selectedRecord:', selectRecord);
         const selectedEvent = new CustomEvent('lookup', {
             bubbles: true,
             composed: true,
@@ -249,7 +258,6 @@ fetchInitialRecord(recordId) { //adnan changed to Camel case ObjectName and Sear
 
     }*/
    @api handleClose(event) {
-    console.log('close called', event);
     this.selectedRecord = undefined;
     this.searchRecords = [];
     this.searchTerm = '';
@@ -286,6 +294,5 @@ fetchInitialRecord(recordId) { //adnan changed to Camel case ObjectName and Sear
 }
 
     valueChanged(event){
-        console.log(event.target)
     }
 }

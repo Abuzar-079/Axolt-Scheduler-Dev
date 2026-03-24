@@ -92,8 +92,7 @@ export default class CounterSchlwc extends LightningElement {
             const now = new Date();
 
             if (this.showFirstTimeLogs) {
-                console.log('counter CT~>', now);
-                console.log('counter dt~>', dt);
+                // Keep the one-time gate for later diagnostics without logging input-derived timestamps.
             }
 
             if (now >= dt) {
@@ -109,8 +108,6 @@ export default class CounterSchlwc extends LightningElement {
 
                 if (this.showFirstTimeLogs) {
                     this.showFirstTimeLogs = false;
-                    console.log('totalMinutes~>', totalMinutes);
-                    console.log('waitingThreshold~>', this.waitingThreshold);
                 }
 
                 if (totalMinutes >= this.waitingThreshold) {
@@ -119,8 +116,7 @@ export default class CounterSchlwc extends LightningElement {
                         console.log('Calling updateWTExceed...');
                         this.change = false;
                         try {
-                            const resp = await updateWTExceed({ RegId: this.regId });
-                            console.log('updateWTExceed resp ==>', JSON.stringify(resp));
+                            await updateWTExceed({ RegId: this.regId });
                         } catch (err) {
                             console.error('Error in updateWTExceed', err);
                             this.change = true; // Reset so it can retry on next tick

@@ -91,10 +91,13 @@ public with sharing class InputLookUp_Sch {
     }
 
     private static String buildLookupQuery(LookupRequest request, String searchKey) {
+        Schema.SObjectType objectType = getValidatedObjectType(request.objectName);
+        String selectFields = getValidatedSelectFields(objectType, request.searchField);
+        String primarySearchField = getPrimaryValidatedField(objectType, request.searchField);
         String safeQueryFilter = String.isBlank(request.queryFilter) ? '' : request.queryFilter;
-        String sQuery = 'SELECT Id, ' + String.escapeSingleQuotes(request.searchField) +
-                        ' FROM ' + String.escapeSingleQuotes(request.objectName) +
-                        ' WHERE ' + String.escapeSingleQuotes(request.searchField) + ' LIKE :searchKey ';
+        String sQuery = 'SELECT Id, ' + selectFields +
+                        ' FROM ' + objectType.getDescribe().getName() +
+                        ' WHERE ' + primarySearchField + ' LIKE :searchKey ';
         if (!String.isBlank(safeQueryFilter)) {
             sQuery += ' AND ' + String.escapeSingleQuotes(safeQueryFilter) + ' ';
         }
@@ -167,18 +170,11 @@ public with sharing class InputLookUp_Sch {
      */
     @AuraEnabled                              //adnan changed Case of ObjectName and SearchField and in search comp
     public static sObject fetchLookUpValueById(String objectName,String searchField,String recordId) {
-                   // commented by abuzar on 09-03-2026 for the scanning issue and added below line
-        // String sQuery =  'SELECT Id, ' +String.escapeSingleQuotes(searchField) + ' FROM ' +String.escapeSingleQuotes(objectName) + ' WHERE Id =\''+String.escapeSingleQuotes(recordId)+'\' LIMIT 1000';
-
-        // commented by abuzar on 14-03-2026 for the scanning issue and added below line "Found trailing whitespace at the end of a line of code."
-        // String sQuery =  'SELECT Id, ' + String.escapeSingleQuotes(searchField) +
-        //                  ' FROM ' + String.escapeSingleQuotes(objectName) +
-        //                  ' WHERE Id = :recordId LIMIT 1000';
-        String sQuery =  'SELECT Id, ' + String.escapeSingleQuotes(searchField) +
-                         ' FROM ' + String.escapeSingleQuotes(objectName) +
+        Schema.SObjectType objectType = getValidatedObjectType(objectName);
+        String selectFields = getValidatedSelectFields(objectType, searchField);
+        String sQuery =  'SELECT Id, ' + selectFields +
+                         ' FROM ' + objectType.getDescribe().getName() +
                          ' WHERE Id = :recordId LIMIT 1000';
-        //changes end here by abuzar
-        //System.debug(LoggingLevel.DEBUG, 'fetchLookUpValueById sQuery==>'+sQuery);
         List < sObject > lstOfRecords = Database.query(sQuery);
         if(lstOfRecords.size()>0){return lstOfRecords[0];} return null; //adnan brackets for if
     }
@@ -193,12 +189,51 @@ public with sharing class InputLookUp_Sch {
 public static List<sobject> findRecords(String searchKey, String objectName) {
     // 1. Prepare the search string with the wildcard, NO manual quotes needed!
     String searchText = searchKey + '%';
+    Schema.SObjectType objectType = getValidatedObjectType(objectName);
     
     // 2. Build the query string using a bind variable (:searchText)
-    String query = 'SELECT Id, Name FROM ' + String.escapeSingleQuotes(objectName) + ' WHERE Name LIKE :searchText LIMIT 10';
+    String query = 'SELECT Id, Name FROM ' + objectType.getDescribe().getName() + ' WHERE Name LIKE :searchText LIMIT 10';
     
     // 3. Execute the query
     return Database.query(query);
 }
+
+    private static Schema.SObjectType getValidatedObjectType(String objectName) {
+        if (String.isBlank(objectName)) {
+            throw new AuraHandledException('Invalid object name');
+        }
+        Schema.SObjectType objectType = Schema.getGlobalDescribe().get(objectName.trim());
+        if (objectType == null) {
+            throw new AuraHandledException('Invalid object name');
+        }
+        return objectType;
+    }
+
+    private static String getValidatedSelectFields(Schema.SObjectType objectType, String fieldList) {
+        return String.join(getValidatedFieldNames(objectType, fieldList), ', ');
+    }
+
+    private static String getPrimaryValidatedField(Schema.SObjectType objectType, String fieldList) {
+        return getValidatedFieldNames(objectType, fieldList)[0];
+    }
+
+    private static List<String> getValidatedFieldNames(Schema.SObjectType objectType, String fieldList) {
+        if (String.isBlank(fieldList)) {
+            throw new AuraHandledException('Invalid search field');
+        }
+        Map<String, Schema.SObjectField> fieldMap = objectType.getDescribe().fields.getMap();
+        List<String> validatedFields = new List<String>();
+        for (String rawFieldName : fieldList.split(',')) {
+            String fieldName = rawFieldName == null ? '' : rawFieldName.trim();
+            if (String.isBlank(fieldName) || !fieldMap.containsKey(fieldName)) {
+                throw new AuraHandledException('Invalid search field');
+            }
+            validatedFields.add(fieldMap.get(fieldName).getDescribe().getName());
+        }
+        if (validatedFields.isEmpty()) {
+            throw new AuraHandledException('Invalid search field');
+        }
+        return validatedFields;
+    }
 
 }

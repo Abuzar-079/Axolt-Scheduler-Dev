@@ -128,12 +128,9 @@ get futureIconVariant() {
         this.updateRegistrations(this.newRegistrations);
     }
 nameChange(event){
-    console.log('Issue 3');
         const fieldName = event.target.value;
 
         const key = event.target.dataset.field;
-        console.log('key:',key);
-        console.log('Value:',fieldName);
 this.createReg = { ...this.createReg, [key]: fieldName };
 
 }
@@ -182,7 +179,6 @@ this.createReg = { ...this.createReg, [key]: fieldName };
     }
     get newDateColumnListWithClasses() {
     return this.newDateColumnList.map((slot, index) => {
-      console.log('log:', index);
         const isDropIn = slot.Event?.Event_Type__c === 'Drop-in';
         const isZeroQty = slot.AvailableQuantity === 0;
 
@@ -266,13 +262,11 @@ get hasMultipleLocOptions() {
 
 .then(() => {
 
-                    console.log('Static Resource Loaded');
 
                 })
 
                 .catch(error => {
 
-                    console.log('Static Resource Error', error);
 
                 });
     }
@@ -282,7 +276,6 @@ get hasMultipleLocOptions() {
     }
 
     changeView(event) {
-        console.log('changeView 2');
         const view = event.currentTarget.dataset.tab;
         if (view !== this.view) {
             this.view = view;
@@ -290,7 +283,6 @@ get hasMultipleLocOptions() {
     }
 
     async searchEvent(event) {
-         console.log('searchEvent 2');
         const timeLine = event.currentTarget.dataset.val;
         if (this.activeEventType !== timeLine) {
             switch (timeLine) {
@@ -358,7 +350,6 @@ handleTypeChange(event) {
        //     await this.handleFilterEvents();
        // }
        this.filterName = event.target.value; // 🔥 THIS is what updates the variable!
-    console.log('this.filterName:', this.filterName);
 
     if (event.type === 'change') {
         await this.handleFilterEvents(); // run on blur/change
@@ -369,7 +360,7 @@ handleTypeChange(event) {
 
     async handleFilterEvents() {
         this.isLoading = true;
-        try {console.log('this.filterName:',this.filterName);
+        try {
             const result = await getEventList({
                 eventName: this.filterName,
                 eventLocation: this.filterLocation,
@@ -377,7 +368,6 @@ handleTypeChange(event) {
             });
             this.changefiltervalues=false;
             this.processEventList(result);
-            console.log('result:',result);
         } catch (error) {
             this.showToast('Error', error.body.message, 'error');
             this.isLoading = false;
@@ -398,12 +388,9 @@ handleTypeChange(event) {
 
         const eventIndex = event.currentTarget.dataset.index;
         const events = this.eventListWithExtras;
-        console.log('HERE---->',this.eventListWithExtras);
         if (events[eventIndex].EVT.Available_Registrations__c > 0) {
             this.event = events[eventIndex].EVT;
-            console.log('Here?');
             this.eventId = events[eventIndex].EVT.Id;
-            console.log('Here 2?',events[eventIndex].EVT.Id);
             let selQty = 0;
             if (events[eventIndex].EVT.Maximum_Quantity_Select__c) {
                 selQty = Math.min(
@@ -424,19 +411,14 @@ handleTypeChange(event) {
                 Zip_Code__c: events[eventIndex].EVT.Event_Location__r.Zip_Code__c,
                 Country__c: events[eventIndex].EVT.Event_Location__r.Country__c
             };
-             console.log('HERE---->',this.location);
             this.regCheckIn = events[eventIndex].EVT.Instant_CheckIn__c;
             this.disableNext = true;
             if (this.event.Allow_Guest_Registrations__c) {
                 this.disableForm = false;
             }
-            console.log('Here?3');
             await this.getAllEventDetails(this.eventId);
-            console.log('Here?4');
             await this.fetchAllDays();
-            console.log('Here?5');
         } else {
-            console.log('Issue heree2');
             this.showToast('Error', 'This Event Registrations are full.', 'error');
             setTimeout(() => {
                 this.errorMessage = '';
@@ -444,7 +426,6 @@ handleTypeChange(event) {
         }
         this.isLoading = false;
     }catch(error){
-        console.log('Error', error.body.message, 'error');
          this.showToast('Error', error.body.message, 'error');
             this.isLoading = false;
             setTimeout(() => {
@@ -457,7 +438,6 @@ handleTypeChange(event) {
         const index = event.currentTarget.dataset.index;
         const type = event.currentTarget.dataset.type;
         const dateColumnList = [...this.newDateColumnList];
-        console.log('dateColumnList[index]',JSON.stringify(dateColumnList[index]));
         this.startdateReg=dateColumnList[index].AvailableDate1;
         if (dateColumnList[index].Zone) {
     // Slot-based → use duration
@@ -491,10 +471,7 @@ handleTypeChange(event) {
     }
 
     reserveReg() {
-        console.log('this.newDateColumnList:',this.newDateColumnList);
         this.selectedSchedules = this.newDateColumnList.filter(slot => slot.isSelect);
-        console.log('this.selectedSchedules:',this.selectedSchedules);
-        console.log('this.startdateReg:',this.startdateReg);
         this.showEvtDetails = true;
     }
 
@@ -562,15 +539,12 @@ handleTypeChange(event) {
 
     async displayRecords() {
         /*if (!this.searchClientString) {
-            console.log('this.searchClientString NOT: ' + this.searchClientString);
             this.clearSearch();
             return;
         }*/
         try {
-            console.log('this.searchClientString: ' + this.searchClientString);
             const result = await getSearchRecords({ searchString: this.searchClientString });
             this.srList = result;
-             console.log('this.searchClientString res: ' + result);
             if (result?.length > 0) {
                 this.showSearchPanel = true;
             }
@@ -713,7 +687,6 @@ handleTypeChange(event) {
             reg.End_Time__c = schedule.Zone.End_Date__c;
             reg.Expert_Location__c = schedule.Zone.Event_Zone_Location__c;
         } else {
-            console.log('this.startdateReg:',this.startdateReg);
             reg.Registration_Time__c = this.startdateReg;
             //reg.Registration_Time__c = event.Start_Date__c;
             reg.Registration_End_Time__c = event.End_Date__c;
@@ -761,7 +734,6 @@ handleTypeChange(event) {
                 eventType: ''
             });
             this.processEventList(result);
-            console.log('Result----->',result);
         } catch (error) {
             this.showToast('Error', error.body.message, 'error');
             setTimeout(() => {
@@ -842,7 +814,6 @@ this.eventListWP = rawEventList.map((item, index) => {
 
     async fetchAllDays() {
         this.isLoading = true;
-        console.log('this.eventId?',this.eventId);
         try {
             const result = await getAllDaysCon({
                 EventId: this.eventId,
@@ -852,8 +823,6 @@ this.eventListWP = rawEventList.map((item, index) => {
             const dcList = result.DateColumnList || [];
             this.mainDateColumnList = dcList;
             this.newDateColumnList = dcList;
-            console.log('dcList?',dcList);
-console.log('this.newDateColumnList?',this.newDateColumnList);
             const LocOptions = [];
             const locSet = new Set();
            /* dcList.forEach(item => {
@@ -896,7 +865,6 @@ this.LocOptions = LocOptions;
                 }, 5000);
             }
         } catch (error) {
-             console.log('Issue heree1');
             this.showToast('Error', error.body.message, 'error');
             this.isLoading = false;
             setTimeout(() => {
@@ -917,13 +885,11 @@ this.LocOptions = LocOptions;
             this.sponsorList = result.sponsorshipList;
             this.speakerList = result.speakerList;
             this.location = result.Location;
-            console.log('result.Location---->',result.Location);
             this.eventId = eventId;
 
             window.scrollTo({ top: 0, behavior: 'smooth' });
             this.isLoading = false;
         } catch (error) {
-            console.log('Issue heree3');
             this.showToast('Error', error.body.message, 'error');
             this.isLoading = false;
             setTimeout(() => {
@@ -960,7 +926,6 @@ this.LocOptions = LocOptions;
 
     async finishBooking(parentRegs, childRegs, bookingMethod) {
         this.isLoading = true;
-        console.log('bookingMethod:', bookingMethod);
         try {
             const result = await createEventBookings({
                 pRegs: JSON.stringify(parentRegs),
@@ -1080,7 +1045,6 @@ this.LocOptions = LocOptions;
     }
 
     handleInputChange(event) {
-      console.log('check 2');
 
         const field = event.target.dataset.id;
         if (field.startsWith('child')) {
@@ -1092,11 +1056,7 @@ this.LocOptions = LocOptions;
         }
     }
     /* handleInputChange(event) {
-      console.log('check 1');
-      console.log('ssue 3');
       const fieldName = event.target.value;
-      console.log('ssue 2:',fieldName);
-      console.log('ssue 1');
     }*/
 
 }

@@ -136,7 +136,7 @@
                 </template>
 
                 <template for:each={maps} for:item="cus" for:index="key">
-                    <article key={cus.key} class="slds-card slds-m-bottom_small car1">
+                    <article key={cus.queueId} class="slds-card slds-m-bottom_small car1">
                         <a data-name={cus.value.Booked_Date__c} data-value={cus.value.Id} data-rec-id={recIdValue}
                             onclick={GetRegsDetails}
                             class="slds-card__body slds-p-around_medium slds-grid slds-wrap car3">

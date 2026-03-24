@@ -211,11 +211,11 @@ export default class QueueExpertSch extends LightningElement {
                 this.qry = this.buildQuery(this.locations, 'Id');
                 this.qryForPrograms = this.buildQuery(this.allPrgrms, 'Id');
 
-                const setMap = Object.keys(result.mapOfRecords).map(key => {
-                    const rec = result.mapOfRecords[key];
+                const queueEntries = Object.keys(result.mapOfRecords).map(recordKey => {
+                    const rec = result.mapOfRecords[recordKey];
                     return {
                         value: rec,
-                        key,
+                        queueId: recordKey,
                         hasRegistrationAndCheckIn: rec.Registration_Time__c && rec.Checked_in_Date_Time__c,
                         registrationAfterCheckIn:
                             rec.Registration_Time__c &&
@@ -226,9 +226,9 @@ export default class QueueExpertSch extends LightningElement {
                 });
 
                 this.orginalMap = result.mapOfRecords;
-                this.maps = setMap;
-                this.queueCount = setMap.length;
-                this.toastMeassage = setMap.length === 0;
+                this.maps = queueEntries;
+                this.queueCount = queueEntries.length;
+                this.toastMeassage = queueEntries.length === 0;
                 this.recordValues = result.ObjectValues;
 
                 if (this.recordValues.length > 0) {
@@ -293,19 +293,24 @@ export default class QueueExpertSch extends LightningElement {
         console.log('selId', selId);
         getRegDetails({ id: selId })
             .then(result => {
-                console.log('Full API Result:', JSON.stringify(result));
-                console.log('ObjectValues:', JSON.parse(JSON.stringify(result.ObjectValues)));
                 this.selectedNotes = result.Notes;
                 this.selectedAttachments = result.Attachments;
                 this.recordValues = result.ObjectValues;
-                console.log('firstRecordId bush bfr---->', this.firstRecordId);
+                console.log('getRegDetails response received', {
+                    attachmentCount: this.selectedAttachments ? this.selectedAttachments.length : 0,
+                    noteCount: this.selectedNotes ? this.selectedNotes.length : 0,
+                    recordCount: this.recordValues ? this.recordValues.length : 0
+                });
                 this.firstRecordId = this.recordValues[0].Id;
                 this.firstRecordContact = this.recordValues && this.recordValues[0] && this.recordValues[0].Contact__c;
                 this.firstRecordLocation = this.recordValues && this.recordValues[0] && this.recordValues[0].Expert_Location__c;
                 this.firstRecordResourceUser = this.recordValues[0].User__c;
-                console.log('firstRecordContact bush---->', this.firstRecordContact);
-                console.log('recordValues after assignment:', this.recordValues);
-                console.log('recordValues[0] content:', this.recordValues[0]);
+                console.log('Primary registration loaded', {
+                    recordId: this.firstRecordId,
+                    hasContact: Boolean(this.firstRecordContact),
+                    hasLocation: Boolean(this.firstRecordLocation),
+                    hasResourceUser: Boolean(this.firstRecordResourceUser)
+                });
                 this.dataLoaded = !this.dataLoaded;
                 this.setRecValues();
                 if (this.recordValues.length > 0) {
@@ -337,9 +342,13 @@ export default class QueueExpertSch extends LightningElement {
             return;
         }
 
-        const row = this.maps[index];
-        const currentStatus = row.value.Booked_Current_Status__c;
-        console.log('Current status for clicked row:', currentStatus, 'label:', row.buttonLabel);
+        const selectedQueueEntry = this.maps[index];
+        const currentStatus = selectedQueueEntry.value.Booked_Current_Status__c;
+        console.log('Queue entry selected', {
+            index,
+            hasButtonLabel: Boolean(selectedQueueEntry.buttonLabel),
+            isInProgress: currentStatus === 'InProgress'
+        });
 
         if (currentStatus === 'InProgress') {
             this.inprogress = false;
@@ -409,7 +418,11 @@ export default class QueueExpertSch extends LightningElement {
                             return cus;
                         });
 
-                        console.log('popRecord completed, updated maps:', JSON.stringify(this.maps[index]));
+                        console.log('popRecord completed', {
+                            updatedIndex: index,
+                            updatedStatus: this.maps[index] && this.maps[index].value && this.maps[index].value.Booked_Current_Status__c,
+                            updatedButtonLabel: this.maps[index] && this.maps[index].buttonLabel
+                        });
                     })
                     .catch(error => {
                         console.error('Error in popRecord:', error);
@@ -506,12 +519,11 @@ export default class QueueExpertSch extends LightningElement {
     }
 
     handleFieldChange(event) {
-        const fieldApiName = event.target.fieldName;
+        const updatedField = event.target.fieldName;
         const value = event.target.value;
-        console.log('Field changed:', fieldApiName, '=>', value);
         this.draftRegistration = {
             ...this.draftRegistration,
-            [fieldApiName]: value
+            [updatedField]: value
         };
     }
 
@@ -854,16 +866,16 @@ export default class QueueExpertSch extends LightningElement {
             .then(result => {
                 this.orginalMap = result.mapOfRecords;
                 this.toastMeassage = result.existLocation;
-                const setMap = Object.keys(result.mapOfRecords).map(key => ({
-                    value: result.mapOfRecords[key],
-                    key,
-                    hasRegistrationAndCheckIn: result.mapOfRecords[key].Registration_Time__c && result.mapOfRecords[key].Checked_in_Date_Time__c,
-                    registrationAfterCheckIn: result.mapOfRecords[key].Registration_Time__c && result.mapOfRecords[key].Checked_in_Date_Time__c && result.mapOfRecords[key].Registration_Time__c > result.mapOfRecords[key].Checked_in_Date_Time__c,
-                    buttonLabel: key.Booked_Current_Status__c === 'InProgress' ? 'Finish' : 'Serve Now'
+                const queueEntries = Object.keys(result.mapOfRecords).map(recordKey => ({
+                    value: result.mapOfRecords[recordKey],
+                    queueId: recordKey,
+                    hasRegistrationAndCheckIn: result.mapOfRecords[recordKey].Registration_Time__c && result.mapOfRecords[recordKey].Checked_in_Date_Time__c,
+                    registrationAfterCheckIn: result.mapOfRecords[recordKey].Registration_Time__c && result.mapOfRecords[recordKey].Checked_in_Date_Time__c && result.mapOfRecords[recordKey].Registration_Time__c > result.mapOfRecords[recordKey].Checked_in_Date_Time__c,
+                    buttonLabel: result.mapOfRecords[recordKey].Booked_Current_Status__c === 'InProgress' ? 'Finish' : 'Serve Now'
                 }));
-                this.maps = setMap;
-                if (setMap.length === 0) {
-                    this.queueCount = setMap.length;
+                this.maps = queueEntries;
+                if (queueEntries.length === 0) {
+                    this.queueCount = queueEntries.length;
                     this.message = 'No Records For The Selected Location.';
                     this.maps = [];
                     this.toastMeassage = true;
@@ -876,7 +888,7 @@ export default class QueueExpertSch extends LightningElement {
                     this.orginalMap = result.mapOfRecords;
                     this.toastMeassage = false;
                     this.inprogress = result.inProgress;
-                    this.queueCount = setMap.length;
+                    this.queueCount = queueEntries.length;
                     this.recordValues = result.ObjectValues;
                     if (this.recordValues.length > 0) {
                         this.setRecValues();
@@ -912,7 +924,12 @@ export default class QueueExpertSch extends LightningElement {
             catValue
         })
             .then(result => {
-                console.log('getRecordsOfLocations result:', JSON.stringify(result, null, 2));
+                console.log('getRecordsOfLocations response received', {
+                    attachmentCount: result.Attachments ? result.Attachments.length : 0,
+                    noteCount: result.Notes ? result.Notes.length : 0,
+                    queueCount: result.mapOfRecords ? Object.keys(result.mapOfRecords).length : 0,
+                    registrationCount: result.regRecords ? result.regRecords.length : 0
+                });
                 this.setRegValues();
                 this.selectedNotes = result.Notes || [];
                 this.selectedAttachments = result.Attachments || [];
@@ -921,15 +938,15 @@ export default class QueueExpertSch extends LightningElement {
                 this.selectedUserName = result.SelectedUserName;
                 this.changeEXPID = !this.changeEXPID;
                 this.toastMeassage = result.existLocation;
-                const setMap = Object.keys(result.mapOfRecords || {}).map(key => ({
-                    value: result.mapOfRecords[key],
-                    key,
-                    hasRegistrationAndCheckIn: result.mapOfRecords[key].Registration_Time__c && result.mapOfRecords[key].Checked_in_Date_Time__c,
-                    registrationAfterCheckIn: result.mapOfRecords[key].Registration_Time__c && result.mapOfRecords[key].Checked_in_Date_Time__c && result.mapOfRecords[key].Registration_Time__c > result.mapOfRecords[key].Checked_in_Date_Time__c,
-                    buttonLabel: key.Booked_Current_Status__c === 'InProgress' ? 'Finish' : 'Serve Now'
+                const queueEntries = Object.keys(result.mapOfRecords || {}).map(recordKey => ({
+                    value: result.mapOfRecords[recordKey],
+                    queueId: recordKey,
+                    hasRegistrationAndCheckIn: result.mapOfRecords[recordKey].Registration_Time__c && result.mapOfRecords[recordKey].Checked_in_Date_Time__c,
+                    registrationAfterCheckIn: result.mapOfRecords[recordKey].Registration_Time__c && result.mapOfRecords[recordKey].Checked_in_Date_Time__c && result.mapOfRecords[recordKey].Registration_Time__c > result.mapOfRecords[recordKey].Checked_in_Date_Time__c,
+                    buttonLabel: result.mapOfRecords[recordKey].Booked_Current_Status__c === 'InProgress' ? 'Finish' : 'Serve Now'
                 }));
-                this.maps = setMap;
-                this.queueCount = setMap.length;
+                this.maps = queueEntries;
+                this.queueCount = queueEntries.length;
                 this.inprogress = result.inProgress;
 
                 if (!this.recordValues?.length) {
@@ -984,19 +1001,23 @@ export default class QueueExpertSch extends LightningElement {
             waitingTime: currentCounter
         })
             .then(result => {
-                console.log('popUpRecordsOfId result:', JSON.stringify(result));
+                console.log('popUpRecordsOfId response received', {
+                    attachmentCount: result.Attachments ? result.Attachments.length : 0,
+                    noteCount: result.Notes ? result.Notes.length : 0,
+                    hasUpdatedRecord: Boolean(result.mapOfRecords && result.mapOfRecords[selId])
+                });
                 this.selectedNotes = result.Notes || [];
                 this.selectedAttachments = result.Attachments || [];
 
-                const updatedMap = result.mapOfRecords[selId] ? {
+                const updatedQueueEntry = result.mapOfRecords[selId] ? {
                     value: { ...result.mapOfRecords[selId], Booked_Current_Status__c: 'InProgress' },
-                    key: selId,
+                    queueId: selId,
                     hasRegistrationAndCheckIn: result.mapOfRecords[selId].Registration_Time__c && result.mapOfRecords[selId].Checked_in_Date_Time__c,
                     registrationAfterCheckIn: result.mapOfRecords[selId].Registration_Time__c && result.mapOfRecords[selId].Checked_in_Date_Time__c && result.mapOfRecords[selId].Registration_Time__c > result.mapOfRecords[selId].Checked_in_Date_Time__c
                 } : null;
 
-                if (updatedMap) {
-                    this.maps = this.maps.map(item => (item.key === selId ? updatedMap : item));
+                if (updatedQueueEntry) {
+                    this.maps = this.maps.map(queueEntry => (queueEntry.queueId === selId ? updatedQueueEntry : queueEntry));
                 }
 
                 this.orginalMap = { ...this.orginalMap, [selId]: result.mapOfRecords[selId] || this.orginalMap[selId] };
