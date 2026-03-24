@@ -1,2 +1,2 @@
-main/default/classes/QueueExpertSchSupport.cls
-main/default/classes/Queue_Expert_Sch.cls
+main/default/classes/EventBooking_Sch.cls
+main/default/classes/EventBooking_SchTestClass.cls
