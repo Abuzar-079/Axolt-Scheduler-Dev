@@ -1,1 +1,1 @@
-main/default/classes/Queue_Expert_Sch.cls
+main/default/classes/EventBooking_Sch.cls
