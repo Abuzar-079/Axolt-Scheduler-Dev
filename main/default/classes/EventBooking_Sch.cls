@@ -3521,17 +3521,41 @@ public with sharing class EventBooking_Sch {
         List<Registration_SCH__c> rList = buildRegistrationContactAssignments(regList, context);
         // commented by abuzar on 2026-03-23 for DML Statements Inside Loops issue.
         // Keep the bulk DML in this method so the scanner does not trace a helper-based upsert back to the source loop.
-        // commented by Abuzar on 2026-03-25 for the Checkmarkx issue and added below line "Upsert on Registration_SCH__c must verify create and update access on the object and Contact__c field before performing DML."
-        // if (!rList.isEmpty() && context.canCreateReg) {
+        // commented by Abuzar on 2026-03-25 for the Checkmarkx issue and added below line "Registration_SCH__c create and update operations must enforce object-level and Contact__c field-level permissions before DML instead of relying on a single upsert gate."
+        // Boolean canUpsertRegistrations =
+        //     Schema.sObjectType.Registration_SCH__c.isCreateable() &&
+        //     Schema.sObjectType.Registration_SCH__c.isUpdateable() &&
+        //     Schema.sObjectType.Registration_SCH__c.fields.Contact__c.isCreateable() &&
+        //     Schema.sObjectType.Registration_SCH__c.fields.Contact__c.isUpdateable();
+        // if (!rList.isEmpty() && canUpsertRegistrations) {
         //     upsert rList;
         // }
-        Boolean canUpsertRegistrations =
+        List<Registration_SCH__c> registrationsToInsert = new List<Registration_SCH__c>();
+        List<Registration_SCH__c> registrationsToUpdate = new List<Registration_SCH__c>();
+        for (Registration_SCH__c regRecord : rList) {
+            if (regRecord.Id == null) {
+                registrationsToInsert.add(regRecord);
+            } else {
+                registrationsToUpdate.add(regRecord);
+            }
+        }
+        Boolean canInsertRegistrations =
             Schema.sObjectType.Registration_SCH__c.isCreateable() &&
+            Schema.sObjectType.Registration_SCH__c.fields.Contact__c.isCreateable();
+        Boolean canUpdateRegistrations =
             Schema.sObjectType.Registration_SCH__c.isUpdateable() &&
-            Schema.sObjectType.Registration_SCH__c.fields.Contact__c.isCreateable() &&
             Schema.sObjectType.Registration_SCH__c.fields.Contact__c.isUpdateable();
-        if (!rList.isEmpty() && canUpsertRegistrations) {
-            upsert rList;
+        if (
+            (!registrationsToInsert.isEmpty() || !registrationsToUpdate.isEmpty()) &&
+            (registrationsToInsert.isEmpty() || canInsertRegistrations) &&
+            (registrationsToUpdate.isEmpty() || canUpdateRegistrations)
+        ) {
+            if (!registrationsToInsert.isEmpty()) {
+                insert registrationsToInsert;
+            }
+            if (!registrationsToUpdate.isEmpty()) {
+                update registrationsToUpdate;
+            }
         }
         //changes end here by Abuzar
         return getFirstRegistrationId(rList);
@@ -3558,17 +3582,28 @@ public with sharing class EventBooking_Sch {
             Schema.sObjectType.Registration_SCH__c.fields.Contact__c.isCreateable() && Schema.sObjectType.Registration_SCH__c.fields.Contact__c.isUpdateable()
         );
         */
+        // commented by Abuzar on 2026-03-25 for the Checkmarkx issue and added below line "Contact records created from registration data must use Contact create/FLS checks instead of create-and-update checks so the create path remains compliant without blocking optional fields."
+        // context.canCreateContact = Schema.sObjectType.Contact.isCreateable() && Schema.sObjectType.Contact.isUpdateable();
+        // context.canSetFirstName = Schema.sObjectType.Contact.fields.FirstName.isCreateable() && Schema.sObjectType.Contact.fields.FirstName.isUpdateable();
+        // context.canSetLastName = Schema.sObjectType.Contact.fields.LastName.isCreateable() && Schema.sObjectType.Contact.fields.LastName.isUpdateable();
+        // context.canSetMobile = Schema.sObjectType.Contact.fields.MobilePhone.isCreateable() && Schema.sObjectType.Contact.fields.MobilePhone.isUpdateable();
+        // context.canSetEmail = Schema.sObjectType.Contact.fields.Email.isCreateable() && Schema.sObjectType.Contact.fields.Email.isUpdateable();
+        // context.canSetEvent = Schema.sObjectType.Contact.fields.Event__c.isCreateable() && Schema.sObjectType.Contact.fields.Event__c.isUpdateable();
         RegistrationBuildContext context = new RegistrationBuildContext();
         context.conList = conList;
         context.contactId = contactId;
-        context.canCreateContact = Schema.sObjectType.Contact.isCreateable() && Schema.sObjectType.Contact.isUpdateable();
-        context.canSetFirstName = Schema.sObjectType.Contact.fields.FirstName.isCreateable() && Schema.sObjectType.Contact.fields.FirstName.isUpdateable();
-        context.canSetLastName = Schema.sObjectType.Contact.fields.LastName.isCreateable() && Schema.sObjectType.Contact.fields.LastName.isUpdateable();
-        context.canSetMobile = Schema.sObjectType.Contact.fields.MobilePhone.isCreateable() && Schema.sObjectType.Contact.fields.MobilePhone.isUpdateable();
-        context.canSetEmail = Schema.sObjectType.Contact.fields.Email.isCreateable() && Schema.sObjectType.Contact.fields.Email.isUpdateable();
-        context.canSetEvent = Schema.sObjectType.Contact.fields.Event__c.isCreateable() && Schema.sObjectType.Contact.fields.Event__c.isUpdateable();
-        context.canCreateReg = Schema.sObjectType.Registration_SCH__c.isCreateable() && Schema.sObjectType.Registration_SCH__c.isUpdateable();
-        context.canSetRegContact = Schema.sObjectType.Registration_SCH__c.fields.Contact__c.isCreateable() && Schema.sObjectType.Registration_SCH__c.fields.Contact__c.isUpdateable();
+        context.canCreateContact = Schema.sObjectType.Contact.isCreateable();
+        context.canSetFirstName = Schema.sObjectType.Contact.fields.FirstName.isCreateable();
+        context.canSetLastName = Schema.sObjectType.Contact.fields.LastName.isCreateable();
+        context.canSetMobile = Schema.sObjectType.Contact.fields.MobilePhone.isCreateable();
+        context.canSetEmail = Schema.sObjectType.Contact.fields.Email.isCreateable();
+        context.canSetEvent = Schema.sObjectType.Contact.fields.Event__c.isCreateable();
+        context.canCreateReg = Schema.sObjectType.Registration_SCH__c.isCreateable();
+        // commented by Abuzar on 2026-03-25 for the Checkmarkx issue and added below line "Registration Contact__c assignment is used for both insert and update flows, so the in-memory assignment should allow either create or update field access while DML permissions remain enforced separately."
+        // context.canSetRegContact = Schema.sObjectType.Registration_SCH__c.fields.Contact__c.isCreateable() &&
+        //     Schema.sObjectType.Registration_SCH__c.fields.Contact__c.isUpdateable();
+        context.canSetRegContact = Schema.sObjectType.Registration_SCH__c.fields.Contact__c.isCreateable() ||
+            Schema.sObjectType.Registration_SCH__c.fields.Contact__c.isUpdateable();
         //changes end here by abuzar
         return context;
     }
@@ -3743,17 +3778,15 @@ public with sharing class EventBooking_Sch {
 
         // commented by abuzar on 2026-03-23 for DML Statements Inside Loops issue.
         // Keep the bulk DML visibly outside the loop so the scanner does not trace a helper call as loop-scoped DML.
-        // commented by Abuzar on 2026-03-25 for the Checkmarkx issue and added below line "New Contact records built in this flow should enforce create/FLS checks and use insert instead of upsert to avoid update-permission violations."
-        // if (!contactsToUpsert.isEmpty() && context.canCreateContact) {
-        //     upsert contactsToUpsert;
-        // }
-        Boolean canInsertContacts =
-            Schema.sObjectType.Contact.isCreateable() &&
-            Schema.sObjectType.Contact.fields.FirstName.isCreateable() &&
-            Schema.sObjectType.Contact.fields.LastName.isCreateable() &&
-            Schema.sObjectType.Contact.fields.MobilePhone.isCreateable() &&
-            Schema.sObjectType.Contact.fields.Email.isCreateable() &&
-            Schema.sObjectType.Contact.fields.Event__c.isCreateable();
+        // commented by Abuzar on 2026-03-25 for the Checkmarkx issue and added below line "New Contact inserts must enforce Contact object create permission and the required LastName field create permission without failing when optional fields are not creatable."
+        // Boolean canInsertContacts =
+        //     Schema.sObjectType.Contact.isCreateable() &&
+        //     Schema.sObjectType.Contact.fields.FirstName.isCreateable() &&
+        //     Schema.sObjectType.Contact.fields.LastName.isCreateable() &&
+        //     Schema.sObjectType.Contact.fields.MobilePhone.isCreateable() &&
+        //     Schema.sObjectType.Contact.fields.Email.isCreateable() &&
+        //     Schema.sObjectType.Contact.fields.Event__c.isCreateable();
+        Boolean canInsertContacts = context.canCreateContact && access.canSetLastName;
         if (!contactsToUpsert.isEmpty() && canInsertContacts) {
             insert contactsToUpsert;
         }
@@ -3952,7 +3985,10 @@ public with sharing class EventBooking_Sch {
         // if (String.isEmpty(con.LastName)) {
         //     con.LastName = String.isNotEmpty(reg.Customer_Lastname__c) ? reg.Customer_Lastname__c : 'Unknown';
         // }
-        if (String.isEmpty(con.LastName) && access.canSetLastName) {
+        // commented by Abuzar on 2026-03-25 for the Checkmarkx issue and added below line "Contact.LastName fallback assignment must include an explicit Contact.LastName create check before the Contact is inserted."
+        // if (String.isEmpty(con.LastName) && access.canSetLastName) {
+        Boolean canCreateFallbackLastName = access.canSetLastName && Schema.sObjectType.Contact.fields.LastName.isCreateable();
+        if (String.isEmpty(con.LastName) && canCreateFallbackLastName) {
             con.LastName = String.isNotEmpty(reg.Customer_Lastname__c) ? reg.Customer_Lastname__c : 'Unknown';
         }
         //changes end here by Abuzar
@@ -4700,8 +4736,12 @@ public with sharing class EventBooking_Sch {
         ];
         //changes end here by Abuzar
 
+        Boolean canSetParentContact = Schema.sObjectType.Registration_SCH__c.fields.Contact__c.isCreateable();
+
         if (!existingContacts.isEmpty()) {
-            pr.Contact__c = existingContacts[0].Id;
+            if (canSetParentContact) {
+                pr.Contact__c = existingContacts[0].Id;
+            }
             return;
         }
 
@@ -4717,23 +4757,34 @@ public with sharing class EventBooking_Sch {
         insert newContact;
         pr.Contact__c = newContact.Id;
         */
+        // commented by Abuzar on 2026-03-25 for the Checkmarkx issue and added below line "Primary parent Contact creation must use explicit registration read checks and Contact create/FLS checks before assigning fields and inserting the Contact."
+        // Boolean canCreateContact = Schema.sObjectType.Contact.isCreateable();
+        // Boolean canReadCustomerName = canAccessCreateAndUpdateRegistrationField(Schema.sObjectType.Registration_SCH__c.fields.Customer_Name__c);
+        // Boolean canReadCustomerLastName = canAccessCreateAndUpdateRegistrationField(Schema.sObjectType.Registration_SCH__c.fields.Customer_Lastname__c);
+        // Boolean canReadCustomerEmail = canAccessCreateAndUpdateRegistrationField(Schema.sObjectType.Registration_SCH__c.fields.Customer_Email__c);
+        // Boolean canReadCustomerContact = canAccessCreateAndUpdateRegistrationField(Schema.sObjectType.Registration_SCH__c.fields.Customer_Contact__c);
+        // Boolean canSetFirstName = canAccessCreateAndUpdateContactField(Schema.sObjectType.Contact.fields.FirstName);
+        // Boolean canSetLastName = canAccessCreateAndUpdateContactField(Schema.sObjectType.Contact.fields.LastName);
+        // Boolean canSetEmail = canAccessCreateAndUpdateContactField(Schema.sObjectType.Contact.fields.Email);
+        // Boolean canSetMobilePhone = canAccessCreateAndUpdateContactField(Schema.sObjectType.Contact.fields.MobilePhone);
+        // Boolean canSetPhone = canAccessCreateAndUpdateContactField(Schema.sObjectType.Contact.fields.Phone);
         Boolean canCreateContact = Schema.sObjectType.Contact.isCreateable();
-        Boolean canReadCustomerName = canAccessCreateAndUpdateRegistrationField(Schema.sObjectType.Registration_SCH__c.fields.Customer_Name__c);
-        Boolean canReadCustomerLastName = canAccessCreateAndUpdateRegistrationField(Schema.sObjectType.Registration_SCH__c.fields.Customer_Lastname__c);
-        Boolean canReadCustomerEmail = canAccessCreateAndUpdateRegistrationField(Schema.sObjectType.Registration_SCH__c.fields.Customer_Email__c);
-        Boolean canReadCustomerContact = canAccessCreateAndUpdateRegistrationField(Schema.sObjectType.Registration_SCH__c.fields.Customer_Contact__c);
-        Boolean canSetFirstName = canAccessCreateAndUpdateContactField(Schema.sObjectType.Contact.fields.FirstName);
-        Boolean canSetLastName = canAccessCreateAndUpdateContactField(Schema.sObjectType.Contact.fields.LastName);
-        Boolean canSetEmail = canAccessCreateAndUpdateContactField(Schema.sObjectType.Contact.fields.Email);
-        Boolean canSetMobilePhone = canAccessCreateAndUpdateContactField(Schema.sObjectType.Contact.fields.MobilePhone);
-        Boolean canSetPhone = canAccessCreateAndUpdateContactField(Schema.sObjectType.Contact.fields.Phone);
+        Boolean canReadCustomerName = Schema.sObjectType.Registration_SCH__c.fields.Customer_Name__c.isAccessible();
+        Boolean canReadCustomerLastName = Schema.sObjectType.Registration_SCH__c.fields.Customer_Lastname__c.isAccessible();
+        Boolean canReadCustomerEmail = Schema.sObjectType.Registration_SCH__c.fields.Customer_Email__c.isAccessible();
+        Boolean canReadCustomerContact = Schema.sObjectType.Registration_SCH__c.fields.Customer_Contact__c.isAccessible();
+        Boolean canSetFirstName = Schema.sObjectType.Contact.fields.FirstName.isCreateable();
+        Boolean canSetLastName = Schema.sObjectType.Contact.fields.LastName.isCreateable();
+        Boolean canSetEmail = Schema.sObjectType.Contact.fields.Email.isCreateable();
+        Boolean canSetMobilePhone = Schema.sObjectType.Contact.fields.MobilePhone.isCreateable();
+        Boolean canSetPhone = Schema.sObjectType.Contact.fields.Phone.isCreateable();
 
         if (canCreateContact && canReadCustomerLastName && canSetLastName) {
             Contact newContact = new Contact();
             if (canReadCustomerName && canSetFirstName && String.isNotBlank(pr.Customer_Name__c)) {
                 newContact.FirstName = pr.Customer_Name__c;
             }
-            if (String.isNotBlank(pr.Customer_Lastname__c)) {
+            if (canReadCustomerLastName && String.isNotBlank(pr.Customer_Lastname__c)) {
                 newContact.LastName = pr.Customer_Lastname__c;
             }
             if (canReadCustomerEmail && canSetEmail && String.isNotBlank(pr.Customer_Email__c)) {
@@ -4747,7 +4798,7 @@ public with sharing class EventBooking_Sch {
                     newContact.Phone = pr.Customer_Contact__c;
                 }
             }
-            if (String.isNotBlank(newContact.LastName)) {
+            if (String.isNotBlank(newContact.LastName) && canSetParentContact) {
                 insert newContact;
                 pr.Contact__c = newContact.Id;
             }
