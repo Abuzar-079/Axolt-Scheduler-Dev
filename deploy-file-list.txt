@@ -1,2 +1,1 @@
-main/default/classes/EventBooking_Sch.cls
-main/default/classes/EventBooking_SchTestClass.cls
+main/default/classes/InputLookUp_Sch.cls

@@ -266,7 +266,10 @@ export default class Queue_Sch_LWC extends LightningElement {
                 filterType: this.filterType
             });
             console.log('this.locId:', this.locId);
-            console.log('Inside getQueueRecords result ', JSON.stringify(result));
+            // commented by Abuzar on 2026-03-25 for the Checkmarkx issue and added below line "Logging full queue response objects can expose sensitive data and trigger JS Crypto Secrets findings."
+            // console.log('Inside getQueueRecords result ', JSON.stringify(result));
+            console.log('Inside getQueueRecords result. queueRecordCount:', result.queueRecords ? result.queueRecords.length : 0, 'bookedRecordCount:', result.bookedRecords ? result.bookedRecords.length : 0);
+            //changes end here by Abuzar
             this.queueRecords = result.queueRecords.map(record => ({
                 ...record,
                 waitingTime: this.calculateWaitingTime(record.Registration_Time__c)
@@ -333,7 +336,9 @@ export default class Queue_Sch_LWC extends LightningElement {
                     : 'axolt-list-card'
             };
         });
-        console.log('response init~>', JSON.stringify(this.maps));
+        // commented by Abuzar on 2026-03-25 for the Checkmarkx issue and added below line "Logging queue map objects can expose sensitive data and trigger JS Crypto Secrets findings."
+        // console.log('response init~>', JSON.stringify(this.maps));
+        console.log('response init completed. queueCount:', this.maps.length, 'selectedRecordPresent:', Boolean(this.selectedRecordId));
         this.queueCount = custs.length;
 
         this.allBookedAppointments = response.bookedAppointment || [];
@@ -346,7 +351,10 @@ export default class Queue_Sch_LWC extends LightningElement {
                     : 'axolt-list-card'
             };
         });
-        console.log('this.ExistReg~>', JSON.stringify(this.ExistReg));
+        // commented by Abuzar on 2026-03-25 for the Checkmarkx issue and added below line "Logging booked registration objects can expose sensitive data and trigger JS Crypto Secrets findings."
+        // console.log('this.ExistReg~>', JSON.stringify(this.ExistReg));
+        console.log('Existing registrations updated. bookedCount:', this.ExistReg.length);
+        //changes end here by Abuzar
         this.qry = this.buildIdQuery(this.locations);
         this.qryForServices = this.services.length > 0 ? this.buildIdQuery(this.services) : 'And Id = Null';
         this.qryserheader = this.qryForServices;
@@ -372,7 +380,9 @@ export default class Queue_Sch_LWC extends LightningElement {
         this.Spinner = true;
         try {
             const response = await getRegLocationqueueRecords({ location: this.locId, service: this.setServiceID, eventid: this.setExpert });
-            console.log('response getRecords~>', JSON.stringify(response));
+            // commented by Abuzar on 2026-03-25 for the Checkmarkx issue and added below line "Logging full queue response objects can expose sensitive data and trigger JS Crypto Secrets findings."
+            // console.log('response getRecords~>', JSON.stringify(response));
+            console.log('response getRecords completed. queueCount:', response.mapOfRecords ? Object.keys(response.mapOfRecords).length : 0, 'locationCount:', response.allLocations ? response.allLocations.length : 0, 'serviceCount:', response.allServices ? response.allServices.length : 0);
             // commented by abuzar on 2026-03-14 for the scanning issue and added below line "Duplicate code detected for language 'javascript'. Found 2 code locations containing the same block of code consisting of 419 tokens across 50 lines."
             // this.selectedQueue = response.getLocation?.[0]?.Id || '';
             // this.LocationName = response.getLocation?.[0]?.Location__r?.Name || '';
@@ -435,7 +445,9 @@ export default class Queue_Sch_LWC extends LightningElement {
         this.Spinner = true;
         try {
             const response = await setLocations({ location: this.locId });
-            console.log('response init~>', JSON.stringify(response));
+            // commented by Abuzar on 2026-03-25 for the Checkmarkx issue and added below line "Logging full location response objects can expose sensitive data and trigger JS Crypto Secrets findings."
+            // console.log('response init~>', JSON.stringify(response));
+            console.log('response init completed. queueCount:', response.mapOfRecords ? Object.keys(response.mapOfRecords).length : 0, 'locationCount:', response.allLocations ? response.allLocations.length : 0, 'serviceCount:', response.allServices ? response.allServices.length : 0);
             this.selectedQueue = response.getLocation?.[0]?.Id || '';
             this.LocationName = response.getLocation?.[0]?.Location__r?.Name || '';
             this.initLocation = response.floc;
@@ -514,7 +526,10 @@ export default class Queue_Sch_LWC extends LightningElement {
     handleInputChange(event) {
         const field = event.target.name;
         this.queueRecord = { ...this.queueRecord, [field]: event.target.value };
-        console.log('this.queueRecord :', JSON.stringify(this.queueRecord));
+        // commented by Abuzar on 2026-03-25 for the Checkmarkx issue and added below line "Logging full queueRecord objects can expose sensitive data and trigger JS Crypto Secrets findings."
+        // console.log('this.queueRecord :', JSON.stringify(this.queueRecord));
+        console.log('queueRecord field updated. field:', field, 'hasRecordId:', Boolean(this.queueRecord?.Id));
+        //changes end here by Abuzar
     }
 
     get checkInLabel() {
@@ -853,8 +868,11 @@ export default class Queue_Sch_LWC extends LightningElement {
             lookupComp6.handleClose();
             this.setExpert = null;
         }
-        console.log('this.setServiceID:' + this.setServiceID);
-        console.log('this.setExpert:' + this.setExpert);
+        // commented by Abuzar on 2026-03-25 for the Checkmarkx issue and added below line "Logging selected service or expert identifiers can expose sensitive data and trigger JS Crypto Secrets findings."
+        // console.log('this.setServiceID:' + this.setServiceID);
+        // console.log('this.setExpert:' + this.setExpert);
+        console.log('Selection state cleared. hasServiceId:', Boolean(this.setServiceID), 'hasExpert:', Boolean(this.setExpert));
+        //changes end here by Abuzar
     }
 
     handleQueueRowAction(event) {
@@ -995,15 +1013,19 @@ export default class Queue_Sch_LWC extends LightningElement {
 
     async updateSelectedRecordState(selected) {
         this.queueRecord = this.buildQueueRecord(selected);
-        console.log(' this.queueRecord: ', JSON.stringify(this.queueRecord));
-        console.log('selected.ExpertId: ', this.queueRecord.expertId);
+        // commented by Abuzar on 2026-03-25 for the Checkmarkx issue and added below line "Logging selected queue record objects can expose sensitive data and trigger JS Crypto Secrets findings."
+        // console.log(' this.queueRecord: ', JSON.stringify(this.queueRecord));
+        // console.log('selected.ExpertId: ', this.queueRecord.expertId);
+        console.log('Selected queue record state prepared. hasQueueRecordId:', Boolean(this.queueRecord?.Id), 'hasExpertId:', Boolean(this.queueRecord?.expertId));
         this.setServiceID = '000000000000000AAA';
         await Promise.resolve();
         this.setServiceID = selected.Product2__c || null;
         this.setExpert = '000000000000000AAA';
         await Promise.resolve();
         this.setExpert = this.queueRecord.expertId || null;
-        console.log('this.setExpert: ', this.setExpert);
+        // commented by Abuzar on 2026-03-25 for the Checkmarkx issue and added below line "Logging selected expert identifiers can expose sensitive data and trigger JS Crypto Secrets findings."
+        // console.log('this.setExpert: ', this.setExpert);
+        console.log('Selected queue record state applied. hasServiceId:', Boolean(this.setServiceID), 'hasExpert:', Boolean(this.setExpert));
         this.selectedRecordId = selected.Id;
         this.maps = this.maps.map(r => {
             return {
@@ -1027,7 +1049,9 @@ export default class Queue_Sch_LWC extends LightningElement {
         const index = event.currentTarget.dataset.index;
         console.log('Clicked index: ', index);
         const selected = this.maps[index].value;
-        console.log('selected: ', JSON.stringify(selected));
+        // commented by Abuzar on 2026-03-25 for the Checkmarkx issue and added below line "Logging selected queue entry objects can expose sensitive data and trigger JS Crypto Secrets findings."
+        // console.log('selected: ', JSON.stringify(selected));
+        console.log('Queue record selected. hasSelectedRecord:', Boolean(selected?.Id), 'hasServiceId:', Boolean(selected?.Product2__c));
 
         // commented by abuzar on 2026-03-14 for the scanning issue and added below line "Duplicate code detected for language 'javascript'. Found 2 code locations containing the same block of code."
         // this.queueRecord = {
@@ -1073,7 +1097,10 @@ export default class Queue_Sch_LWC extends LightningElement {
         const index = event.currentTarget.dataset.index;
         console.log('Clicked index: ', index);
         const selected = this.ExistReg[index];
-        console.log('selected: ', JSON.stringify(selected));
+        // commented by Abuzar on 2026-03-25 for the Checkmarkx issue and added below line "Logging selected booked registration objects can expose sensitive data and trigger JS Crypto Secrets findings."
+        // console.log('selected: ', JSON.stringify(selected));
+        console.log('Booked record selected. hasSelectedRecord:', Boolean(selected?.Id), 'hasServiceId:', Boolean(selected?.Product2__c));
+        //changes end here by Abuzar
 
         // commented by abuzar on 2026-03-14 for the scanning issue and added below line "Duplicate code detected for language 'javascript'. Found 2 code locations containing the same block of code."
         // this.queueRecord = {

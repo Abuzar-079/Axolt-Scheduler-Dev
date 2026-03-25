@@ -344,11 +344,13 @@ export default class QueueExpertSch extends LightningElement {
 
         const selectedQueueEntry = this.maps[index];
         const currentStatus = selectedQueueEntry.value.Booked_Current_Status__c;
-        console.log('Queue entry selected', {
-            index,
-            hasButtonLabel: Boolean(selectedQueueEntry.buttonLabel),
-            isInProgress: currentStatus === 'InProgress'
-        });
+        // commented by Abuzar on 2026-03-25 for the Checkmarkx issue and added below line "Logging queue entry objects can expose sensitive data and trigger JS Crypto Secrets findings."
+        // console.log('Queue entry selected', {
+        //     index,
+        //     hasButtonLabel: Boolean(selectedQueueEntry.buttonLabel),
+        //     isInProgress: currentStatus === 'InProgress'
+        // });
+        console.log('Queue entry selected. index:', index, 'hasButtonLabel:', Boolean(selectedQueueEntry.buttonLabel), 'isInProgress:', currentStatus === 'InProgress');
 
         if (currentStatus === 'InProgress') {
             this.inprogress = false;
@@ -418,11 +420,14 @@ export default class QueueExpertSch extends LightningElement {
                             return cus;
                         });
 
-                        console.log('popRecord completed', {
-                            updatedIndex: index,
-                            updatedStatus: this.maps[index] && this.maps[index].value && this.maps[index].value.Booked_Current_Status__c,
-                            updatedButtonLabel: this.maps[index] && this.maps[index].buttonLabel
-                        });
+                        // commented by Abuzar on 2026-03-25 for the Checkmarkx issue and added below line "Logging updated queue entry objects can expose sensitive data and trigger JS Crypto Secrets findings."
+                        // console.log('popRecord completed', {
+                        //     updatedIndex: index,
+                        //     updatedStatus: this.maps[index] && this.maps[index].value && this.maps[index].value.Booked_Current_Status__c,
+                        //     updatedButtonLabel: this.maps[index] && this.maps[index].buttonLabel
+                        // });
+                        console.log('popRecord completed. updatedIndex:', index, 'recordUpdated:', Boolean(this.maps[index]));
+                        //changes end here by Abuzar
                     })
                     .catch(error => {
                         console.error('Error in popRecord:', error);
@@ -924,12 +929,14 @@ export default class QueueExpertSch extends LightningElement {
             catValue
         })
             .then(result => {
-                console.log('getRecordsOfLocations response received', {
-                    attachmentCount: result.Attachments ? result.Attachments.length : 0,
-                    noteCount: result.Notes ? result.Notes.length : 0,
-                    queueCount: result.mapOfRecords ? Object.keys(result.mapOfRecords).length : 0,
-                    registrationCount: result.regRecords ? result.regRecords.length : 0
-                });
+                // commented by Abuzar on 2026-03-25 for the Checkmarkx issue and added below line "Logging response objects derived from queue records can expose sensitive data and trigger JS Crypto Secrets findings."
+                // console.log('getRecordsOfLocations response received', {
+                //     attachmentCount: result.Attachments ? result.Attachments.length : 0,
+                //     noteCount: result.Notes ? result.Notes.length : 0,
+                //     queueCount: result.mapOfRecords ? Object.keys(result.mapOfRecords).length : 0,
+                //     registrationCount: result.regRecords ? result.regRecords.length : 0
+                // });
+                console.log('getRecordsOfLocations response received. attachmentCount:', result.Attachments ? result.Attachments.length : 0, 'noteCount:', result.Notes ? result.Notes.length : 0, 'queueCount:', result.mapOfRecords ? Object.keys(result.mapOfRecords).length : 0, 'registrationCount:', result.regRecords ? result.regRecords.length : 0);
                 this.setRegValues();
                 this.selectedNotes = result.Notes || [];
                 this.selectedAttachments = result.Attachments || [];
@@ -1001,11 +1008,13 @@ export default class QueueExpertSch extends LightningElement {
             waitingTime: currentCounter
         })
             .then(result => {
-                console.log('popUpRecordsOfId response received', {
-                    attachmentCount: result.Attachments ? result.Attachments.length : 0,
-                    noteCount: result.Notes ? result.Notes.length : 0,
-                    hasUpdatedRecord: Boolean(result.mapOfRecords && result.mapOfRecords[selId])
-                });
+                // commented by Abuzar on 2026-03-25 for the Checkmarkx issue and added below line "Logging queue response objects can expose sensitive data and trigger JS Crypto Secrets findings."
+                // console.log('popUpRecordsOfId response received', {
+                //     attachmentCount: result.Attachments ? result.Attachments.length : 0,
+                //     noteCount: result.Notes ? result.Notes.length : 0,
+                //     hasUpdatedRecord: Boolean(result.mapOfRecords && result.mapOfRecords[selId])
+                // });
+                console.log('popUpRecordsOfId response received. attachmentCount:', result.Attachments ? result.Attachments.length : 0, 'noteCount:', result.Notes ? result.Notes.length : 0, 'hasUpdatedRecord:', Boolean(result.mapOfRecords && result.mapOfRecords[selId]));
                 this.selectedNotes = result.Notes || [];
                 this.selectedAttachments = result.Attachments || [];
 
@@ -1023,7 +1032,9 @@ export default class QueueExpertSch extends LightningElement {
                 this.orginalMap = { ...this.orginalMap, [selId]: result.mapOfRecords[selId] || this.orginalMap[selId] };
                 this.recordValues = result.ObjectValues || [];
                 this.inprogress = true;
-                console.log('recordValues set:', this.recordValues);
+                // commented by Abuzar on 2026-03-25 for the Checkmarkx issue and added below line "Logging full registration records can expose sensitive data and trigger JS Crypto Secrets findings."
+                // console.log('recordValues set:', this.recordValues);
+                console.log('recordValues set. recordCount:', this.recordValues.length);
 
                 if (this.recordValues.length > 0) {
                     this.recordValues = [{ ...this.recordValues[0], Booked_Current_Status__c: 'InProgress' }];
@@ -1037,7 +1048,10 @@ export default class QueueExpertSch extends LightningElement {
                     this.cusEmail = this.recordValues[0].Customer_Email__c || this.cusEmail || '';
                     this.cusphone = this.recordValues[0].Customer_Contact__c || this.cusphone || '';
                     this.registrationType = this.recordValues[0].Registration_Type__c || this.registrationType || '';
-                    console.log('setRecValues called, recordValues:', this.recordValues);
+                    // commented by Abuzar on 2026-03-25 for the Checkmarkx issue and added below line "Logging full registration records can expose sensitive data and trigger JS Crypto Secrets findings."
+                    // console.log('setRecValues called, recordValues:', this.recordValues);
+                    console.log('setRecValues called. recordCount:', this.recordValues.length, 'hasPrimaryRecord:', Boolean(this.recordValues[0]?.Id));
+                    //changes end here by Abuzar
                 } else {
                     console.warn('No recordValues returned from popUpRecordsOfId');
                     this.dispatchEvent(
