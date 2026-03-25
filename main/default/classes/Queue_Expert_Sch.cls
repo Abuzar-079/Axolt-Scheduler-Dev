@@ -398,6 +398,25 @@ public with sharing class Queue_Expert_Sch {
         if (String.isBlank(parent)) {
             throw new AuraHandledException('Parent record id is required.');
         }
+        Id parentId;
+        try {
+            parentId = (Id) parent;
+        } catch (Exception ex) {
+            throw new AuraHandledException('Invalid parent record id.');
+        }
+        Schema.SObjectType parentObjectType = parentId.getSObjectType();
+        Schema.DescribeSObjectResult parentDescribe = parentObjectType.getDescribe();
+        if (!parentDescribe.isAccessible()) {
+            throw new AuraHandledException('Insufficient access to the parent record.');
+        }
+        List<SObject> parentRecords = Database.query(
+            'SELECT Id FROM ' + parentDescribe.getName() +
+            ' WHERE Id = \'' + String.escapeSingleQuotes(parent) + '\'' +
+            ' WITH USER_MODE LIMIT 1'
+        );
+        if (parentRecords.isEmpty()) {
+            throw new AuraHandledException('Parent record is not accessible.');
+        }
         if (
             !Schema.sObjectType.Attachment.isCreateable() ||
             !Schema.sObjectType.Attachment.fields.ParentId.isCreateable() ||
@@ -409,12 +428,20 @@ public with sharing class Queue_Expert_Sch {
         }
 
         base64Data = EncodingUtil.urlDecode(base64Data, 'UTF-8');
+        // commented by Abuzar on 2026-03-25 for the Checkmarkx issue and added below line "Attachment insert using ParentId must also validate CRUD access on the parent object and record."
+        // Attachment a = new Attachment();
+        // a.ParentId = parent;
+        // a.Body = EncodingUtil.base64Decode(base64Data);
+        // a.Name = fileName;
+        // a.ContentType = contentType;
+        // Database.insert(a, false, AccessLevel.USER_MODE);
         Attachment a = new Attachment();
-        a.ParentId = parent;
+        a.ParentId = parentId;
         a.Body = EncodingUtil.base64Decode(base64Data);
         a.Name = fileName;
         a.ContentType = contentType;
         Database.insert(a, false, AccessLevel.USER_MODE);
+        //changes end here by Abuzar
         //System.debug(LoggingLevel.DEBUG, a.Id);
         // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
         // List<Attachment> myAtt = [Select Id, Name, ParentId, ContentType From Attachment Where ParentId  =:parent WITH USER_MODE Order By CreatedDate Asc LIMIT 1000];
