@@ -75,7 +75,7 @@ public with sharing class Queue_Expert_Sch {
             //                         Registration_Time__c, Registration_End_Time__c, End_Time__c, Meeting_Status__c, Meeting_outcome__c,
             //                         Purpose__c, Customer_Name__c, Customer_Lastname__c, Customer_Email__c, Customer_Contact__c,
             //                         Registration_Price__c, Total_Tax_Amount__c, Discount__c, LastModifiedDate, waiting_Time__c,
-            //                         Booked_Current_Status__c FROM Registration_SCH__c WHERE id = :regId WITH SECURITY_ENFORCED LIMIT 1000];
+            //                         Booked_Current_Status__c FROM Registration_SCH__c WHERE id = :regId WITH USER_MODE LIMIT 1000];
             registrationToUpdate = [SELECT id, Name, OwnerId, Product2__c, Wait_Time_Exceeded__c, RecordTypeId, Account__c, Account__r.Name,
                                     Expert_Location__c, Company__c, Customer_Status__c, Is_Amount_Refunded__c,
                                     Twilio_Message__c, Queue__c, Queue__r.Name, Customer_Type__c, Status__c, Registration_Type__c,
@@ -205,14 +205,14 @@ public with sharing class Queue_Expert_Sch {
         Wrapper wrapper=new Wrapper(); Registration_SCH__c registrationToUpdate;
         try {
             registrationToUpdate = [SELECT Booked_Current_Status__c,waiting_Time__c FROM Registration_SCH__c
-                                    WHERE id=: id WITH SECURITY_ENFORCED LIMIT 1];
+                                    WHERE id=: id WITH USER_MODE LIMIT 1];
             registrationToUpdate.Booked_Current_Status__c = 'InProgress';
             registrationToUpdate.waiting_Time__c = waitingTime;
             registrationToUpdate.Serve_Start_Time__c = System.now();
 
             // update registrationToUpdate;
             Database.update(registrationToUpdate, false, AccessLevel.USER_MODE);
-            registrationToUpdate = [SELECT Booked_Current_Status__c FROM Registration_SCH__c WHERE id=: id WITH SECURITY_ENFORCED LIMIT 1];
+            registrationToUpdate = [SELECT Booked_Current_Status__c FROM Registration_SCH__c WHERE id=: id WITH USER_MODE LIMIT 1];
             if(registrationToUpdate.Booked_Current_Status__c == 'InProgress'){wrapper.updateStatusForCancel=True;}    } catch(DmlException e) {
             return null;
                 //System.debug(LoggingLevel.DEBUG, 'An unexpected error has occurred: ' + e.getMessage());
@@ -285,7 +285,7 @@ public with sharing class Queue_Expert_Sch {
         Registration_SCH__c registrationToUpdate;
         try {
             // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
-            // registrationToUpdate = [SELECT Product2__c,Status__c,Booked_Current_Status__c FROM Registration_SCH__c WHERE id=: passedId WITH SECURITY_ENFORCED LIMIT 1];
+            // registrationToUpdate = [SELECT Product2__c,Status__c,Booked_Current_Status__c FROM Registration_SCH__c WHERE id=: passedId WITH USER_MODE LIMIT 1];
             registrationToUpdate = [SELECT Product2__c,Status__c,Booked_Current_Status__c FROM Registration_SCH__c WHERE id=: passedId WITH USER_MODE LIMIT 1];
             //changes end here by Abuzar
 
@@ -297,7 +297,7 @@ public with sharing class Queue_Expert_Sch {
             // update registrationToUpdate;
             Database.update(registrationToUpdate, false, AccessLevel.USER_MODE);
             // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
-            // registrationToUpdate = [SELECT Product2__c,Status__c FROM Registration_SCH__c WHERE id=: passedId WITH SECURITY_ENFORCED LIMIT 1];
+            // registrationToUpdate = [SELECT Product2__c,Status__c FROM Registration_SCH__c WHERE id=: passedId WITH USER_MODE LIMIT 1];
             registrationToUpdate = [SELECT Product2__c,Status__c FROM Registration_SCH__c WHERE id=: passedId WITH USER_MODE LIMIT 1];
             //changes end here by Abuzar
             if( registrationToUpdate.Status__c == status){wrapper.updateStatusForCancel=True;} } catch(DmlException e) {
@@ -348,7 +348,7 @@ public with sharing class Queue_Expert_Sch {
 
         try{
             // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
-            // Registration_SCH__c registrationToUpdate = [SELECT id, Name, OwnerId,Product2__c,Wait_Time_Exceeded__c, RecordTypeId, Account__c,Account__r.Name, Expert_Location__c,Company__c, Customer_Status__c,Is_Amount_Refunded__c,Twilio_Message__c, Queue__c,Queue__r.Name,Customer_Type__c, Status__c, Registration_Type__c,Registration_Time__c,Registration_End_Time__c,End_Time__c,  Meeting_Status__c, Meeting_outcome__c,Purpose__c,Customer_Name__c, Customer_Lastname__c, Customer_Email__c,Customer_Contact__c, Registration_Price__c, Total_Tax_Amount__c, Discount__c,LastModifiedDate,waiting_Time__c,Booked_Current_Status__c FROM Registration_SCH__c WHERE id=: regId WITH SECURITY_ENFORCED LIMIT 1000];
+            // Registration_SCH__c registrationToUpdate = [SELECT id, Name, OwnerId,Product2__c,Wait_Time_Exceeded__c, RecordTypeId, Account__c,Account__r.Name, Expert_Location__c,Company__c, Customer_Status__c,Is_Amount_Refunded__c,Twilio_Message__c, Queue__c,Queue__r.Name,Customer_Type__c, Status__c, Registration_Type__c,Registration_Time__c,Registration_End_Time__c,End_Time__c,  Meeting_Status__c, Meeting_outcome__c,Purpose__c,Customer_Name__c, Customer_Lastname__c, Customer_Email__c,Customer_Contact__c, Registration_Price__c, Total_Tax_Amount__c, Discount__c,LastModifiedDate,waiting_Time__c,Booked_Current_Status__c FROM Registration_SCH__c WHERE id=: regId WITH USER_MODE LIMIT 1000];
             Registration_SCH__c registrationToUpdate = [SELECT id, Name, OwnerId,Product2__c,Wait_Time_Exceeded__c, RecordTypeId, Account__c,Account__r.Name, Expert_Location__c,Company__c, Customer_Status__c,Is_Amount_Refunded__c,Twilio_Message__c, Queue__c,Queue__r.Name,Customer_Type__c, Status__c, Registration_Type__c,Registration_Time__c,Registration_End_Time__c,End_Time__c,  Meeting_Status__c, Meeting_outcome__c,Purpose__c,Customer_Name__c, Customer_Lastname__c, Customer_Email__c,Customer_Contact__c, Registration_Price__c, Total_Tax_Amount__c, Discount__c,LastModifiedDate,waiting_Time__c,Booked_Current_Status__c FROM Registration_SCH__c WHERE id=: regId WITH USER_MODE LIMIT 1000];
             //changes end here by Abuzar
             // commented by abuzar on 2026-03-13 for the scanning issue and added below line "reduced NCSS and repeated assignments in getRegRecordUpdate"
@@ -363,7 +363,7 @@ public with sharing class Queue_Expert_Sch {
             //changes end here by abuzar
             Database.update(registrationToUpdate, false, AccessLevel.USER_MODE);
             // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
-            // registrationToUpdate = [SELECT Status__c,Product2__c FROM Registration_SCH__c WHERE id=: regId WITH SECURITY_ENFORCED LIMIT 1000];
+            // registrationToUpdate = [SELECT Status__c,Product2__c FROM Registration_SCH__c WHERE id=: regId WITH USER_MODE LIMIT 1000];
             registrationToUpdate = [SELECT Status__c,Product2__c FROM Registration_SCH__c WHERE id=: regId WITH USER_MODE LIMIT 1000];
             //changes end here by Abuzar
             if( registrationToUpdate.Status__c == 'Completed') { wrapper.updateStatus=True; }
@@ -417,7 +417,7 @@ public with sharing class Queue_Expert_Sch {
         Database.insert(a, false, AccessLevel.USER_MODE);
         //System.debug(LoggingLevel.DEBUG, a.Id);
         // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
-        // List<Attachment> myAtt = [Select Id, Name, ParentId, ContentType From Attachment Where ParentId  =:parent WITH SECURITY_ENFORCED Order By CreatedDate Asc LIMIT 1000];
+        // List<Attachment> myAtt = [Select Id, Name, ParentId, ContentType From Attachment Where ParentId  =:parent WITH USER_MODE Order By CreatedDate Asc LIMIT 1000];
         List<Attachment> myAtt = [Select Id, Name, ParentId, ContentType From Attachment Where ParentId  =:parent WITH USER_MODE Order By CreatedDate Asc LIMIT 1000];
         //changes end here by Abuzar
         return myAtt;
@@ -440,7 +440,7 @@ public with sharing class Queue_Expert_Sch {
             //System.debug(LoggingLevel.DEBUG, 'Errro=>'+e.getMessage());wrapper.errorMsg = e.getMessage() +' Line Number @ : '+ e.getLineNumber();
         }
         // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
-        // List<Note> myAtt = [Select Id, Title, ParentId From Note Where ParentId=:regID WITH SECURITY_ENFORCED Order By CreatedDate Asc LIMIT 1000];
+        // List<Note> myAtt = [Select Id, Title, ParentId From Note Where ParentId=:regID WITH USER_MODE Order By CreatedDate Asc LIMIT 1000];
         List<Note> myAtt = [Select Id, Title, ParentId From Note Where ParentId=:regID WITH USER_MODE Order By CreatedDate Asc LIMIT 1000];
         //changes end here by Abuzar
         return myAtt;
@@ -573,7 +573,7 @@ public with sharing class Queue_Expert_Sch {
         if (String.isBlank(userId)) {
             return null;
         }
-        List<User> users = [SELECT Id, Name FROM User WHERE Id = :userId WITH SECURITY_ENFORCED LIMIT 1];
+        List<User> users = [SELECT Id, Name FROM User WHERE Id = :userId WITH USER_MODE LIMIT 1];
         return users.isEmpty() ? null : users[0].Name;
     }
 

@@ -10,7 +10,7 @@ public with sharing class Queue_Sch_Support {
                 //     SELECT Id, Wait_Time_Exceeded__c
                 //     FROM Registration_SCH__c
                 //     WHERE Id = :regId
-                //     WITH SECURITY_ENFORCED
+                //     WITH USER_MODE
                 //     LIMIT 1000
                 // ];
                 Registration_SCH__c reg = [
@@ -43,7 +43,7 @@ public with sharing class Queue_Sch_Support {
             //     SELECT Id
             //     FROM Queue__c
             //     WHERE Location__c = :location AND Status__c = 'Active'
-            //     WITH SECURITY_ENFORCED
+            //     WITH USER_MODE
             //     LIMIT 1000
             // ];
             List<Queue__c> queueOfloc = [
@@ -136,7 +136,7 @@ public with sharing class Queue_Sch_Support {
     public static Queue_Sch_Wrapper getlookups(String location){
         Queue_Sch_Wrapper wrapper = new Queue_Sch_Wrapper();
         // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
-        // List<Expert_Location__c> loc = [SELECT Id, Name FROM Expert_Location__c WHERE Id = :location WITH SECURITY_ENFORCED LIMIT 1000];
+        // List<Expert_Location__c> loc = [SELECT Id, Name FROM Expert_Location__c WHERE Id = :location WITH USER_MODE LIMIT 1000];
         List<Expert_Location__c> loc = [SELECT Id, Name FROM Expert_Location__c WHERE Id = :location WITH USER_MODE LIMIT 1000];
         //changes end here by Abuzar
         if(!loc.isEmpty()) {
@@ -144,7 +144,7 @@ public with sharing class Queue_Sch_Support {
         }
         Queue_Sch_Wrapper filterwrap = getFilterValues(location, null, null);
         // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
-        // List<Product2> forPrograms = [SELECT Id FROM Product2 WHERE Id IN :filterwrap.allServices WITH SECURITY_ENFORCED LIMIT 1000];
+        // List<Product2> forPrograms = [SELECT Id FROM Product2 WHERE Id IN :filterwrap.allServices WITH USER_MODE LIMIT 1000];
         List<Product2> forPrograms = [SELECT Id FROM Product2 WHERE Id IN :filterwrap.allServices WITH USER_MODE LIMIT 1000];
         //changes end here by Abuzar
         wrapper.products = forPrograms;
@@ -177,7 +177,7 @@ public with sharing class Queue_Sch_Support {
         //changes end here by Abuzar
         wrapper.allServices = filterwrap.allServices;
         // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
-        // List<Product2> forPrograms = [SELECT Id, Name FROM Product2 WHERE Id = :serviceId WITH SECURITY_ENFORCED LIMIT 1000];
+        // List<Product2> forPrograms = [SELECT Id, Name FROM Product2 WHERE Id = :serviceId WITH USER_MODE LIMIT 1000];
         List<Product2> forPrograms = [SELECT Id, Name FROM Product2 WHERE Id = :serviceId WITH USER_MODE LIMIT 1000];
         //changes end here by Abuzar
         wrapper.allServices.clear();
@@ -197,7 +197,7 @@ public with sharing class Queue_Sch_Support {
             throw new AuraHandledException('Insufficient permissions to access Product2.');
         }
         // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
-        // List<Product2> allServices = [SELECT Id, Name FROM Product2 WITH SECURITY_ENFORCED LIMIT 10];
+        // List<Product2> allServices = [SELECT Id, Name FROM Product2 WITH USER_MODE LIMIT 10];
         List<Product2> allServices = [SELECT Id, Name FROM Product2 WITH USER_MODE LIMIT 10];
         //changes end here by Abuzar
         for(Product2 service : allServices){
@@ -400,7 +400,7 @@ public with sharing class Queue_Sch_Support {
 
     private static Integer getWorkbenchRefreshValue(){
         // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
-        // List<SystemCode__c> sysWB = [SELECT Workbench_Refresh__c FROM SystemCode__c WITH SECURITY_ENFORCED LIMIT 1];
+        // List<SystemCode__c> sysWB = [SELECT Workbench_Refresh__c FROM SystemCode__c WITH USER_MODE LIMIT 1];
         List<SystemCode__c> sysWB = [SELECT Workbench_Refresh__c FROM SystemCode__c WITH USER_MODE LIMIT 1];
         //changes end here by Abuzar
         if(sysWB.isEmpty()){
@@ -411,7 +411,7 @@ public with sharing class Queue_Sch_Support {
 
     private static Set<Id> getActiveLocationIds(){
         // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
-        // List<Queue__c> queueLocations = [SELECT Id, Location__c, Location__r.Name FROM Queue__c WHERE Status__c = 'Active' WITH SECURITY_ENFORCED LIMIT 1000];
+        // List<Queue__c> queueLocations = [SELECT Id, Location__c, Location__r.Name FROM Queue__c WHERE Status__c = 'Active' WITH USER_MODE LIMIT 1000];
         List<Queue__c> queueLocations = [SELECT Id, Location__c, Location__r.Name FROM Queue__c WHERE Status__c = 'Active' WITH USER_MODE LIMIT 1000];
         //changes end here by Abuzar
         Set<Id> locationIds = new Set<Id>();
@@ -427,12 +427,12 @@ public with sharing class Queue_Sch_Support {
         }
         if(String.isNotEmpty(location)){
             // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
-            // return [SELECT Id, Location__c, Location__r.Name FROM Queue__c WHERE Location__c = :location AND Status__c = 'Active' AND Location__c != null WITH SECURITY_ENFORCED ORDER BY LastModifiedDate DESC LIMIT 1];
+            // return [SELECT Id, Location__c, Location__r.Name FROM Queue__c WHERE Location__c = :location AND Status__c = 'Active' AND Location__c != null WITH USER_MODE ORDER BY LastModifiedDate DESC LIMIT 1];
             return [SELECT Id, Location__c, Location__r.Name FROM Queue__c WHERE Location__c = :location AND Status__c = 'Active' AND Location__c != null WITH USER_MODE ORDER BY LastModifiedDate DESC LIMIT 1];
             //changes end here by Abuzar
         }
         // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
-        // return [SELECT Id, Location__c, Location__r.Name FROM Queue__c WHERE Status__c = 'Active' AND Location__c != null WITH SECURITY_ENFORCED ORDER BY LastModifiedDate DESC LIMIT 1];
+        // return [SELECT Id, Location__c, Location__r.Name FROM Queue__c WHERE Status__c = 'Active' AND Location__c != null WITH USER_MODE ORDER BY LastModifiedDate DESC LIMIT 1];
         return [SELECT Id, Location__c, Location__r.Name FROM Queue__c WHERE Status__c = 'Active' AND Location__c != null WITH USER_MODE ORDER BY LastModifiedDate DESC LIMIT 1];
         //changes end here by Abuzar
     }

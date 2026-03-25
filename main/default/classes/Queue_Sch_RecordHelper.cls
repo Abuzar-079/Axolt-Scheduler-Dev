@@ -77,7 +77,7 @@ public with sharing class Queue_Sch_RecordHelper {
         }
         List<Product2> serviceSlotDuration = new List<Product2>();
         if(String.isNotBlank(serviceId)){
-            serviceSlotDuration = [SELECT Id, SCH_Duration__c FROM Product2 WHERE Id = :serviceId WITH SECURITY_ENFORCED LIMIT 1];
+            serviceSlotDuration = [SELECT Id, SCH_Duration__c FROM Product2 WHERE Id = :serviceId WITH USER_MODE LIMIT 1];
         }
         if(!serviceSlotDuration.isEmpty() && serviceSlotDuration[0].SCH_Duration__c != null){
             return startTime.addMinutes(Integer.valueOf(serviceSlotDuration[0].SCH_Duration__c));
@@ -91,7 +91,7 @@ public with sharing class Queue_Sch_RecordHelper {
                        Product2__c, Product2__r.Name, End_Time__c, Status__c, Cancellation_Reasons__c,
                        Queue__c, Booked_Date__c, Checked_in_Date_Time__c, Booked_Current_Status__c,
                        Customer_Status__c, Token_Number__c
-                FROM Registration_SCH__c WHERE Id = :registrationId WITH SECURITY_ENFORCED LIMIT 1];
+                FROM Registration_SCH__c WHERE Id = :registrationId WITH USER_MODE LIMIT 1];
     }
 
     private static void applyUpdateExistingCustomerFields(Registration_SCH__c recordToUpdate, Queue_Sch_UpdateExistRecordsRequest request){
@@ -151,8 +151,8 @@ public with sharing class Queue_Sch_RecordHelper {
             return;
         }
         // commented by abuzar on 2026-03-12 for the scanning issue and added below line "Apex compile error: Expression cannot be a statement"
-        // [SELECT Id, Name FROM Product2 WHERE Id = :serviceId WITH SECURITY_ENFORCED LIMIT 1];
-        Product2 serviceProduct = [SELECT Id, Name FROM Product2 WHERE Id = :serviceId WITH SECURITY_ENFORCED LIMIT 1];
+        // [SELECT Id, Name FROM Product2 WHERE Id = :serviceId WITH USER_MODE LIMIT 1];
+        Product2 serviceProduct = [SELECT Id, Name FROM Product2 WHERE Id = :serviceId WITH USER_MODE LIMIT 1];
         if(serviceProduct == null){
             return;
         }
@@ -171,7 +171,7 @@ public with sharing class Queue_Sch_RecordHelper {
     }
 
     private static Id getActiveQueueId(String locationId){
-        List<Queue__c> queues = [SELECT Id FROM Queue__c WHERE Location__c = :locationId AND Status__c = 'Active' WITH SECURITY_ENFORCED LIMIT 1];
+        List<Queue__c> queues = [SELECT Id FROM Queue__c WHERE Location__c = :locationId AND Status__c = 'Active' WITH USER_MODE LIMIT 1];
         if(queues.isEmpty()){
             throw new Queue_Sch_CustomException('No Queue record available for selected location.');
         }
@@ -236,7 +236,7 @@ public with sharing class Queue_Sch_RecordHelper {
             registration.Queue__c = context.activeQueueId;
         }
         if(String.isNotBlank(request.res) && Schema.sObjectType.Registration_SCH__c.fields.Resource_Email__c.isCreateable()) {
-            List<User> userList = [SELECT Id, Email FROM User WHERE Id = :request.res WITH SECURITY_ENFORCED LIMIT 1];
+            List<User> userList = [SELECT Id, Email FROM User WHERE Id = :request.res WITH USER_MODE LIMIT 1];
             if(!userList.isEmpty() && String.isNotBlank(userList[0].Email)) {
                 registration.Resource_Email__c = userList[0].Email;
             }
@@ -268,17 +268,29 @@ public with sharing class Queue_Sch_RecordHelper {
 
     private static List<Contact> findExistingContacts(String email, String phone){
         if(String.isNotBlank(email) && String.isNotBlank(phone)){
-            List<Contact> contactsByEmailAndPhone = [SELECT Id, Name, Email, MobilePhone FROM Contact WHERE Email = :email AND MobilePhone = :phone WITH SECURITY_ENFORCED LIMIT 1];
+            // commented by Abuzar on 2026-03-25 for the Checkmarkx issue and added below line "Apex SOQL SOSL SECURITY ENFORCED USAGE"
+            // List<Contact> contactsByEmailAndPhone = [SELECT Id, Name, Email, MobilePhone FROM Contact WHERE Email = :email AND MobilePhone = :phone WITH USER_MODE LIMIT 1];
+            List<Contact> contactsByEmailAndPhone = [SELECT Id, Name, Email, MobilePhone FROM Contact WHERE Email = :email AND MobilePhone = :phone WITH USER_MODE LIMIT 1];
+            //changes end here by Abuzar
             if(!contactsByEmailAndPhone.isEmpty()){
                 return contactsByEmailAndPhone;
             }
-            return [SELECT Id, Name, Email, MobilePhone FROM Contact WHERE Email = :email WITH SECURITY_ENFORCED LIMIT 1];
+            // commented by Abuzar on 2026-03-25 for the Checkmarkx issue and added below line "Apex SOQL SOSL SECURITY ENFORCED USAGE"
+            // return [SELECT Id, Name, Email, MobilePhone FROM Contact WHERE Email = :email WITH USER_MODE LIMIT 1];
+            return [SELECT Id, Name, Email, MobilePhone FROM Contact WHERE Email = :email WITH USER_MODE LIMIT 1];
+            //changes end here by Abuzar
         }
         if(String.isNotBlank(email)){
-            return [SELECT Id, Name, Email, MobilePhone FROM Contact WHERE Email = :email WITH SECURITY_ENFORCED LIMIT 1];
+            // commented by Abuzar on 2026-03-25 for the Checkmarkx issue and added below line "Apex SOQL SOSL SECURITY ENFORCED USAGE"
+            // return [SELECT Id, Name, Email, MobilePhone FROM Contact WHERE Email = :email WITH USER_MODE LIMIT 1];
+            return [SELECT Id, Name, Email, MobilePhone FROM Contact WHERE Email = :email WITH USER_MODE LIMIT 1];
+            //changes end here by Abuzar
         }
         if(String.isNotBlank(phone)){
-            return [SELECT Id, Name, Email, MobilePhone FROM Contact WHERE MobilePhone = :phone WITH SECURITY_ENFORCED LIMIT 1];
+            // commented by Abuzar on 2026-03-25 for the Checkmarkx issue and added below line "Apex SOQL SOSL SECURITY ENFORCED USAGE"
+            // return [SELECT Id, Name, Email, MobilePhone FROM Contact WHERE MobilePhone = :phone WITH USER_MODE LIMIT 1];
+            return [SELECT Id, Name, Email, MobilePhone FROM Contact WHERE MobilePhone = :phone WITH USER_MODE LIMIT 1];
+            //changes end here by Abuzar
         }
         return new List<Contact>();
     }

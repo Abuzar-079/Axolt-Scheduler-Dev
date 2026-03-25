@@ -73,7 +73,7 @@ public inherited sharing class QueueExpertSchSupport {
             return null;
         }
         // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
-        // List<User> users = [SELECT Id, Name FROM User WHERE Id = :userId WITH SECURITY_ENFORCED LIMIT 1];
+        // List<User> users = [SELECT Id, Name FROM User WHERE Id = :userId WITH USER_MODE LIMIT 1];
         List<User> users = [SELECT Id, Name FROM User WHERE Id = :userId WITH USER_MODE LIMIT 1];
         //changes end here by Abuzar
         return users.isEmpty() ? null : users[0].Name;

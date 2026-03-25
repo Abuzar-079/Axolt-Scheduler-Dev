@@ -221,7 +221,7 @@ public with sharing class EventBooking_Sch {
                 AND End_Date__c >= :nowTime
                 AND Registration_End_Date__c >= :nowTime
                 AND Registration_Start_Date__c <= :nowTime
-                WITH SECURITY_ENFORCED
+                WITH USER_MODE
                 ORDER BY LastModifiedDate DESC
                 LIMIT 1000
             ]);
@@ -231,7 +231,7 @@ public with sharing class EventBooking_Sch {
                 WHERE UserId = :UserInfo.getUserId()
                 AND HasEditAccess = true
                 AND RecordId IN :evMap.keySet()
-                WITH SECURITY_ENFORCED
+                WITH USER_MODE
                 LIMIT 1000
             ]);
 
@@ -376,7 +376,7 @@ public with sharing class EventBooking_Sch {
                     List<Attachment> attchListSpon = [
                         SELECT Id, Name, Body, ParentId FROM Attachment
                         WHERE ParentId IN :sponIds
-                        WITH SECURITY_ENFORCED LIMIT 1000
+                        WITH USER_MODE LIMIT 1000
                     ];
                     for (Sponsorship__c spon : sponsorshipMap.values()) {
                         for (Attachment at : attchListSpon) {
@@ -485,7 +485,7 @@ public with sharing class EventBooking_Sch {
                 daysContainer.registration = (Registration_SCH__c) Database.queryWithBinds(query1, params, AccessLevel.USER_MODE)[0];
             }
 
-            User lu = [SELECT Id, Name, ContactId FROM User WHERE Id = :UserInfo.getUserId() WITH SECURITY_ENFORCED LIMIT 1];
+            User lu = [SELECT Id, Name, ContactId FROM User WHERE Id = :UserInfo.getUserId() WITH USER_MODE LIMIT 1];
             if (lu.ContactId != null) {
                 daysContainer.contact = [SELECT Id, Name, AccountId FROM Contact WHERE Id = :lu.ContactId LIMIT 1];
             }
@@ -654,7 +654,7 @@ public with sharing class EventBooking_Sch {
     //         AND End_Date__c >= :nowTime
     //         AND Registration_End_Date__c >= :nowTime
     //         AND Registration_Start_Date__c <= :nowTime
-    //         WITH SECURITY_ENFORCED
+    //         WITH USER_MODE
     //         ORDER BY LastModifiedDate DESC
     //         LIMIT 1000
     //     ]);
@@ -664,7 +664,7 @@ public with sharing class EventBooking_Sch {
     //         WHERE UserId = :UserInfo.getUserId()
     //         AND HasEditAccess = true
     //         AND RecordId IN :evMap.keySet()
-    //         WITH SECURITY_ENFORCED
+    //         WITH USER_MODE
     //         LIMIT 1000
     //     ]);
     //     return new Set<Id>(accessRecordsMap.keySet());
@@ -872,7 +872,7 @@ public with sharing class EventBooking_Sch {
         List<Attachment> attchListSpon = [
             SELECT Id, Name, Body, ParentId FROM Attachment
             WHERE ParentId IN :sponsorshipMap.keySet()
-            WITH SECURITY_ENFORCED LIMIT 1000
+            WITH USER_MODE LIMIT 1000
         ];
         */
         Map<String, Object> attachmentParams = new Map<String, Object>{
@@ -968,7 +968,7 @@ public with sharing class EventBooking_Sch {
 
     private static Contact fetchCurrentUserContact() {
         // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
-        // User lu = [SELECT Id, Name, ContactId FROM User WHERE Id = :UserInfo.getUserId() WITH SECURITY_ENFORCED LIMIT 1];
+        // User lu = [SELECT Id, Name, ContactId FROM User WHERE Id = :UserInfo.getUserId() WITH USER_MODE LIMIT 1];
         User lu = [SELECT Id, Name, ContactId FROM User WHERE Id = :UserInfo.getUserId() WITH USER_MODE LIMIT 1];
         //changes end here by Abuzar
         if (lu.ContactId == null) {
@@ -1640,7 +1640,7 @@ public with sharing class EventBooking_Sch {
         //     SELECT Id, Name, ContentType FROM Document
         //     WHERE Name LIKE :'%EventPic%'
         //     AND ContentType IN ('image/png', 'image/jpeg', 'image/gif')
-        //     WITH SECURITY_ENFORCED LIMIT 1
+        //     WITH USER_MODE LIMIT 1
         // ];
         List<Document> docList = [
             SELECT Id, Name, ContentType FROM Document
@@ -1918,7 +1918,7 @@ public with sharing class EventBooking_Sch {
         }
         Registration_SCH__c reg = [
             SELECT Id, Name, Status__c, Registration_Type__c
-            FROM Registration_SCH__c WHERE Id = :reg1[0].Id WITH SECURITY_ENFORCED LIMIT 1
+            FROM Registration_SCH__c WHERE Id = :reg1[0].Id WITH USER_MODE LIMIT 1
         ];
         Boolean canSetRegType =
             Schema.sObjectType.Registration_SCH__c.fields.Registration_Type__c.isAccessible() &&
@@ -2046,7 +2046,7 @@ public with sharing class EventBooking_Sch {
     //         SELECT Id, Name, Status__c, Registration_Type__c
     //         FROM Registration_SCH__c
     //         WHERE Id = :registrationId
-    //         WITH SECURITY_ENFORCED
+    //         WITH USER_MODE
     //         LIMIT 1
     //     ];
     // }
@@ -2055,7 +2055,7 @@ public with sharing class EventBooking_Sch {
     if (!Schema.sObjectType.Registration_SCH__c.isAccessible()) {
         throw new AuraHandledException('Insufficient permissions to access Registration records.');
     }
-    // WITH SECURITY_ENFORCED throws QueryException when the running user lacks FLS on
+    // WITH USER_MODE throws QueryException when the running user lacks FLS on
     // Status__c or Registration_Type__c. USER_MODE enforces accessible fields without throwing.
     Map<String, Object> params = new Map<String, Object>{ 'registrationId' => registrationId };
     List<Registration_SCH__c> results = (List<Registration_SCH__c>) Database.queryWithBinds(
@@ -2233,7 +2233,7 @@ public with sharing class EventBooking_Sch {
         Event_Zone__c zn = new Event_Zone__c();
         if (Schema.sObjectType.Event_Zone__c.isAccessible()) {
             // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
-            // zn = [SELECT Id, Name, Available_Registrations__c FROM Event_Zone__c WHERE Id = :zoneId WITH SECURITY_ENFORCED LIMIT 1];
+            // zn = [SELECT Id, Name, Available_Registrations__c FROM Event_Zone__c WHERE Id = :zoneId WITH USER_MODE LIMIT 1];
             zn = [SELECT Id, Name, Available_Registrations__c FROM Event_Zone__c WHERE Id = :zoneId WITH USER_MODE LIMIT 1];
             //changes end here by Abuzar
         }
@@ -4980,7 +4980,7 @@ public with sharing class EventBooking_Sch {
             dateColumnList = new List<DateColumn>();
             this.portalUser = false;
             // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
-            // User lu = [SELECT Id, Name, ContactId FROM User WHERE Id = :UserInfo.getUserId() WITH SECURITY_ENFORCED LIMIT 1];
+            // User lu = [SELECT Id, Name, ContactId FROM User WHERE Id = :UserInfo.getUserId() WITH USER_MODE LIMIT 1];
             User lu = [SELECT Id, Name, ContactId FROM User WHERE Id = :UserInfo.getUserId() WITH USER_MODE LIMIT 1];
             //changes end here by Abuzar
             if (lu.ContactId != null) {
