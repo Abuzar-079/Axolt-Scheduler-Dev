@@ -41,6 +41,7 @@ public with sharing class EventBooking_Sch {
     /** @description Stores the selected event venue label. */
     @AuraEnabled public static String eventVenue {get; set;}
     @SuppressWarnings('PMD.AvoidBooleanMethodParameters')
+    
     /** @description Indicates whether captcha validation is required. */
     @AuraEnabled public static Boolean isCaptchaRequired {get; set;}
     /** @description Stores the selected event zone name. */
