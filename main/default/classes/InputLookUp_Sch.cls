@@ -82,7 +82,14 @@ public with sharing class InputLookUp_Sch {
     public static List<sObject> fetchLookUpValues(LookupRequest request) {
         //System.debug(LoggingLevel.DEBUG, 'ObjectName-->' + request.objectName + '  ,queryFilter==>' + request.queryFilter);
         String searchKey = buildSearchKey(request.searchKeyWord);
-        List<sObject> fetchedRecords = Database.query(buildLookupQuery(request, searchKey));
+        // commented by Abuzar on 25-03-2026 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING result path 4 and 6"
+        // List<sObject> fetchedRecords = Database.query(buildLookupQuery(request, searchKey));
+        List<sObject> fetchedRecords = Database.queryWithBinds(
+            buildLookupQuery(request),
+            new Map<String, Object>{ 'searchKey' => searchKey },
+            AccessLevel.USER_MODE
+        );
+        //changes end here by Abuzar
         return prepareLookupResults(fetchedRecords, request.searchKeyWord);
     }
 
@@ -90,7 +97,7 @@ public with sharing class InputLookUp_Sch {
         return '%' + String.escapeSingleQuotes(searchKeyWord) + '%';
     }
 
-    private static String buildLookupQuery(LookupRequest request, String searchKey) {
+    private static String buildLookupQuery(LookupRequest request) {
         Schema.SObjectType objectType = getValidatedObjectType(request.objectName);
         String selectFields = getValidatedSelectFields(objectType, request.searchField);
         String primarySearchField = getPrimaryValidatedField(objectType, request.searchField);
@@ -172,10 +179,20 @@ public with sharing class InputLookUp_Sch {
     public static sObject fetchLookUpValueById(String objectName,String searchField,String recordId) {
         Schema.SObjectType objectType = getValidatedObjectType(objectName);
         String selectFields = getValidatedSelectFields(objectType, searchField);
+        // commented by Abuzar on 25-03-2026 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING result path 1, 2 and 7"
+        // String sQuery =  'SELECT Id, ' + selectFields +
+        //                  ' FROM ' + objectType.getDescribe().getName() +
+        //                  ' WHERE Id = :recordId LIMIT 1000';
+        // List < sObject > lstOfRecords = Database.query(sQuery);
         String sQuery =  'SELECT Id, ' + selectFields +
                          ' FROM ' + objectType.getDescribe().getName() +
                          ' WHERE Id = :recordId LIMIT 1000';
-        List < sObject > lstOfRecords = Database.query(sQuery);
+        List<sObject> lstOfRecords = Database.queryWithBinds(
+            sQuery,
+            new Map<String, Object>{ 'recordId' => recordId },
+            AccessLevel.USER_MODE
+        );
+        //changes end here by Abuzar
         if(lstOfRecords.size()>0){return lstOfRecords[0];} return null; //adnan brackets for if
     }
 
@@ -192,10 +209,19 @@ public static List<sobject> findRecords(String searchKey, String objectName) {
     Schema.SObjectType objectType = getValidatedObjectType(objectName);
     
     // 2. Build the query string using a bind variable (:searchText)
+    // commented by Abuzar on 25-03-2026 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING result path 3 and 5"
+    // String query = 'SELECT Id, Name FROM ' + objectType.getDescribe().getName() + ' WHERE Name LIKE :searchText LIMIT 10';
+    // return Database.query(query);
     String query = 'SELECT Id, Name FROM ' + objectType.getDescribe().getName() + ' WHERE Name LIKE :searchText LIMIT 10';
     
     // 3. Execute the query
-    return Database.query(query);
+    List<sObject> records = Database.queryWithBinds(
+        query,
+        new Map<String, Object>{ 'searchText' => searchText },
+        AccessLevel.USER_MODE
+    );
+    //changes end here by Abuzar
+    return records;
 }
 
     private static Schema.SObjectType getValidatedObjectType(String objectName) {
