@@ -3,7 +3,10 @@
 /**
  * @description Shared helper methods for queue expert scheduler operations.
  */
-public inherited sharing class QueueExpertSchSupport {
+// commented by Abuzar on 2026-03-25 for the Checkmarkx issue and added below line "Entry-point Apex classes must use an explicit with sharing declaration instead of inherited sharing."
+// public inherited sharing class QueueExpertSchSupport {
+public with sharing class QueueExpertSchSupport {
+//changes end here by Abuzar
     private static final String TODAYS_APPOINTMENTS = 'Todays Appointments';
     private static final String CHECK_IN_APPOINTMENTS = 'Check In Appointments';
     private static final String FUTURE_APPOINTMENTS = 'Future Appointments';
