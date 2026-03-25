@@ -3521,9 +3521,19 @@ public with sharing class EventBooking_Sch {
         List<Registration_SCH__c> rList = buildRegistrationContactAssignments(regList, context);
         // commented by abuzar on 2026-03-23 for DML Statements Inside Loops issue.
         // Keep the bulk DML in this method so the scanner does not trace a helper-based upsert back to the source loop.
-        if (!rList.isEmpty() && context.canCreateReg) {
+        // commented by Abuzar on 2026-03-25 for the Checkmarkx issue and added below line "Upsert on Registration_SCH__c must verify create and update access on the object and Contact__c field before performing DML."
+        // if (!rList.isEmpty() && context.canCreateReg) {
+        //     upsert rList;
+        // }
+        Boolean canUpsertRegistrations =
+            Schema.sObjectType.Registration_SCH__c.isCreateable() &&
+            Schema.sObjectType.Registration_SCH__c.isUpdateable() &&
+            Schema.sObjectType.Registration_SCH__c.fields.Contact__c.isCreateable() &&
+            Schema.sObjectType.Registration_SCH__c.fields.Contact__c.isUpdateable();
+        if (!rList.isEmpty() && canUpsertRegistrations) {
             upsert rList;
         }
+        //changes end here by Abuzar
         return getFirstRegistrationId(rList);
     }
 
@@ -3733,9 +3743,21 @@ public with sharing class EventBooking_Sch {
 
         // commented by abuzar on 2026-03-23 for DML Statements Inside Loops issue.
         // Keep the bulk DML visibly outside the loop so the scanner does not trace a helper call as loop-scoped DML.
-        if (!contactsToUpsert.isEmpty() && context.canCreateContact) {
-            upsert contactsToUpsert;
+        // commented by Abuzar on 2026-03-25 for the Checkmarkx issue and added below line "New Contact records built in this flow should enforce create/FLS checks and use insert instead of upsert to avoid update-permission violations."
+        // if (!contactsToUpsert.isEmpty() && context.canCreateContact) {
+        //     upsert contactsToUpsert;
+        // }
+        Boolean canInsertContacts =
+            Schema.sObjectType.Contact.isCreateable() &&
+            Schema.sObjectType.Contact.fields.FirstName.isCreateable() &&
+            Schema.sObjectType.Contact.fields.LastName.isCreateable() &&
+            Schema.sObjectType.Contact.fields.MobilePhone.isCreateable() &&
+            Schema.sObjectType.Contact.fields.Email.isCreateable() &&
+            Schema.sObjectType.Contact.fields.Event__c.isCreateable();
+        if (!contactsToUpsert.isEmpty() && canInsertContacts) {
+            insert contactsToUpsert;
         }
+        //changes end here by Abuzar
         linkRegistrationsToCreatedContacts(rList, new ContactRegistrationLink(regsNeedingNewContact, contactsToUpsert), context);
         appendRegistrationsUsingExistingContact(rList, regsUsingExistingContact, context);
         return rList;
@@ -3926,9 +3948,14 @@ public with sharing class EventBooking_Sch {
         //changes end here by abuzar
         // Contact.LastName is required. If it wasn't set due to null value or FLS,
         // the upsert will fail and con.Id stays null, breaking the Contact__c linkage.
-        if (String.isEmpty(con.LastName)) {
+        // commented by Abuzar on 2026-03-25 for the Checkmarkx issue and added below line "Contact.LastName fallback assignment must respect field update/create access before setting the field."
+        // if (String.isEmpty(con.LastName)) {
+        //     con.LastName = String.isNotEmpty(reg.Customer_Lastname__c) ? reg.Customer_Lastname__c : 'Unknown';
+        // }
+        if (String.isEmpty(con.LastName) && access.canSetLastName) {
             con.LastName = String.isNotEmpty(reg.Customer_Lastname__c) ? reg.Customer_Lastname__c : 'Unknown';
         }
+        //changes end here by Abuzar
         return con;
      }
 
@@ -3962,7 +3989,10 @@ public with sharing class EventBooking_Sch {
     }
 
     private static Boolean shouldLinkWithNewContact(Contact con, Boolean createNewContact) {
-        return con.Email != null && createNewContact;
+        // commented by Abuzar on 2026-03-25 for the Checkmarkx issue and added below line "Only create a new Contact when required writable fields are populated so the secured insert path does not fail."
+        // return con.Email != null && createNewContact;
+        return con.Email != null && String.isNotEmpty(con.LastName) && createNewContact;
+        //changes end here by Abuzar
     }
 
     private static void linkRegistrationsToCreatedContacts(

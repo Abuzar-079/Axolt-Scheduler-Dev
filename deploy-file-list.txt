@@ -1,2 +1,1 @@
-main/default/lwc/queue_Expert_Sch_LWC
-main/default/lwc/queue_Sch_LWC
+main/default/classes/Queue_Expert_Sch.cls
