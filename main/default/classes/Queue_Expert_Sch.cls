@@ -404,6 +404,36 @@ public with sharing class Queue_Expert_Sch {
         } catch (Exception ex) {
             throw new AuraHandledException('Invalid parent record id.');
         }
+        // commented by Abuzar on 2026-03-27 for the Checkmarkx issue and added below line "Attachment insert using ParentId must also validate CRUD access on the parent object and accessible parent record before DML, and attachment query fields should be checked before read access."
+        // Schema.SObjectType parentObjectType = parentId.getSObjectType();
+        // Schema.DescribeSObjectResult parentDescribe = parentObjectType.getDescribe();
+        // if (!parentDescribe.isAccessible()) {
+        //     throw new AuraHandledException('Insufficient access to the parent record.');
+        // }
+        // List<SObject> parentRecords = Database.query(
+        //     'SELECT Id FROM ' + parentDescribe.getName() +
+        //     ' WHERE Id = \'' + String.escapeSingleQuotes(parent) + '\'' +
+        //     ' WITH USER_MODE LIMIT 1'
+        // );
+        // if (parentRecords.isEmpty()) {
+        //     throw new AuraHandledException('Parent record is not accessible.');
+        // }
+        // if (
+        //     !Schema.sObjectType.Attachment.isCreateable() ||
+        //     !Schema.sObjectType.Attachment.fields.ParentId.isCreateable() ||
+        //     !Schema.sObjectType.Attachment.fields.Body.isCreateable() ||
+        //     !Schema.sObjectType.Attachment.fields.Name.isCreateable() ||
+        //     !Schema.sObjectType.Attachment.fields.ContentType.isCreateable()
+        // ) {
+        //     throw new AuraHandledException('Insufficient access to upload attachments.');
+        // }
+        // base64Data = EncodingUtil.urlDecode(base64Data, 'UTF-8');
+        // Attachment a = new Attachment();
+        // a.ParentId = parentId;
+        // a.Body = EncodingUtil.base64Decode(base64Data);
+        // a.Name = fileName;
+        // a.ContentType = contentType;
+        // Database.insert(a, false, AccessLevel.USER_MODE);
         Schema.SObjectType parentObjectType = parentId.getSObjectType();
         Schema.DescribeSObjectResult parentDescribe = parentObjectType.getDescribe();
         if (!parentDescribe.isAccessible()) {
@@ -411,30 +441,26 @@ public with sharing class Queue_Expert_Sch {
         }
         List<SObject> parentRecords = Database.query(
             'SELECT Id FROM ' + parentDescribe.getName() +
-            ' WHERE Id = \'' + String.escapeSingleQuotes(parent) + '\'' +
-            ' WITH USER_MODE LIMIT 1'
+            ' WHERE Id = :parentId WITH USER_MODE LIMIT 1'
         );
         if (parentRecords.isEmpty()) {
             throw new AuraHandledException('Parent record is not accessible.');
         }
         if (
             !Schema.sObjectType.Attachment.isCreateable() ||
+            !Schema.sObjectType.Attachment.isAccessible() ||
             !Schema.sObjectType.Attachment.fields.ParentId.isCreateable() ||
+            !Schema.sObjectType.Attachment.fields.ParentId.isAccessible() ||
             !Schema.sObjectType.Attachment.fields.Body.isCreateable() ||
             !Schema.sObjectType.Attachment.fields.Name.isCreateable() ||
-            !Schema.sObjectType.Attachment.fields.ContentType.isCreateable()
+            !Schema.sObjectType.Attachment.fields.Name.isAccessible() ||
+            !Schema.sObjectType.Attachment.fields.ContentType.isCreateable() ||
+            !Schema.sObjectType.Attachment.fields.ContentType.isAccessible()
         ) {
             throw new AuraHandledException('Insufficient access to upload attachments.');
         }
 
         base64Data = EncodingUtil.urlDecode(base64Data, 'UTF-8');
-        // commented by Abuzar on 2026-03-25 for the Checkmarkx issue and added below line "Attachment insert using ParentId must also validate CRUD access on the parent object and record."
-        // Attachment a = new Attachment();
-        // a.ParentId = parent;
-        // a.Body = EncodingUtil.base64Decode(base64Data);
-        // a.Name = fileName;
-        // a.ContentType = contentType;
-        // Database.insert(a, false, AccessLevel.USER_MODE);
         Attachment a = new Attachment();
         a.ParentId = parentId;
         a.Body = EncodingUtil.base64Decode(base64Data);
@@ -443,9 +469,17 @@ public with sharing class Queue_Expert_Sch {
         Database.insert(a, false, AccessLevel.USER_MODE);
         //changes end here by Abuzar
         //System.debug(LoggingLevel.DEBUG, a.Id);
-        // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+        // commented by Abuzar on 2026-03-27 for the Checkmarkx issue and added below line "Attachment read should also validate object and field accessibility before querying attachment records."
         // List<Attachment> myAtt = [Select Id, Name, ParentId, ContentType From Attachment Where ParentId  =:parent WITH USER_MODE Order By CreatedDate Asc LIMIT 1000];
-        List<Attachment> myAtt = [Select Id, Name, ParentId, ContentType From Attachment Where ParentId  =:parent WITH USER_MODE Order By CreatedDate Asc LIMIT 1000];
+        if (
+            !Schema.sObjectType.Attachment.isAccessible() ||
+            !Schema.sObjectType.Attachment.fields.Name.isAccessible() ||
+            !Schema.sObjectType.Attachment.fields.ParentId.isAccessible() ||
+            !Schema.sObjectType.Attachment.fields.ContentType.isAccessible()
+        ) {
+            throw new AuraHandledException('Insufficient access to view attachments.');
+        }
+        List<Attachment> myAtt = [Select Id, Name, ParentId, ContentType From Attachment Where ParentId = :parentId WITH USER_MODE Order By CreatedDate Asc LIMIT 1000];
         //changes end here by Abuzar
         return myAtt;
     }
