@@ -3530,15 +3530,31 @@ public with sharing class EventBooking_Sch {
         // if (!rList.isEmpty() && canUpsertRegistrations) {
         //     upsert rList;
         // }
+        // commented by Abuzar on 2026-03-27 for the Checkmarkx issue and added below line "Updating deserialized Registration_SCH__c records directly can carry non-checked fields into DML, so update operations must use sparse records limited to Id and Contact__c after isUpdateable checks."
+        // List<Registration_SCH__c> registrationsToInsert = new List<Registration_SCH__c>();
+        // List<Registration_SCH__c> registrationsToUpdate = new List<Registration_SCH__c>();
+        // for (Registration_SCH__c regRecord : rList) {
+        //     if (regRecord.Id == null) {
+        //         registrationsToInsert.add(regRecord);
+        //     } else {
+        //         registrationsToUpdate.add(regRecord);
+        //     }
+        // }
+        // commented by Abuzar on 2026-03-27 for the Checkmarkx issue and added below line "Create DML on deserialized Registration_SCH__c records must only include fields that pass isCreateable checks, so insert operations use sanitized create records instead of the raw deserialized sObjects."
+        // List<Registration_SCH__c> registrationsToInsert = new List<Registration_SCH__c>();
         List<Registration_SCH__c> registrationsToInsert = new List<Registration_SCH__c>();
         List<Registration_SCH__c> registrationsToUpdate = new List<Registration_SCH__c>();
         for (Registration_SCH__c regRecord : rList) {
             if (regRecord.Id == null) {
-                registrationsToInsert.add(regRecord);
+                registrationsToInsert.add(sanitizeRegistrationForCreate(regRecord));
             } else {
-                registrationsToUpdate.add(regRecord);
+                registrationsToUpdate.add(new Registration_SCH__c(
+                    Id = regRecord.Id,
+                    Contact__c = regRecord.Contact__c
+                ));
             }
         }
+        //changes end here by Abuzar
         Boolean canInsertRegistrations =
             Schema.sObjectType.Registration_SCH__c.isCreateable() &&
             Schema.sObjectType.Registration_SCH__c.fields.Contact__c.isCreateable();
@@ -3786,9 +3802,16 @@ public with sharing class EventBooking_Sch {
         //     Schema.sObjectType.Contact.fields.MobilePhone.isCreateable() &&
         //     Schema.sObjectType.Contact.fields.Email.isCreateable() &&
         //     Schema.sObjectType.Contact.fields.Event__c.isCreateable();
+        // commented by Abuzar on 2026-03-27 for the Checkmarkx issue and added below line "Contact create DML must insert only creatable Contact fields, so the pending Contact records are sanitized before insert while keeping the same booking flow."
+        // Boolean canInsertContacts = context.canCreateContact && access.canSetLastName;
         Boolean canInsertContacts = context.canCreateContact && access.canSetLastName;
         if (!contactsToUpsert.isEmpty() && canInsertContacts) {
-            insert contactsToUpsert;
+            List<Contact> contactsToInsert = new List<Contact>();
+            for (Contact pendingContact : contactsToUpsert) {
+                contactsToInsert.add(sanitizeContactForCreate(pendingContact));
+            }
+            insert contactsToInsert;
+            contactsToUpsert = contactsToInsert;
         }
         //changes end here by Abuzar
         linkRegistrationsToCreatedContacts(rList, new ContactRegistrationLink(regsNeedingNewContact, contactsToUpsert), context);
@@ -3994,6 +4017,36 @@ public with sharing class EventBooking_Sch {
         //changes end here by Abuzar
         return con;
      }
+
+    private static Registration_SCH__c sanitizeRegistrationForCreate(Registration_SCH__c sourceRegistration) {
+        Registration_SCH__c sanitizedRegistration = new Registration_SCH__c();
+        Map<String, Object> populatedFields = sourceRegistration.getPopulatedFieldsAsMap();
+        Map<String, Schema.SObjectField> registrationFields = Schema.sObjectType.Registration_SCH__c.fields.getMap();
+        for (String fieldName : populatedFields.keySet()) {
+            if (fieldName == 'Id' || !registrationFields.containsKey(fieldName)) {
+                continue;
+            }
+            if (registrationFields.get(fieldName).getDescribe().isCreateable()) {
+                sanitizedRegistration.put(fieldName, populatedFields.get(fieldName));
+            }
+        }
+        return sanitizedRegistration;
+    }
+
+    private static Contact sanitizeContactForCreate(Contact sourceContact) {
+        Contact sanitizedContact = new Contact();
+        Map<String, Object> populatedFields = sourceContact.getPopulatedFieldsAsMap();
+        Map<String, Schema.SObjectField> contactFields = Schema.sObjectType.Contact.fields.getMap();
+        for (String fieldName : populatedFields.keySet()) {
+            if (fieldName == 'Id' || !contactFields.containsKey(fieldName)) {
+                continue;
+            }
+            if (contactFields.get(fieldName).getDescribe().isCreateable()) {
+                sanitizedContact.put(fieldName, populatedFields.get(fieldName));
+            }
+        }
+        return sanitizedContact;
+    }
 
     private class ContactFieldAssignment {
         private Boolean canAssign;
