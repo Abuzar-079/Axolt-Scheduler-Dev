@@ -527,7 +527,7 @@ export default class QueueExpertSch extends LightningElement {
             return;
         }
         this.spinner = true;
-        uploadFile(this.pendingUploadPayload)
+        uploadFile({...this.pendingUploadPayload, userInitiated: true })
             .then(result => {
                 this.refAttach = false;
                 this.selectedAttachments = result;
