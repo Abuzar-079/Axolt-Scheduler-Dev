@@ -306,9 +306,9 @@
                 <div class="slds-m-top_small"></div>
                 <template for:each={maps} for:item="record" for:index="index">
                     <div
-    key={record.value.Id}
+    key={record.Id}
     class={record.cssClass}
-    data-id={record.value.Id}
+    data-id={record.Id}
     data-index={index}
     onclick={handleRecordSelect}
 >
@@ -323,7 +323,7 @@
                         title="Reference Number"
                     ></lightning-icon>
                     <span class="clickable-text axolt-link">
-                        {record.value.Name} ({record.value.Token_Number__c})
+                        {record.Name} ({record.Token_Number__c})
                     </span>
                 </div>
             </div>
@@ -336,7 +336,7 @@
                         title="Name"
                     ></lightning-icon>
                     <span class="slds-truncate">
-                        {record.value.Customer_Name__c} {record.value.Customer_Lastname__c}
+                        {record.Customer_Name__c} {record.Customer_Lastname__c}
                     </span>
                 </div>
             </div>
@@ -350,7 +350,7 @@
                         class="slds-m-right_x-small"
                         title="Phone"
                     ></lightning-icon>
-                    <span>{record.value.Customer_Contact__c}</span>
+                    <span>{record.Customer_Contact__c}</span>
                 </div>
             </div>
             <div class="slds-col slds-size_1-of-2 slds-medium-size_6-of-12">
@@ -362,7 +362,7 @@
                         title="Email"
                     ></lightning-icon>
                     <span class="slds-truncate">
-                        {record.value.Customer_Email__c}
+                        {record.Customer_Email__c}
                     </span>
                 </div>
             </div>
