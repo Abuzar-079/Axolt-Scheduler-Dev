@@ -8,7 +8,15 @@ const fs = require("fs");
 const path = require("path");
 const readline = require("readline");
 
+<<<<<<< HEAD
 const DEV_BRANCH = "imran-khan";
+=======
+<<<<<<< HEAD
+const DEV_BRANCH = "imran-khan";
+=======
+const DEV_BRANCH = "dev-abuzar";
+>>>>>>> 307ad0eca77e0027fbb9e27bac7f42afe3cc6a84
+>>>>>>> d244ec68f47b14a2c92c779285c47a8df66431ee
 const DEPLOY_BRANCH = "deploy-scheduler";
 
 const ALLOWED_ORG_DOMAIN = "https://orgfarm-2a16d57383-dev-ed.develop.my.salesforce.com";
