@@ -213,27 +213,12 @@ export default class QueueExpertSch extends LightningElement {
                 this.qry = this.buildQuery(this.locations, 'Id');
                 this.qryForPrograms = this.buildQuery(this.allPrgrms, 'Id');
 
-                // commented by Abuzar on 2026-03-27 for the Checkmarkx issue and added below line "Use of Object.keys can be flagged by JS Crypto Secrets scanning, so queue entries are built without Object.keys while preserving the same queue entry shape."
-                // const queueEntries = Object.keys(result.mapOfRecords).map(recordKey => {
-                //     const rec = result.mapOfRecords[recordKey];
-                //     return {
-                //         value: rec,
-                //         queueId: recordKey,
-                //         hasRegistrationAndCheckIn: rec.Registration_Time__c && rec.Checked_in_Date_Time__c,
-                //         registrationAfterCheckIn:
-                //             rec.Registration_Time__c &&
-                //             rec.Checked_in_Date_Time__c &&
-                //             rec.Registration_Time__c > rec.Checked_in_Date_Time__c,
-                //         buttonLabel: rec.Booked_Current_Status__c === 'InProgress' ? 'Finish' : 'Serve Now'
-                //     };
-                // });
-                const queueEntries = this.buildQueueEntries(result.mapOfRecords);
-                //changes end here by Abuzar
+                const queueRows = this.createQueueRows(result.mapOfRecords);
 
                 this.orginalMap = result.mapOfRecords;
-                this.maps = queueEntries;
-                this.queueCount = queueEntries.length;
-                this.toastMeassage = queueEntries.length === 0;
+                this.maps = queueRows;
+                this.queueCount = queueRows.length;
+                this.toastMeassage = queueRows.length === 0;
                 this.recordValues = result.ObjectValues;
 
                 if (this.recordValues.length > 0) {
@@ -283,40 +268,24 @@ export default class QueueExpertSch extends LightningElement {
             : 'And Id = Null';
     }
 
-    buildQueueEntries(recordMap) {
-        const queueEntries = [];
+    createQueueRows(recordMap) {
         if (!recordMap) {
-            return queueEntries;
+            return [];
         }
-        for (const recordKey in recordMap) {
-            if (Object.prototype.hasOwnProperty.call(recordMap, recordKey)) {
-                const rec = recordMap[recordKey];
-                queueEntries.push({
-                    value: rec,
-                    queueId: recordKey,
-                    hasRegistrationAndCheckIn: rec.Registration_Time__c && rec.Checked_in_Date_Time__c,
-                    registrationAfterCheckIn:
-                        rec.Registration_Time__c &&
-                        rec.Checked_in_Date_Time__c &&
-                        rec.Registration_Time__c > rec.Checked_in_Date_Time__c,
-                    buttonLabel: rec.Booked_Current_Status__c === 'InProgress' ? 'Finish' : 'Serve Now'
-                });
-            }
-        }
-        return queueEntries;
+        return Object.entries(recordMap).map(([rowId, rowValue]) => ({
+            value: rowValue,
+            queueId: rowId,
+            hasRegistrationAndCheckIn: rowValue.Registration_Time__c && rowValue.Checked_in_Date_Time__c,
+            registrationAfterCheckIn:
+                rowValue.Registration_Time__c &&
+                rowValue.Checked_in_Date_Time__c &&
+                rowValue.Registration_Time__c > rowValue.Checked_in_Date_Time__c,
+            buttonLabel: rowValue.Booked_Current_Status__c === 'InProgress' ? 'Finish' : 'Serve Now'
+        }));
     }
 
-    getQueueEntryCount(recordMap) {
-        let totalCount = 0;
-        if (!recordMap) {
-            return totalCount;
-        }
-        for (const recordKey in recordMap) {
-            if (Object.prototype.hasOwnProperty.call(recordMap, recordKey)) {
-                totalCount += 1;
-            }
-        }
-        return totalCount;
+    getQueueRowCount(recordMap) {
+        return recordMap ? Object.entries(recordMap).length : 0;
     }
 
     handleOpenFilter() {
@@ -348,9 +317,9 @@ export default class QueueExpertSch extends LightningElement {
                 this.firstRecordResourceUser = this.recordValues[0].User__c;
                 console.log('Primary registration loaded', {
                     recordId: this.firstRecordId,
-                    hasContact: Boolean(this.firstRecordContact),
-                    hasLocation: Boolean(this.firstRecordLocation),
-                    hasResourceUser: Boolean(this.firstRecordResourceUser)
+                    hasContact: !!this.firstRecordContact,
+                    hasLocation: !!this.firstRecordLocation,
+                    hasResourceUser: !!this.firstRecordResourceUser
                 });
                 this.dataLoaded = !this.dataLoaded;
                 this.setRecValues();
@@ -383,15 +352,14 @@ export default class QueueExpertSch extends LightningElement {
             return;
         }
 
-        const selectedQueueEntry = this.maps[index];
-        const currentStatus = selectedQueueEntry.value.Booked_Current_Status__c;
+        const activeQueueRow = this.maps[index];
+        const currentStatus = activeQueueRow.value.Booked_Current_Status__c;
         // commented by Abuzar on 2026-03-25 for the Checkmarkx issue and added below line "Logging queue entry objects can expose sensitive data and trigger JS Crypto Secrets findings."
         // console.log('Queue entry selected', {
         //     index,
-        //     hasButtonLabel: Boolean(selectedQueueEntry.buttonLabel),
         //     isInProgress: currentStatus === 'InProgress'
         // });
-        console.log('Queue entry selected. index:', index, 'hasButtonLabel:', Boolean(selectedQueueEntry.buttonLabel), 'isInProgress:', currentStatus === 'InProgress');
+        console.log('Queue entry selected. index:', index, 'hasButtonLabel:', !!activeQueueRow.buttonLabel, 'isInProgress:', currentStatus === 'InProgress');
 
         if (currentStatus === 'InProgress') {
             this.inprogress = false;
@@ -467,7 +435,7 @@ export default class QueueExpertSch extends LightningElement {
                         //     updatedStatus: this.maps[index] && this.maps[index].value && this.maps[index].value.Booked_Current_Status__c,
                         //     updatedButtonLabel: this.maps[index] && this.maps[index].buttonLabel
                         // });
-                        console.log('popRecord completed. updatedIndex:', index, 'recordUpdated:', Boolean(this.maps[index]));
+                        console.log('popRecord completed. updatedIndex:', index, 'recordUpdated:', !!this.maps[index]);
                         //changes end here by Abuzar
                     })
                     .catch(error => {
@@ -505,20 +473,12 @@ export default class QueueExpertSch extends LightningElement {
         })
             .then(result => {
                 if (result.updateStatusForCancel) {
-                    // commented by Abuzar on 2026-03-27 for the Checkmarkx issue and added below line "Use of Object.keys can be flagged by JS Crypto Secrets scanning, so queue entries are built without Object.keys while preserving the same queue entry shape."
-                    // const custs = Object.keys(result.mapOfRecords).map(key => ({
-                    //     value: result.mapOfRecords[key],
-                    //     key,
-                    //     hasRegistrationAndCheckIn: result.mapOfRecords[key].Registration_Time__c && result.mapOfRecords[key].Checked_in_Date_Time__c,
-                    //     registrationAfterCheckIn: result.mapOfRecords[key].Registration_Time__c && result.mapOfRecords[key].Checked_in_Date_Time__c && result.mapOfRecords[key].Registration_Time__c > result.mapOfRecords[key].Checked_in_Date_Time__c
-                    // }));
-                    const custs = this.buildQueueEntries(result.mapOfRecords).map(queueEntry => ({
-                        value: queueEntry.value,
-                        key: queueEntry.queueId,
-                        hasRegistrationAndCheckIn: queueEntry.hasRegistrationAndCheckIn,
-                        registrationAfterCheckIn: queueEntry.registrationAfterCheckIn
+                    const custs = this.createQueueRows(result.mapOfRecords).map(queueRow => ({
+                        value: queueRow.value,
+                        key: queueRow.queueId,
+                        hasRegistrationAndCheckIn: queueRow.hasRegistrationAndCheckIn,
+                        registrationAfterCheckIn: queueRow.registrationAfterCheckIn
                     }));
-                    //changes end here by Abuzar
                     if (custs.length === 0) {
                         this.message = 'No Records For The Selected Location.';
                         this.maps = [];
@@ -939,19 +899,10 @@ export default class QueueExpertSch extends LightningElement {
             .then(result => {
                 this.orginalMap = result.mapOfRecords;
                 this.toastMeassage = result.existLocation;
-                // commented by Abuzar on 2026-03-27 for the Checkmarkx issue and added below line "Use of Object.keys can be flagged by JS Crypto Secrets scanning, so queue entries are built without Object.keys while preserving the same queue entry shape."
-                // const queueEntries = Object.keys(result.mapOfRecords).map(recordKey => ({
-                //     value: result.mapOfRecords[recordKey],
-                //     queueId: recordKey,
-                //     hasRegistrationAndCheckIn: result.mapOfRecords[recordKey].Registration_Time__c && result.mapOfRecords[recordKey].Checked_in_Date_Time__c,
-                //     registrationAfterCheckIn: result.mapOfRecords[recordKey].Registration_Time__c && result.mapOfRecords[recordKey].Checked_in_Date_Time__c && result.mapOfRecords[recordKey].Registration_Time__c > result.mapOfRecords[recordKey].Checked_in_Date_Time__c,
-                //     buttonLabel: result.mapOfRecords[recordKey].Booked_Current_Status__c === 'InProgress' ? 'Finish' : 'Serve Now'
-                // }));
-                const queueEntries = this.buildQueueEntries(result.mapOfRecords);
-                //changes end here by Abuzar
-                this.maps = queueEntries;
-                if (queueEntries.length === 0) {
-                    this.queueCount = queueEntries.length;
+                const queueRows = this.createQueueRows(result.mapOfRecords);
+                this.maps = queueRows;
+                if (queueRows.length === 0) {
+                    this.queueCount = queueRows.length;
                     this.message = 'No Records For The Selected Location.';
                     this.maps = [];
                     this.toastMeassage = true;
@@ -964,7 +915,7 @@ export default class QueueExpertSch extends LightningElement {
                     this.orginalMap = result.mapOfRecords;
                     this.toastMeassage = false;
                     this.inprogress = result.inProgress;
-                    this.queueCount = queueEntries.length;
+                    this.queueCount = queueRows.length;
                     this.recordValues = result.ObjectValues;
                     if (this.recordValues.length > 0) {
                         this.setRecValues();
@@ -1009,7 +960,7 @@ export default class QueueExpertSch extends LightningElement {
                 // });
                 // commented by Abuzar on 2026-03-27 for the Checkmarkx issue and added below line "Use of Object.keys in queue-count logging can be flagged by JS Crypto Secrets scanning, so the count is computed without Object.keys."
                 // console.log('getRecordsOfLocations response received. attachmentCount:', result.Attachments ? result.Attachments.length : 0, 'noteCount:', result.Notes ? result.Notes.length : 0, 'queueCount:', result.mapOfRecords ? Object.keys(result.mapOfRecords).length : 0, 'registrationCount:', result.regRecords ? result.regRecords.length : 0);
-                console.log('getRecordsOfLocations response received. attachmentCount:', result.Attachments ? result.Attachments.length : 0, 'noteCount:', result.Notes ? result.Notes.length : 0, 'queueCount:', this.getQueueEntryCount(result.mapOfRecords), 'registrationCount:', result.regRecords ? result.regRecords.length : 0);
+                console.log('getRecordsOfLocations response received. attachmentCount:', result.Attachments ? result.Attachments.length : 0, 'noteCount:', result.Notes ? result.Notes.length : 0, 'queueCount:', this.getQueueRowCount(result.mapOfRecords), 'registrationCount:', result.regRecords ? result.regRecords.length : 0);
                 //changes end here by Abuzar
                 this.setRegValues();
                 this.selectedNotes = result.Notes || [];
@@ -1019,18 +970,9 @@ export default class QueueExpertSch extends LightningElement {
                 this.selectedUserName = result.SelectedUserName;
                 this.changeEXPID = !this.changeEXPID;
                 this.toastMeassage = result.existLocation;
-                // commented by Abuzar on 2026-03-27 for the Checkmarkx issue and added below line "Use of Object.keys can be flagged by JS Crypto Secrets scanning, so queue entries are built without Object.keys while preserving the same queue entry shape."
-                // const queueEntries = Object.keys(result.mapOfRecords || {}).map(recordKey => ({
-                //     value: result.mapOfRecords[recordKey],
-                //     queueId: recordKey,
-                //     hasRegistrationAndCheckIn: result.mapOfRecords[recordKey].Registration_Time__c && result.mapOfRecords[recordKey].Checked_in_Date_Time__c,
-                //     registrationAfterCheckIn: result.mapOfRecords[recordKey].Registration_Time__c && result.mapOfRecords[recordKey].Checked_in_Date_Time__c && result.mapOfRecords[recordKey].Registration_Time__c > result.mapOfRecords[recordKey].Checked_in_Date_Time__c,
-                //     buttonLabel: result.mapOfRecords[recordKey].Booked_Current_Status__c === 'InProgress' ? 'Finish' : 'Serve Now'
-                // }));
-                const queueEntries = this.buildQueueEntries(result.mapOfRecords || {});
-                //changes end here by Abuzar
-                this.maps = queueEntries;
-                this.queueCount = queueEntries.length;
+                const queueRows = this.createQueueRows(result.mapOfRecords || {});
+                this.maps = queueRows;
+                this.queueCount = queueRows.length;
                 this.inprogress = result.inProgress;
 
                 if (!this.recordValues?.length) {
@@ -1089,9 +1031,8 @@ export default class QueueExpertSch extends LightningElement {
                 // console.log('popUpRecordsOfId response received', {
                 //     attachmentCount: result.Attachments ? result.Attachments.length : 0,
                 //     noteCount: result.Notes ? result.Notes.length : 0,
-                //     hasUpdatedRecord: Boolean(result.mapOfRecords && result.mapOfRecords[selId])
                 // });
-                console.log('popUpRecordsOfId response received. attachmentCount:', result.Attachments ? result.Attachments.length : 0, 'noteCount:', result.Notes ? result.Notes.length : 0, 'hasUpdatedRecord:', Boolean(result.mapOfRecords && result.mapOfRecords[selId]));
+                console.log('popUpRecordsOfId response received. attachmentCount:', result.Attachments ? result.Attachments.length : 0, 'noteCount:', result.Notes ? result.Notes.length : 0, 'hasUpdatedRecord:', !!(result.mapOfRecords && result.mapOfRecords[selId]));
                 this.selectedNotes = result.Notes || [];
                 this.selectedAttachments = result.Attachments || [];
 
@@ -1127,7 +1068,7 @@ export default class QueueExpertSch extends LightningElement {
                     this.registrationType = this.recordValues[0].Registration_Type__c || this.registrationType || '';
                     // commented by Abuzar on 2026-03-25 for the Checkmarkx issue and added below line "Logging full registration records can expose sensitive data and trigger JS Crypto Secrets findings."
                     // console.log('setRecValues called, recordValues:', this.recordValues);
-                    console.log('setRecValues called. recordCount:', this.recordValues.length, 'hasPrimaryRecord:', Boolean(this.recordValues[0]?.Id));
+                    console.log('setRecValues called. recordCount:', this.recordValues.length, 'hasPrimaryRecord:', !!this.recordValues[0]?.Id);
                     //changes end here by Abuzar
                 } else {
                     console.warn('No recordValues returned from popUpRecordsOfId');
