@@ -384,6 +384,68 @@ public with sharing class Queue_Expert_Sch {
 
  // REMOVED: generateSlots method - uses Time_Off__c for slot generation // REMOVED: getNextSlots method - queries Resource__c, Time_Off__c and calls generateSlots // REMOVED: fetchPreSlot method - queries Resource__c, Time_Off__c and calls generateSlots // REMOVED: confirmSlot method - queries and updates Resource__c related fields // REMOVED: slotOnDateChange method - queries Resource__c, Time_Off__c and calls generateSlots // REMOVED: getSlot method - queries Work_Planner__c, Resource__c, Resource_Requirement__c, Time_Off__c and calls generateSlots
 
+    private static Id validateParentRecordId(String parent) {
+        if (String.isBlank(parent)) {
+            throw new AuraHandledException('Parent record id is required.');
+        }
+        try {
+            return (Id) parent;
+        } catch (Exception ex) {
+            throw new AuraHandledException('Invalid parent record id.');
+        }
+    }
+
+    private static void assertParentRecordAccessible(Id parentId) {
+        Schema.DescribeSObjectResult parentDescribe = parentId.getSObjectType().getDescribe();
+        if (!parentDescribe.isAccessible()) {
+            throw new AuraHandledException('Insufficient access to the parent record.');
+        }
+
+        List<SObject> parentRecords = Database.query(
+            'SELECT Id FROM ' + parentDescribe.getName() + ' WHERE Id = :parentId WITH USER_MODE LIMIT 1'
+        );
+        if (parentRecords.isEmpty()) {
+            throw new AuraHandledException('Parent record is not accessible.');
+        }
+    }
+
+    private static void assertAttachmentCreateAccess(Id parentId) {
+        assertParentRecordAccessible(parentId);
+        if (
+            !Schema.sObjectType.Attachment.isCreateable() ||
+            !Schema.sObjectType.Attachment.fields.ParentId.isCreateable() ||
+            !Schema.sObjectType.Attachment.fields.Body.isCreateable() ||
+            !Schema.sObjectType.Attachment.fields.Name.isCreateable() ||
+            !Schema.sObjectType.Attachment.fields.ContentType.isCreateable()
+        ) {
+            throw new AuraHandledException('Insufficient access to upload attachments.');
+        }
+    }
+
+    private static void assertAttachmentReadAccess(Id parentId) {
+        assertParentRecordAccessible(parentId);
+        if (
+            !Schema.sObjectType.Attachment.isAccessible() ||
+            !Schema.sObjectType.Attachment.fields.Name.isAccessible() ||
+            !Schema.sObjectType.Attachment.fields.ParentId.isAccessible() ||
+            !Schema.sObjectType.Attachment.fields.ContentType.isAccessible()
+        ) {
+            throw new AuraHandledException('Insufficient access to view attachments.');
+        }
+    }
+
+    private static List<Attachment> getAttachmentsByParent(Id parentId) {
+        assertAttachmentReadAccess(parentId);
+        return [
+            SELECT Id, Name, ParentId, ContentType
+            FROM Attachment
+            WHERE ParentId = :parentId
+            WITH USER_MODE
+            ORDER BY CreatedDate ASC
+            LIMIT 1000
+        ];
+    }
+
     /**
      * @description Uploads an attachment to the specified parent record.
      * @param parent Parent record identifier.
@@ -395,70 +457,8 @@ public with sharing class Queue_Expert_Sch {
     @AuraEnabled
     @SuppressWarnings('PMD.ExcessiveParameterList')
     public static List<Attachment> uploadFile(String parent, String fileName, String base64Data, String contentType) {
-        if (String.isBlank(parent)) {
-            throw new AuraHandledException('Parent record id is required.');
-        }
-        Id parentId;
-        try {
-            parentId = (Id) parent;
-        } catch (Exception ex) {
-            throw new AuraHandledException('Invalid parent record id.');
-        }
-        // commented by Abuzar on 2026-03-27 for the Checkmarkx issue and added below line "Attachment insert using ParentId must also validate CRUD access on the parent object and accessible parent record before DML, and attachment query fields should be checked before read access."
-        // Schema.SObjectType parentObjectType = parentId.getSObjectType();
-        // Schema.DescribeSObjectResult parentDescribe = parentObjectType.getDescribe();
-        // if (!parentDescribe.isAccessible()) {
-        //     throw new AuraHandledException('Insufficient access to the parent record.');
-        // }
-        // List<SObject> parentRecords = Database.query(
-        //     'SELECT Id FROM ' + parentDescribe.getName() +
-        //     ' WHERE Id = \'' + String.escapeSingleQuotes(parent) + '\'' +
-        //     ' WITH USER_MODE LIMIT 1'
-        // );
-        // if (parentRecords.isEmpty()) {
-        //     throw new AuraHandledException('Parent record is not accessible.');
-        // }
-        // if (
-        //     !Schema.sObjectType.Attachment.isCreateable() ||
-        //     !Schema.sObjectType.Attachment.fields.ParentId.isCreateable() ||
-        //     !Schema.sObjectType.Attachment.fields.Body.isCreateable() ||
-        //     !Schema.sObjectType.Attachment.fields.Name.isCreateable() ||
-        //     !Schema.sObjectType.Attachment.fields.ContentType.isCreateable()
-        // ) {
-        //     throw new AuraHandledException('Insufficient access to upload attachments.');
-        // }
-        // base64Data = EncodingUtil.urlDecode(base64Data, 'UTF-8');
-        // Attachment a = new Attachment();
-        // a.ParentId = parentId;
-        // a.Body = EncodingUtil.base64Decode(base64Data);
-        // a.Name = fileName;
-        // a.ContentType = contentType;
-        // Database.insert(a, false, AccessLevel.USER_MODE);
-        Schema.SObjectType parentObjectType = parentId.getSObjectType();
-        Schema.DescribeSObjectResult parentDescribe = parentObjectType.getDescribe();
-        if (!parentDescribe.isAccessible()) {
-            throw new AuraHandledException('Insufficient access to the parent record.');
-        }
-        List<SObject> parentRecords = Database.query(
-            'SELECT Id FROM ' + parentDescribe.getName() +
-            ' WHERE Id = :parentId WITH USER_MODE LIMIT 1'
-        );
-        if (parentRecords.isEmpty()) {
-            throw new AuraHandledException('Parent record is not accessible.');
-        }
-        if (
-            !Schema.sObjectType.Attachment.isCreateable() ||
-            !Schema.sObjectType.Attachment.isAccessible() ||
-            !Schema.sObjectType.Attachment.fields.ParentId.isCreateable() ||
-            !Schema.sObjectType.Attachment.fields.ParentId.isAccessible() ||
-            !Schema.sObjectType.Attachment.fields.Body.isCreateable() ||
-            !Schema.sObjectType.Attachment.fields.Name.isCreateable() ||
-            !Schema.sObjectType.Attachment.fields.Name.isAccessible() ||
-            !Schema.sObjectType.Attachment.fields.ContentType.isCreateable() ||
-            !Schema.sObjectType.Attachment.fields.ContentType.isAccessible()
-        ) {
-            throw new AuraHandledException('Insufficient access to upload attachments.');
-        }
+        Id parentId = validateParentRecordId(parent);
+        assertAttachmentCreateAccess(parentId);
 
         base64Data = EncodingUtil.urlDecode(base64Data, 'UTF-8');
         Attachment a = new Attachment();
@@ -467,21 +467,8 @@ public with sharing class Queue_Expert_Sch {
         a.Name = fileName;
         a.ContentType = contentType;
         Database.insert(a, false, AccessLevel.USER_MODE);
-        //changes end here by Abuzar
-        //System.debug(LoggingLevel.DEBUG, a.Id);
-        // commented by Abuzar on 2026-03-27 for the Checkmarkx issue and added below line "Attachment read should also validate object and field accessibility before querying attachment records."
-        // List<Attachment> myAtt = [Select Id, Name, ParentId, ContentType From Attachment Where ParentId  =:parent WITH USER_MODE Order By CreatedDate Asc LIMIT 1000];
-        if (
-            !Schema.sObjectType.Attachment.isAccessible() ||
-            !Schema.sObjectType.Attachment.fields.Name.isAccessible() ||
-            !Schema.sObjectType.Attachment.fields.ParentId.isAccessible() ||
-            !Schema.sObjectType.Attachment.fields.ContentType.isAccessible()
-        ) {
-            throw new AuraHandledException('Insufficient access to view attachments.');
-        }
-        List<Attachment> myAtt = [Select Id, Name, ParentId, ContentType From Attachment Where ParentId = :parentId WITH USER_MODE Order By CreatedDate Asc LIMIT 1000];
-        //changes end here by Abuzar
-        return myAtt;
+
+        return getAttachmentsByParent(parentId);
     }
 
     /**
@@ -715,7 +702,7 @@ public with sharing class Queue_Expert_Sch {
         }
         Registration_SCH__c primaryRecord = wrapper.objectValues[0];
         wrapper.notes = [Select Id, Title, ParentId From Note Where ParentId = :primaryRecord.Id Order By CreatedDate Asc LIMIT 1000];
-        wrapper.attachments = [Select Id, Name, ParentId, ContentType From Attachment Where ParentId = :primaryRecord.Id Order By CreatedDate Asc LIMIT 1000];
+        wrapper.attachments = getAttachmentsByParent(primaryRecord.Id);
         wrapper.userName = [SELECT Name FROM User WHERE Id = :primaryRecord.OwnerId LIMIT 1000];
         wrapper.recordTypeName = [Select Id, Name From RecordType where id = :primaryRecord.RecordTypeId LIMIT 1000];
     }
