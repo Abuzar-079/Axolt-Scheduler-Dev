@@ -28,7 +28,7 @@ public with sharing class Queue_Sch_RecordHelper {
         }
     }
 
-    @AuraEnabled
+    //@AuraEnabled
     public static Queue_Sch_Wrapper insertRecords(Queue_Sch_InsertRecordsRequest request){
         Queue_Sch_Wrapper wrapper = new Queue_Sch_Wrapper();
         try{
