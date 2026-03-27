@@ -189,7 +189,6 @@ public with sharing class Queue_Sch_Support {
         }
         return wrapper;
     }
-
     @AuraEnabled
     public static Queue_Sch_Wrapper getFilterValues(String loc, String ser, String rtype){
         Queue_Sch_Wrapper wrapper = new Queue_Sch_Wrapper();
