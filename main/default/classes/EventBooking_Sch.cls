@@ -4549,7 +4549,7 @@ public with sharing class EventBooking_Sch {
      * @param currentEvent Serialized event payload.
      * @return Status map describing the update result.
      */
-    @AuraEnabled
+    @AuraEnabled(cacheable=false)
     public static Map<String, String> updateFilledEvent(String currentEvent) {
         Map<String, String> result = new Map<String, String>();
         Event__c fullEvent = (Event__c) JSON.deserialize(currentEvent, Event__c.class);
