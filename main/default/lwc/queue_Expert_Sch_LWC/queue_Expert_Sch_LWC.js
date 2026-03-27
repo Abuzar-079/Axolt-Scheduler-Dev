@@ -553,8 +553,8 @@ export default class QueueExpertSch extends LightningElement {
                     parent: this.recordValues[0]?.Id,
                     fileName: file.name,
                     base64Data: encodeURIComponent(reader.result.substring(dataStart)),
-                    contentType: file.type,
-                    userInitiated: true
+                    contentType: file.type
+                    
                 };
                 this.pendingUploadFileName = file.name;
             };
@@ -567,13 +567,14 @@ export default class QueueExpertSch extends LightningElement {
             return;
         }
         this.spinner = true;
-        uploadFile(this.pendingUploadPayload)
+        uploadFile({this.pendingUploadPayload, userInitiated: true})
             .then(result => {
                 this.refAttach = false;
                 this.selectedAttachments = result;
                 this.refAttach = true;
                 this.clearPendingUpload();
                 this.spinner = false;
+                
             })
             .catch(error => {
                 console.error('Error in uploadFile:', error);
