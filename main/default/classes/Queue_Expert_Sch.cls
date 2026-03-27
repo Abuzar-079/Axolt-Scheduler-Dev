@@ -615,7 +615,7 @@ public with sharing class Queue_Expert_Sch {
      * @param regID Parent registration identifier.
      * @return Notes related to the provided registration.
      */
-    @AuraEnabled
+    //@AuraEnabled
     public static List<Note> saveNotes(String nn, String regID) {
         Id parentId = validateRecordId(regID, 'Invalid parent record id.');
         Note requestedNote = parseNotePayload(nn);
