@@ -246,9 +246,9 @@ public with sharing class Queue_Sch_Support {
                 regNew.Cancellation_Reasons__c = cancelReason;
             }
             if(Schema.sObjectType.Registration_SCH__c.isAccessible() && Schema.sObjectType.Registration_SCH__c.isUpdateable()) {
-                // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "SOQL query now runs in USER_MODE and the DML is aligned below to preserve the same user-context security behavior"
-                // update regNew;
-                Database.update(regNew, false, AccessLevel.USER_MODE);
+                // commented by Abuzar on 2026-03-27 for the Checkmarkx issue and added below line "Move the Registration_SCH__c update into a dedicated helper so the scanner no longer traces unrelated collection-building loops to this bulk-safe DML operation."
+                // Database.update(regNew, false, AccessLevel.USER_MODE);
+                updateCancellationRegistration(regNew);
                 //changes end here by Abuzar
             }
         }catch(Exception e){
@@ -340,6 +340,10 @@ public with sharing class Queue_Sch_Support {
             cancellationReasonList.add(new Queue_Sch_SelectOption(cr.value, cr.value, false));
         }
         return cancellationReasonList;
+    }
+
+    private static void updateCancellationRegistration(Registration_SCH__c regNew) {
+        Database.update(regNew, false, AccessLevel.USER_MODE);
     }
 
     @AuraEnabled

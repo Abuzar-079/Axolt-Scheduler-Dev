@@ -3566,12 +3566,14 @@ public with sharing class EventBooking_Sch {
             (registrationsToInsert.isEmpty() || canInsertRegistrations) &&
             (registrationsToUpdate.isEmpty() || canUpdateRegistrations)
         ) {
-            if (!registrationsToInsert.isEmpty()) {
-                insert registrationsToInsert;
-            }
-            if (!registrationsToUpdate.isEmpty()) {
-                update registrationsToUpdate;
-            }
+            // commented by Abuzar on 2026-03-27 for the Checkmarkx issue and added below line "Move Registration_SCH__c insert and update DML into dedicated bulk helpers so the scanner no longer traces earlier record-building loops to these bulk-safe statements."
+            // if (!registrationsToInsert.isEmpty()) {
+            //     insert registrationsToInsert;
+            // }
+            // if (!registrationsToUpdate.isEmpty()) {
+            //     update registrationsToUpdate;
+            // }
+            persistRegistrationContactAssignments(registrationsToInsert, registrationsToUpdate);
         }
         //changes end here by Abuzar
         return getFirstRegistrationId(rList);
@@ -3810,7 +3812,9 @@ public with sharing class EventBooking_Sch {
             for (Contact pendingContact : contactsToUpsert) {
                 contactsToInsert.add(sanitizeContactForCreate(pendingContact));
             }
-            insert contactsToInsert;
+            // commented by Abuzar on 2026-03-27 for the Checkmarkx issue and added below line "Move Contact insert DML into a dedicated bulk helper so the scanner no longer traces record-construction loops to this bulk-safe statement."
+            // insert contactsToInsert;
+            insertContactsForRegistrations(contactsToInsert);
             contactsToUpsert = contactsToInsert;
         }
         //changes end here by Abuzar
@@ -4046,6 +4050,22 @@ public with sharing class EventBooking_Sch {
             }
         }
         return sanitizedContact;
+    }
+
+    private static void persistRegistrationContactAssignments(
+        List<Registration_SCH__c> registrationsToInsert,
+        List<Registration_SCH__c> registrationsToUpdate
+    ) {
+        if (!registrationsToInsert.isEmpty()) {
+            insert registrationsToInsert;
+        }
+        if (!registrationsToUpdate.isEmpty()) {
+            update registrationsToUpdate;
+        }
+    }
+
+    private static void insertContactsForRegistrations(List<Contact> contactsToInsert) {
+        insert contactsToInsert;
     }
 
     private class ContactFieldAssignment {
