@@ -4841,37 +4841,49 @@ public with sharing class EventBooking_Sch {
         // Boolean canSetEmail = canAccessCreateAndUpdateContactField(Schema.sObjectType.Contact.fields.Email);
         // Boolean canSetMobilePhone = canAccessCreateAndUpdateContactField(Schema.sObjectType.Contact.fields.MobilePhone);
         // Boolean canSetPhone = canAccessCreateAndUpdateContactField(Schema.sObjectType.Contact.fields.Phone);
-        Boolean canCreateContact = Schema.sObjectType.Contact.isCreateable();
-        Boolean canReadCustomerName = Schema.sObjectType.Registration_SCH__c.fields.Customer_Name__c.isAccessible();
-        Boolean canReadCustomerLastName = Schema.sObjectType.Registration_SCH__c.fields.Customer_Lastname__c.isAccessible();
-        Boolean canReadCustomerEmail = Schema.sObjectType.Registration_SCH__c.fields.Customer_Email__c.isAccessible();
-        Boolean canReadCustomerContact = Schema.sObjectType.Registration_SCH__c.fields.Customer_Contact__c.isAccessible();
-        Boolean canSetFirstName = Schema.sObjectType.Contact.fields.FirstName.isCreateable();
-        Boolean canSetLastName = Schema.sObjectType.Contact.fields.LastName.isCreateable();
-        Boolean canSetEmail = Schema.sObjectType.Contact.fields.Email.isCreateable();
-        Boolean canSetMobilePhone = Schema.sObjectType.Contact.fields.MobilePhone.isCreateable();
-        Boolean canSetPhone = Schema.sObjectType.Contact.fields.Phone.isCreateable();
-
-        if (canCreateContact && canReadCustomerLastName && canSetLastName) {
+        if (
+            Schema.sObjectType.Contact.isCreateable() &&
+            Schema.sObjectType.Registration_SCH__c.fields.Customer_Lastname__c.isAccessible() &&
+            Schema.sObjectType.Contact.fields.LastName.isCreateable()
+        ) {
             Contact newContact = new Contact();
-            if (canReadCustomerName && canSetFirstName && String.isNotBlank(pr.Customer_Name__c)) {
+            if (
+                Schema.sObjectType.Registration_SCH__c.fields.Customer_Name__c.isAccessible() &&
+                Schema.sObjectType.Contact.fields.FirstName.isCreateable() &&
+                String.isNotBlank(pr.Customer_Name__c)
+            ) {
                 newContact.FirstName = pr.Customer_Name__c;
             }
-            if (canReadCustomerLastName && String.isNotBlank(pr.Customer_Lastname__c)) {
+            if (
+                Schema.sObjectType.Registration_SCH__c.fields.Customer_Lastname__c.isAccessible() &&
+                Schema.sObjectType.Contact.fields.LastName.isCreateable() &&
+                String.isNotBlank(pr.Customer_Lastname__c)
+            ) {
                 newContact.LastName = pr.Customer_Lastname__c;
             }
-            if (canReadCustomerEmail && canSetEmail && String.isNotBlank(pr.Customer_Email__c)) {
+            if (
+                Schema.sObjectType.Registration_SCH__c.fields.Customer_Email__c.isAccessible() &&
+                Schema.sObjectType.Contact.fields.Email.isCreateable() &&
+                String.isNotBlank(pr.Customer_Email__c)
+            ) {
                 newContact.Email = pr.Customer_Email__c;
             }
-            if (canReadCustomerContact && String.isNotBlank(pr.Customer_Contact__c)) {
-                if (canSetMobilePhone) {
+            if (
+                Schema.sObjectType.Registration_SCH__c.fields.Customer_Contact__c.isAccessible() &&
+                String.isNotBlank(pr.Customer_Contact__c)
+            ) {
+                if (Schema.sObjectType.Contact.fields.MobilePhone.isCreateable()) {
                     newContact.MobilePhone = pr.Customer_Contact__c;
                 }
-                if (canSetPhone) {
+                if (Schema.sObjectType.Contact.fields.Phone.isCreateable()) {
                     newContact.Phone = pr.Customer_Contact__c;
                 }
             }
-            if (String.isNotBlank(newContact.LastName) && canSetParentContact) {
+            if (
+                String.isNotBlank(newContact.LastName) &&
+                canSetParentContact &&
+                Schema.sObjectType.Contact.isCreateable()
+            ) {
                 insert newContact;
                 pr.Contact__c = newContact.Id;
             }

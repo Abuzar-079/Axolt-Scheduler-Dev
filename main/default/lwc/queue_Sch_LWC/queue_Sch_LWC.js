@@ -333,7 +333,7 @@ export default class Queue_Sch_LWC extends LightningElement {
         this.maps = this.maps.map(r => {
             return {
                 ...r,
-                cssClass: r.value.Id === this.selectedRecordId
+                cssClass: r.Id === this.selectedRecordId
                     ? 'axolt-list-card-active'
                     : 'axolt-list-card'
             };
@@ -402,7 +402,7 @@ export default class Queue_Sch_LWC extends LightningElement {
             // this.maps = this.maps.map(r => {
             //     return {
             //         ...r,
-            //         cssClass: r.value.Id === this.selectedRecordId
+            //         cssClass: r.Id === this.selectedRecordId
             //             ? 'axolt-list-card-active'
             //             : 'axolt-list-card'
             //     };
@@ -472,7 +472,7 @@ export default class Queue_Sch_LWC extends LightningElement {
             // this.maps = this.maps.map(r => {
             //     return {
             //         ...r,
-            //         cssClass: r.value.Id === this.selectedRecordId
+            //         cssClass: r.Id === this.selectedRecordId
             //             ? 'axolt-list-card-active'
             //             : 'axolt-list-card'
             //     };
@@ -524,29 +524,17 @@ export default class Queue_Sch_LWC extends LightningElement {
     }
 
     buildQueueMapEntries(recordMap) {
-        const queueEntries = [];
         if (!recordMap) {
-            return queueEntries;
+            return [];
         }
-        for (const mapId in recordMap) {
-            if (Object.prototype.hasOwnProperty.call(recordMap, mapId)) {
-                queueEntries.push({ key: mapId, value: recordMap[mapId] });
-            }
-        }
-        return queueEntries;
+        return Object.entries(recordMap).map(([mapId, mapValue]) => ({
+            ...mapValue,
+            mapKey: mapId
+        }));
     }
 
     getQueueMapCount(recordMap) {
-        let totalCount = 0;
-        if (!recordMap) {
-            return totalCount;
-        }
-        for (const mapId in recordMap) {
-            if (Object.prototype.hasOwnProperty.call(recordMap, mapId)) {
-                totalCount += 1;
-            }
-        }
-        return totalCount;
+        return recordMap ? Object.entries(recordMap).length : 0;
     }
 
     calculateWaitingTime(regTime) {
@@ -1064,7 +1052,7 @@ export default class Queue_Sch_LWC extends LightningElement {
         this.maps = this.maps.map(r => {
             return {
                 ...r,
-                cssClass: r.value.Id === this.selectedRecordId
+                cssClass: r.Id === this.selectedRecordId
                     ? 'axolt-list-card-active'
                     : 'axolt-list-card'
             };
@@ -1082,7 +1070,7 @@ export default class Queue_Sch_LWC extends LightningElement {
     async handleRecordSelect(event) {
         const index = event.currentTarget.dataset.index;
         console.log('Clicked index: ', index);
-        const selected = this.maps[index].value;
+        const selected = this.maps[index];
         // commented by Abuzar on 2026-03-25 for the Checkmarkx issue and added below line "Logging selected queue entry objects can expose sensitive data and trigger JS Crypto Secrets findings."
         // console.log('selected: ', JSON.stringify(selected));
         console.log('Queue record selected. hasSelectedRecord:', Boolean(selected?.Id), 'hasServiceId:', Boolean(selected?.Product2__c));
@@ -1110,7 +1098,7 @@ export default class Queue_Sch_LWC extends LightningElement {
         // this.maps = this.maps.map(r => {
         //     return {
         //         ...r,
-        //         cssClass: r.value.Id === this.selectedRecordId
+        //         cssClass: r.Id === this.selectedRecordId
         //             ? 'axolt-list-card-active'
         //             : 'axolt-list-card'
         //     };
@@ -1167,7 +1155,7 @@ export default class Queue_Sch_LWC extends LightningElement {
         // this.maps = this.maps.map(r => {
         //     return {
         //         ...r,
-        //         cssClass: r.value.Id === this.selectedRecordId
+        //         cssClass: r.Id === this.selectedRecordId
         //             ? 'axolt-list-card-active'
         //             : 'axolt-list-card'
         //     };

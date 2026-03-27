@@ -583,7 +583,7 @@ public with sharing class Queue_Expert_Sch {
      * @param contentType MIME type of the uploaded file.
      * @return Attachments currently associated with the parent record.
      */
-    @AuraEnabled
+   // @AuraEnabled
     @SuppressWarnings('PMD.ExcessiveParameterList')
     public static List<Attachment> uploadFile(String parent, String fileName, String base64Data, String contentType, Boolean userInitiated) {
        
