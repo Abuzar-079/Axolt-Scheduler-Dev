@@ -585,7 +585,7 @@ public with sharing class Queue_Expert_Sch {
      */
    // @AuraEnabled
     @SuppressWarnings('PMD.ExcessiveParameterList')
-    public static List<Attachment> uploadFile(String parent, String fileName, String base64Data, String contentType, Boolean userInitiated) {
+    public static List<Attachment> uploadFile(String parent, String fileName, String base64Data, String contentType) {
        
        if (userInitiated != true) {
         throw new AuraHandledException('Operation must be user-initiated.');
