@@ -3,10 +3,7 @@ deploy-file-list.txt
 deploy-log.txt
 deploy-resolved.js
 deploy-resolved-log.txt
-<<<<<<< HEAD
-=======
 .DS_Store
->>>>>>> c3f9047da50cf5e1a6320fb17e1786e5bdcf1812
 .DS_Store
 .DS_Store
 **/.DS_Store
