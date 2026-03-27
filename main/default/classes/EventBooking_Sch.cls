@@ -4545,7 +4545,7 @@ public with sharing class EventBooking_Sch {
     // updateFilledEvent
     // ============================================================
     /**
-     * @description Updates an event record from serialized client data.
+     * @description  Updates an event record from serialized client data.
      * @param currentEvent Serialized event payload.
      * @return Status map describing the update result.
      */
