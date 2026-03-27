@@ -1,0 +1,93 @@
+{
+  "status": 0,
+  "result": {
+    "checkOnly": false,
+    "completedDate": "2026-03-27T08:56:40.000Z",
+    "createdBy": "005dM00000XiF8P",
+    "createdByName": "Abu zar",
+    "createdDate": "2026-03-27T08:56:36.000Z",
+    "details": {
+      "componentSuccesses": [
+        {
+          "changed": true,
+          "componentType": "LightningComponentBundle",
+          "created": false,
+          "createdDate": "2026-03-27T08:56:36.000Z",
+          "deleted": false,
+          "fileName": "lwc/queue_Expert_Sch_LWC",
+          "fullName": "queue_Expert_Sch_LWC",
+          "id": "0RbdM000005ZvLXSA0",
+          "success": true
+        },
+        {
+          "changed": true,
+          "componentType": "",
+          "created": false,
+          "createdDate": "2026-03-27T08:56:39.000Z",
+          "deleted": false,
+          "fileName": "package.xml",
+          "fullName": "package.xml",
+          "success": true
+        }
+      ],
+      "runTestResult": {
+        "numFailures": 0,
+        "numTestsRun": 0,
+        "totalTime": 0,
+        "codeCoverage": [],
+        "codeCoverageWarnings": [],
+        "failures": [],
+        "flowCoverage": [],
+        "flowCoverageWarnings": [],
+        "successes": []
+      },
+      "componentFailures": []
+    },
+    "done": true,
+    "id": "0AfdM00000XXoRFSA1",
+    "ignoreWarnings": false,
+    "lastModifiedDate": "2026-03-27T08:56:40.000Z",
+    "numberComponentErrors": 0,
+    "numberComponentsDeployed": 1,
+    "numberComponentsTotal": 1,
+    "numberFiles": "7",
+    "numberTestErrors": 0,
+    "numberTestsCompleted": 0,
+    "numberTestsTotal": 0,
+    "rollbackOnError": true,
+    "runTestsEnabled": false,
+    "startDate": "2026-03-27T08:56:36.000Z",
+    "status": "Succeeded",
+    "success": true,
+    "zipSize": 25565,
+    "files": [
+      {
+        "fullName": "queue_Expert_Sch_LWC",
+        "type": "LightningComponentBundle",
+        "state": "Changed",
+        "filePath": "/Users/abuzar/Documents/Axolt/Scheduler dev/force-app/main/default/lwc/queue_Expert_Sch_LWC/queue_Expert_Sch_LWC.css"
+      },
+      {
+        "fullName": "queue_Expert_Sch_LWC",
+        "type": "LightningComponentBundle",
+        "state": "Changed",
+        "filePath": "/Users/abuzar/Documents/Axolt/Scheduler dev/force-app/main/default/lwc/queue_Expert_Sch_LWC/queue_Expert_Sch_LWC.html"
+      },
+      {
+        "fullName": "queue_Expert_Sch_LWC",
+        "type": "LightningComponentBundle",
+        "state": "Changed",
+        "filePath": "/Users/abuzar/Documents/Axolt/Scheduler dev/force-app/main/default/lwc/queue_Expert_Sch_LWC/queue_Expert_Sch_LWC.js"
+      },
+      {
+        "fullName": "queue_Expert_Sch_LWC",
+        "type": "LightningComponentBundle",
+        "state": "Changed",
+        "filePath": "/Users/abuzar/Documents/Axolt/Scheduler dev/force-app/main/default/lwc/queue_Expert_Sch_LWC/queue_Expert_Sch_LWC.js-meta.xml"
+      }
+    ],
+    "zipFileCount": 5,
+    "deployUrl": "https://orgfarm-2a16d57383-dev-ed.develop.my.salesforce.com/lightning/setup/DeployStatus/page?address=%2Fchangemgmt%2FmonitorDeploymentsDetails.apexp%3FasyncId%3D0AfdM00000XXoRFSA1%26retURL%3D%252Fchangemgmt%252FmonitorDeployment.apexp"
+  },
+  "warnings": []
+}

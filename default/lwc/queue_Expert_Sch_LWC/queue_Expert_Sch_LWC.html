@@ -1,0 +1,818 @@
+<template>
+    <div class="car2">
+                <template if:true={refreshPulseEnabled}>
+                    <div class="refresh-pulse" style={refreshPulseStyle} onanimationiteration={handleRefreshPulse} aria-hidden="true"></div>
+                </template>
+                <div class=""><!--erp_mark7 main-->
+
+
+                    <template if:true={showFilter}>
+                        <section class="slds-popover slds-nubbin_top postionfixed" role="dialog" aria-label="Dialog Title" >
+                            <div class="filter-close slds-p-right_small slds-text-align_right slds-p-top_small" onclick={handleCloseFilter} >
+                                <lightning-icon icon-name="utility:close" size="xx-small"></lightning-icon>
+                            </div>
+                            <span class="slds-assistive-text">Close dialog</span>
+                                <div class="erp_Mark7">
+                                    <div class="slds-popover__body">
+                                        <!-- First Row -->
+                                        <div class="slds-grid slds-wrap">
+                                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_x-small">
+                                                <div class="slds-form-element">
+                                                    <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon_right">
+                                                        <c-search-comp-sch
+                                                            obj-name="Expert_Location__c"
+                                                            placeholder="Location"
+                                                            fields="Name"
+                                                            display-fields="Name"
+                                                            value-id={initLocation}
+                                                            onlookup={handleLocationChange}>
+                                                        </c-search-comp-sch>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!--<div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_x-small">
+                                                <div class="slds-form-element">
+                                                    <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon_right">
+                                                        <c-search-comp-sch
+                                                            obj-name="Membership_Program__c"
+                                                            value-id={currentPrgrm}
+                                                            placeholder="Program"
+                                                            fields="Name"
+                                                            display-fields="Name"
+                                                            onlookup={handleProgramChange}>
+                                                        </c-search-comp-sch>
+                                                    </div>
+                                                </div>
+                                            </div>-->
+
+                                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_x-small">
+                                                <div class="slds-form-element">
+                                                    <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon_right">
+                                                        <c-search-comp-sch
+                                                            obj-name="Product2"
+                                                            value-id={service}
+                                                            placeholder="Service"
+                                                            fields="Name"
+                                                            display-fields="Name"
+                                                            onlookup={handleServiceChange}>
+                                                        </c-search-comp-sch>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!--<div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_x-small">
+                                                <div class="slds-form-element">
+                                                    <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon_right">
+                                                        <c-search-comp-sch
+                                                            obj-name="Team__c"
+                                                            value-id={selTeamID}
+                                                            placeholder="Team"
+                                                            fields="Name"
+                                                            display-fields="Name"
+                                                            onlookup={handleTeamChange}>
+                                                        </c-search-comp-sch>
+                                                    </div>
+                                                </div>
+                                            </div>-->
+
+                                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_x-small">
+                                                <div class="slds-form-element">
+                                                    <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon_right">
+                                                        <c-search-comp-sch
+                                                            obj-name="User"
+                                                            value-id={populatedExpID}
+                                                            placeholder="User"
+                                                            fields="Name"
+                                                            display-fields="Name"
+                                                            onlookup={handleExpertChange}>
+                                                        </c-search-comp-sch>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_x-small">
+                                                <lightning-combobox
+                                                    name="category"
+                                                    options={category}
+                                                    value={selcatValue}
+                                                    onchange={handleCategoryChange}
+                                                    class="cursor-pointer width-100">
+                                                </lightning-combobox>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                        </section>
+                    </template>
+                </div>
+
+                <div class="event-rok erp_mark7 erp_Mark7">
+                    <div class="container--fluid">
+                        <div class="slds-grid slds-wrap features-boxed">
+
+                                <div class="slds-col slds-size_1-of-3">
+                                   <div class="slds-card slds-m-around_small car1">
+        <div class="card-body">
+            <div class="d-flex justify-content-between">
+                <h6 class="card-title slds-grid">
+                    {selectedUserName} ({queueCount})
+                    <div onclick={handleOpenFilter} class="cursor-pointer">
+                        <lightning-icon icon-name="utility:filterList" size="xx-small"></lightning-icon>
+                    </div>
+                </h6>
+                <div class="slds-grid"></div>
+            </div>
+        </div>
+
+        <div class="scroll-bar-wrap">
+            <div class="scroll-box">
+                <template if:true={toastMeassage}>
+                    <h4 class="slds-text-heading_small slds-m-around_small">
+                        {message}<br />
+                        Click on the filter icon above to change filter criteria.
+                    </h4>
+                </template>
+
+                <template for:each={maps} for:item="cus" for:index="key">
+                    <article key={cus.queueId} class="slds-card slds-m-bottom_small car1">
+                        <a data-name={cus.value.Booked_Date__c} data-value={cus.value.Id} data-rec-id={recIdValue}
+                            onclick={GetRegsDetails}
+                            class="slds-card__body slds-p-around_medium slds-grid slds-wrap car3">
+
+                            <div class="slds-col slds-size_1-of-1 slds-grid slds-grid_align-spread slds-m-bottom_small">
+                                <div class="slds-grid slds-grid_vertical-align-center">
+                                    <lightning-icon icon-name="utility:user" size="small" class="slds-m-right_x-small"></lightning-icon>
+                                    <span>
+                                        <template if:true={cus.value.Contact__c}>
+                                            <template if:true={cus.value.Contact__r.Name}>
+                                                <strong>{cus.value.Customer_Name__c} {cus.value.Customer_Lastname__c}</strong><!--{cus.value.Contact__r.Name}-->
+                                            </template>
+                                            <template if:false={cus.value.Contact__r.Name}>
+                                                <strong>{cus.value.Customer_Name__c} {cus.value.Customer_Lastname__c}</strong>
+                                            </template>
+                                        </template>
+                                        <template if:false={cus.value.Contact__c}>
+                                            <strong>{cus.value.Customer_Name__c} {cus.value.Customer_Lastname__c}</strong>
+                                        </template>
+                                    </span>
+                                </div>
+                                <div class="slds-grid slds-grid_vertical-align-center">
+                                    <lightning-icon icon-name="utility:display_text" size="small" class="slds-m-right_x-small"></lightning-icon>
+                                    <span>{cus.value.Name}</span>
+                                </div>
+                            </div>
+
+                            <div class="slds-col slds-size_1-of-1 slds-grid slds-grid_align-spread">
+                                <div class="slds-grid slds-grid_vertical-align-center">
+                                    <lightning-icon icon-name="utility:clock" size="small" class="slds-m-right_x-small"></lightning-icon>
+                                    <lightning-formatted-date-time value={cus.value.Registration_Time__c} hour="2-digit" minute="2-digit" time-zone={timezone}></lightning-formatted-date-time>
+                                </div>
+                                <div class="slds-grid slds-grid_vertical-align-center">
+                                    <lightning-icon icon-name="utility:hourglass" size="x-small" alternative-text="Hourglass"></lightning-icon>
+
+                                    <template if:true={itemStatusNotBooked}>
+                                        <div class="waiting-time-box">
+                                            <template if:true={waitingtimenull}>--</template>
+                                            <template if:false={waitingtimenull}>
+                                                <c-counter-schlwc key={cus.value.Id} reg-id={cus.value.Id}
+                                                    wt-exceed={cus.value.Wait_Time_Exceeded__c}
+                                                    waiting-thershold={cus.value.Product2__r.Wait_Threshold__c}
+                                                    count={cus.value.Checked_in_Date_Time__c}>
+                                                </c-counter-schlwc>
+                                            </template>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </a>
+
+                       <footer class="slds-card__footer slds-grid slds-grid_align-spread slds-p-around_small">
+                        <template if:true={isFutureAppointments}>
+                            <div class="cancel-button-container slds-grid_align-end">
+                                <button
+                                    type="button"
+                                    class="slds-button slds-button_neutral reschedule-on-hover"
+                                    data-value="Reschedule"
+                                    data-name={cus.value.Id}
+                                    data-title={cus.value.Status__c}
+                                    onclick={handleWorkbenchOperation}>
+                                    Reschedule
+                                </button>
+
+                                <button
+                                    type="button"
+                                    class={cancelButtonClass}
+                                    name={cus.value.Id}
+                                    onclick={handleGetStatusNoShow}>
+                                    Cancel
+                                </button>
+
+                                <!--<lightning-button-icon-stateful icon-name="utility:like" selected={likeState} onclick={handleLikeButtonClick} alternative-text="Like"></lightning-button-icon-stateful>lightning-button label="Reschedule" icon-name="utility:loop"
+                                    onclick={handleWorkbenchOperation} data-value="Reschedule" data-name={cus.value.Id}
+                                    data-title={cus.value.Status__c} class="slds-button_neutral reschedule-on-hover "></lightning-button>
+
+                                <lightning-button label="Cancel" name={cus.value.Id} class={cancelButtonClass}
+                                    onclick={handleGetStatusNoShow}></lightning-button-->
+                            </div>
+                        </template>
+
+                        <template if:false={isFutureAppointments}>
+                            <button
+                                type="button"
+                                class={buttonClass}
+                                value={cus.value.Id}
+                                data-id={cus.value.Id}
+                                name={cus.value.Checked_in_Date_Time__c}
+                                disabled={isButtonDisabled}
+                                onclick={handleChangeLabelGetRecord}>
+                                {cus.buttonLabel}
+                                <!--{buttonLabel}-->
+                            </button>
+
+                            <button
+                                type="button"
+                                class={cancelButtonClass}
+                                name={cus.value.Id}
+                                onclick={handleGetStatusNoShow}>
+                                Cancel
+                            </button>
+
+                            <!--lightning-button label={buttonLabel} value={cus.value.Id} class={buttonClass} name={cus.value.Checked_in_Date_Time__c}
+                                disabled={isButtonDisabled} onclick={handleChangeLabelGetRecord}></lightning-button>
+
+                            <lightning-button label="Cancel" name={cus.value.Id} class={cancelButtonClass}
+                                onclick={handleGetStatusNoShow}></lightning-button-->
+                        </template>
+                    </footer>
+                    </article>
+                </template>
+            </div>
+        </div>
+                                         </div>
+                                </div>
+
+
+
+                            <div class="slds-col slds-size_1-of-3">
+                               <div class="slds-form maq-form shadow-sm" role="list">
+                                    <template if:true={flag}>
+                                        <div class="slds-grid slds-gutters_small">
+                                            <div class="slds-col slds-has-flexi-truncate" role="listitem">
+                                                <div class="slds-form-element slds-form-element_edit slds-hint-parent">
+                                                    <legend class="slds-form-element__label slds-text-title_caps slds-text-heading_small slds-p-bottom_x-small slds-grid slds-grid_vertical-align-center">
+                                                        <lightning-icon icon-name="utility:flag" size="x-small" class="slds-m-right_x-small car4"></lightning-icon>
+                                                        <span class="slds-m-left_xx-small">Flagged</span>
+                                                    </legend>
+                                                    <hr class="slds-m-vertical_x-small" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </template>
+
+                                    <div class="slds-p-around_small slds-card slds-m-bottom_medium car1">
+                                        <legend class="slds-form-element__label slds-text-title_caps slds-text-heading_small slds-p-bottom_x-small slds-grid slds-grid_vertical-align-center">
+                                            <lightning-icon icon-name="standard:record" size="x-small" class="slds-m-right_x-small car5"></lightning-icon>
+                                            <span class="slds-m-left_xx-small">Information</span>
+                                        </legend>
+                                        <hr class="slds-m-vertical_x-small" />
+                                        <template if:true={infoRender}>
+                                            <lightning-layout multiple-rows class="slds-p-around_small">
+                                                <lightning-layout-item size="6" small-device-size="12" padding="horizontal-small">
+                                                    <c-search-comp-sch
+                                                        obj-name="Registration_SCH__c"
+                                                        data-id="expertLookup1"
+                                                        key={firstRecordId}
+                                                        label-name="Registration Number"
+                                                        placeholder=""
+                                                        fields='Name'
+                                                        display-fields='Name'
+                                                        value-id={firstRecordId}
+                                                        selected-record-id={firstRecordId}>
+                                                    </c-search-comp-sch>
+                                                </lightning-layout-item>
+
+                                                <lightning-layout-item size="6" small-device-size="12" padding="horizontal-small">
+                                                    <c-search-comp-sch
+                                                        obj-name="Contact"
+                                                        data-id="expertLookup2"
+                                                        label-name="Contact"
+                                                        placeholder=""
+                                                        fields='Name'
+                                                        display-fields='Name'
+                                                        value-id={firstRecordContact}
+                                                        selected-record-id={firstRecordContact}>
+                                                    </c-search-comp-sch>
+                                                </lightning-layout-item>
+
+                                                <lightning-layout-item size="6" small-device-size="12" padding="horizontal-small">
+                                                    <c-search-comp-sch
+                                                        obj-name="Expert_Location__c"
+                                                        data-id="expertLookup3"
+                                                        label-name="Location"
+                                                        placeholder=""
+                                                        fields='Name'
+                                                        display-fields='Name'
+                                                        value-id={firstRecordLocation}
+                                                        selected-record-id={firstRecordLocation}>
+                                                    </c-search-comp-sch>
+                                                </lightning-layout-item>
+
+                                                <lightning-layout-item size="6" small-device-size="12" padding="horizontal-small">
+                                                    <c-search-comp-sch
+                                                        obj-name="User"
+                                                        data-id="expertLookup4"
+                                                        label-name="User"
+                                                        placeholder=""
+                                                        fields='Name'
+                                                        display-fields='Name'
+                                                        value-id={firstRecordResourceUser}
+                                                        selected-record-id={firstRecordResourceUser}>
+                                                    </c-search-comp-sch>
+                                                </lightning-layout-item>
+                                            </lightning-layout>
+                                        </template>
+                                    </div>
+
+                                    <div class="slds-p-around_small slds-card slds-m-bottom_medium car1">
+                                        <template if:true={appFields.length}>
+                                            <legend class="slds-form-element__label slds-text-title_caps slds-text-heading_small slds-p-bottom_x-small slds-grid slds-grid_vertical-align-center">
+                                                <lightning-icon icon-name="standard:event" size="x-small" class="slds-m-right_x-small car5"></lightning-icon>
+                                                <span class="slds-m-left_xx-small">Appointment Detail</span>
+                                            </legend>
+                                            <hr class="slds-m-vertical_x-small" />
+                                            <lightning-record-edit-form object-api-name="Registration_SCH__c" record-id={selectedRecordId} class="slds-p-around_small">
+                                                <lightning-messages></lightning-messages>
+                                                <lightning-layout multiple-rows>
+                                                    <template for:each={appFields} for:item="item">
+                                                        <lightning-layout-item key={item} size="12" padding="horizontal-small">
+                                                            <lightning-input-field field-name={item}></lightning-input-field>
+                                                        </lightning-layout-item>
+                                                    </template>
+                                                </lightning-layout>
+                                            </lightning-record-edit-form>
+                                        </template>
+                                    </div>
+
+                                    <div class="slds-p-around_small slds-card slds-m-bottom_medium car1">
+                                        <template if:true={customerFields.length}>
+                                            <legend class="slds-form-element__label slds-text-title_caps slds-text-heading_small slds-p-bottom_x-small slds-grid slds-grid_vertical-align-center">
+                                                <lightning-icon icon-name="standard:contact_list" size="x-small" class="slds-m-right_x-small car5"></lightning-icon>
+                                                <span class="slds-m-left_xx-small">Customer Details</span>
+                                            </legend>
+                                            <hr class="slds-m-vertical_x-small" />
+                                            <lightning-record-edit-form object-api-name="Registration_SCH__c" record-id={selectedRecordId} class="slds-p-around_small">
+                                                <lightning-messages></lightning-messages>
+                                                <lightning-layout multiple-rows>
+                                                    <template for:each={customerFields} for:item="item">
+                                                        <lightning-layout-item key={item} size="6" small-device-size="12" padding="horizontal-small">
+                                                            <lightning-input-field field-name={item}></lightning-input-field>
+                                                        </lightning-layout-item>
+                                                    </template>
+                                                </lightning-layout>
+                                            </lightning-record-edit-form>
+                                        </template>
+                                    </div>
+
+                                    <div class="slds-p-around_small slds-card slds-m-bottom_medium car1">
+                                        <template if:true={meetingFields.length}>
+                                            <legend class="slds-form-element__label slds-text-title_caps slds-text-heading_small slds-p-bottom_x-small slds-grid slds-grid_vertical-align-center">
+                                                <lightning-icon icon-name="standard:link" size="x-small" class="slds-m-right_x-small car5"></lightning-icon>
+                                                <span class="slds-m-left_xx-small">Meeting Details</span>
+                                            </legend>
+                                            <hr class="slds-m-vertical_x-small" />
+                                            <lightning-record-edit-form object-api-name="Registration_SCH__c" record-id={selectedRecordId} class="slds-p-around_small">
+                                                <lightning-messages></lightning-messages>
+                                                <lightning-layout multiple-rows>
+                                                    <template for:each={meetingFields} for:item="item">
+                                                        <lightning-layout-item key={item} size="12" padding="horizontal-small">
+                                                            <lightning-input-field field-name={item}></lightning-input-field>
+                                                        </lightning-layout-item>
+                                                    </template>
+                                                </lightning-layout>
+                                            </lightning-record-edit-form>
+                                        </template>
+                                    </div>
+
+                                    <div class="slds-docked-form-footer">
+                                        <template if:true={isCompletedOrPastAppointments}>
+                                            <lightning-button
+                                                label="Save"
+                                                disabled
+                                                variant="brand"
+                                            ></lightning-button>
+                                        </template>
+                                        <template if:false={isCompletedOrPastAppointments}>
+                                            <lightning-button
+                                                label="Save"
+                                                disabled={isRecordValuesEmpty}
+                                                 variant="brand"
+                                                onclick={handleSaveRecord}
+                                            ></lightning-button>
+                                        </template>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="slds-col slds-size_1-of-3 hideintab">
+                               <div class="slds-card slds-m-around_small slds-p-around_small car1">
+                                <legend class="slds-form-element__label slds-text-title_caps slds-text-heading_small slds-p-bottom_x-small slds-grid slds-grid_vertical-align-center">
+                                    <lightning-icon icon-name="standard:note" size="x-small" class="slds-m-right_x-small car5"></lightning-icon>
+                                    <span class="slds-m-left_xx-small">Notes & Attachments</span>
+                                </legend>
+                                <hr class="slds-m-vertical_x-small" />
+
+                                <div class="slds-grid slds-grid_align-spread slds-m-bottom_medium">
+                                    <div class="slds-col slds-size_9-of-12">
+                                        <div class="slds-form-element slds-file-selector_container">
+                                            <div class="slds-file-selector slds-file-selector_dropzone">
+                                                <input type="file" onchange={handleFileUploaded} disabled={isRecordValuesEmpty} multiple class="slds-file-selector__input slds-assistive-text" id="file-upload-input" aria-labelledby="file-selector-label" />
+                                                <label class="slds-file-selector__body" for="file-upload-input" id="file-selector-label">
+                                                    <span class="slds-file-selector__button slds-button slds-button_neutral">
+                                                        <lightning-icon icon-name="utility:upload" size="x-small" class="slds-m-right_x-small"></lightning-icon>Upload Files
+                                                    </span>
+                                                    <span class="slds-file-selector__text slds-medium-show">or Drop Files</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="slds-col slds-size_3-of-12 slds-grid slds-grid_align-end">
+
+                                        <lightning-button-icon
+                                            class="slds-m-left_x-small"
+                                            icon-name="utility:new"
+                                            alternative-text="New Note"
+                                            title="New Note"
+                                            onclick={handleNewNote}
+                                            disabled={isRecordValuesEmpty}
+                                            variant="border-filled"
+                                            ></lightning-button-icon>
+
+                                        <!--lightning-button-group class="slds-m-left_x-small">
+                                            <lightning-button-icon
+                                                icon-name="utility:new"
+                                                alternative-text="New Note"
+                                                title="New Note"
+                                                onclick={handleNewNote}
+                                                disabled={isRecordValuesEmpty}
+                                                class="slds-button_icon-border-filled"
+                                            ></lightning-button-icon>
+                                        </lightning-button-group-->
+
+                                    </div>
+                                </div>
+
+                                <div class="notes-container slds-m-top_small">
+                                    <template for:each={selectedNotes} for:item="note">
+                                        <div key={note.Id} class="slds-media slds-m-vertical_x-small">
+                                            <div class="slds-media__figure">
+                                                <lightning-icon icon-name="utility:note" size="small"></lightning-icon>
+                                            </div>
+                                            <div class="slds-media__body slds-p-left_small slds-grid slds-grid_align-spread">
+                                                <a
+                                                    href={note.noteUrl}
+                                                    target="_blank"
+                                                    class="slds-truncate"
+                                                    title={note.Title}
+                                                >
+                                                    {note.Title}
+                                                </a>
+
+                                                <lightning-button-icon
+                                                    icon-name="utility:delete"
+                                                    alternative-text="Delete Note"
+                                                    title="Delete Note"
+                                                    onclick={handleOpenConfirm}
+                                                    data-name={note.Id}
+                                                    data-value="Note"
+                                                    size="x-small"
+
+                                                ></lightning-button-icon>
+                                                </div>
+
+                                            <!--div class="slds-media__body slds-p-left_small slds-grid slds-grid_align-spread">
+                                                <a href={note.noteUrl} target="_blank" class="slds-media__body slds-truncate">{note.Title}</a>
+                                                <lightning-button-icon
+                                                    icon-name="utility:delete"
+                                                    alternative-text="Delete Note"
+                                                    title="Delete Note"
+                                                    onclick={handleOpenConfirm}
+                                                    data-name={note.Id}
+                                                    data-value="Note"
+                                                    size="x-small"
+                                                    class="slds-button_icon-border-filled"
+                                                ></lightning-button-icon>
+                                            </div-->
+                                        </div>
+                                    </template>
+                                    <template for:each={selectedAttachments} for:item="attachment">
+                                        <div key={attachment.Id} class="slds-media slds-m-vertical_x-small">
+                                            <div class="slds-media__figure">
+                                                <lightning-icon icon-name="utility:attach" size="x-small"></lightning-icon>
+                                            </div>
+                                            <div class="slds-media__body slds-p-left_small slds-grid slds-grid_align-spread">
+                                                <a href={attachment.attachmentUrl} target="_blank" class="slds-media__body slds-truncate">
+                                                    {attachment.Name}
+                                                </a>
+                                                <lightning-button-icon
+                                                    icon-name="utility:delete"
+                                                    alternative-text="Delete Attachment"
+                                                    title="Delete Attachment"
+                                                    onclick={handleOpenConfirm}
+                                                    data-name={attachment.Id}
+                                                    data-value="Attachment"
+                                                    size="x-small"
+                                                    class="slds-m-left_auto"
+                                                ></lightning-button-icon>
+                                                <!--<template if:true={attachment.Id}>
+                                                    <img src={attachment.previewUrl} class="attachment-preview slds-m-left_small" alt="Attachment Preview" />
+                                                </template>-->
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                            </div>
+
+                            <template if:true={isOpen}>
+                              <!-- Modal (open) -->
+                                <section
+                                role="dialog"
+                                tabindex="-1"
+                                aria-labelledby="modal-heading-02"
+                                aria-describedby="modal-content-id-1"
+                                aria-modal="true"
+                                class="slds-modal slds-fade-in-open modal-overlay"
+                                >
+                                <div class="slds-modal__container">
+
+                                    <!-- Header -->
+                                    <header class="slds-modal__header">
+                                    <!-- <button
+                                        class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                                        title="Close"
+                                        onclick={handleCancelPopupClose}
+                                        type="button"
+                                    >
+                                        <lightning-icon
+                                        icon-name="utility:close"
+                                        alternative-text="Close"
+                                        size="small"
+                                        ></lightning-icon>
+                                        <span class="slds-assistive-text">Close</span>
+                                    </button> -->
+
+                                    <!-- commented and corrected by adnan issue:- slds-button_icon-inverse  -->
+                                    <button
+                                        class="slds-button slds-button_icon slds-modal__close"
+                                        title="Close"
+                                        onclick={handleCancelPopupClose}
+                                        type="button">
+
+                                        <lightning-icon
+                                            icon-name="utility:close"
+                                            alternative-text="Close"
+                                            size="small">
+                                        </lightning-icon>
+
+                                        </button>
+
+                                    <h2 id="modal-heading-02" class="slds-text-heading_medium slds-hyphenate">
+                                        Can you share a reason for this {currentLabel}?
+                                    </h2>
+                                    </header>
+
+                                    <!-- Body -->
+                                    <div id="modal-content-id-1" class="slds-modal__content slds-p-around_large">
+                                    <div class="slds-form-element">
+                                        <label class="slds-form-element__label" for="textarea-id-01">
+                                        Reason
+                                        </label>
+                                        <div class="slds-form-element__control">
+                                        <textarea
+                                            id="textarea-id-01"
+                                            class="slds-textarea modal-textarea"
+                                            rows="2"
+                                            onchange={handlePurposeChange}
+                                        ></textarea>
+                                        </div>
+                                    </div>
+                                    </div>
+
+                                    <!-- Footer -->
+                                    <footer class="slds-modal__footer slds-text-align_center">
+                                    <button
+                                        type="button"
+                                        class="slds-button slds-button_brand"
+                                        onclick={handleStatusCancel}
+                                    >
+                                        Yes
+                                    </button>
+                                    <button
+                                        type="button"
+                                        class="slds-button slds-button_neutral modal-cancel-button"
+                                        onclick={handleCancelPopupClose}
+                                    >
+                                        No
+                                    </button>
+                                    </footer>
+
+                                </div>
+                                </section>
+
+                                <!-- Backdrop (open) -->
+                                <div class="slds-backdrop slds-backdrop_open"></div>
+
+
+                            </template>
+
+
+                            <template if:true={spinner}>
+                                <div class="slds-spinner_container">
+                                    <lightning-spinner alternative-text="Loading" size="large"></lightning-spinner>
+                                </div>
+                            </template>
+
+                           <!-- <template if:true={Modalboxconfirm}>
+                                <div role="dialog" tabindex="-1" aria-labelledby="header43" class="slds-modal slds-fade-in-open modal-overlay" data-id="Modalboxconfirm">
+                                    <div class="slds-modal__container">
+                                        <div class="slds-modal__content slds-p-around--medium">
+                                            <div class="modal-body">
+                                                <h3 class="modal-title">Are you sure you want to delete?</h3>
+                                            </div>
+                                        </div>
+                                        <div class="slds-modal__footer modal-footer">
+                                            <div class="slds-text-align--center">
+                                                <lightning-button
+                                                    label="Yes"
+                                                    variant="brand"
+                                                    onclick={handleDeleteRecordAT}
+                                                ></lightning-button>
+                                                <lightning-button
+                                                    label="No"
+                                                    variant="cancel"
+                                                    onclick={handleCloseConfirm}
+                                                ></lightning-button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="slds-backdrop"></div>
+                            </template>-->
+                        <template if:true={Modalboxconfirm}>
+    <!-- Modal (open) -->
+    <section
+        role="dialog"
+        tabindex="-1"
+        aria-labelledby="modal-heading-confirm"
+        aria-describedby="modal-content-confirm"
+        aria-modal="true"
+        class="slds-modal slds-fade-in-open modal-overlay"
+        data-id="Modalboxconfirm"
+    >
+        <div class="slds-modal__container">
+
+            <!-- Header -->
+
+              <!-- <button
+                    class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                    title="Close"
+                    onclick={handleCloseConfirm}
+                    type="button"
+                >
+                    <lightning-icon
+                        icon-name="utility:close"
+                        alternative-text="Close"
+                        size="small"
+                    ></lightning-icon>
+                    <span class="slds-assistive-text">Close</span>
+                </button> -->
+
+                <!-- commented and corrected by adnan , issue: slds-button_icon-inverse -->
+                <button
+                    class="slds-button slds-button_icon slds-modal__close"
+                    title="Close"
+                    onclick={handleCloseConfirm}
+                    type="button"
+                >
+                    <lightning-icon
+                        icon-name="utility:close"
+                        alternative-text="Close"
+                        size="small"
+                    ></lightning-icon>
+
+                    </button>
+
+            <!--<header class="slds-modal__header">
+                <button
+                    class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                    title="Close"
+                    onclick={handleCloseConfirm}
+                    type="button"
+                >
+                    <lightning-icon
+                        icon-name="utility:close"
+                        alternative-text="Close"
+                        size="small"
+                    ></lightning-icon>
+                    <span class="slds-assistive-text">Close</span>
+                </button>
+
+
+            </header>-->
+
+            <!-- Body -->
+            <div
+                id="modal-content-confirm"
+                class="slds-modal__content slds-p-around_large"
+            >
+            <h4
+
+                    class="slds-text-heading_small slds-hyphenate"
+                >
+                    Are you sure you want to delete?
+                </h4>
+                <!-- Optional extra content can go here if needed -->
+            </div>
+
+            <!-- Footer -->
+            <footer class="slds-modal__footer slds-text-align_center">
+                <button
+                    type="button"
+                    class="slds-button slds-button_brand"
+                    onclick={handleDeleteRecordAT}
+                >
+                    Yes
+                </button>
+                <button
+                    type="button"
+                    class="slds-button slds-button_neutral modal-cancel-button"
+                    onclick={handleCloseConfirm}
+                >
+                    No
+                </button>
+            </footer>
+
+        </div>
+    </section>
+
+    <!-- Backdrop (open) -->
+    <div class="slds-backdrop slds-backdrop_open"></div>
+</template>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <template if:true={showNoteModal}>
+        <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-02" aria-modal="true" data-id="showNoteModal"
+                class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <div class="slds-modal__header">
+                    <h2 class="slds-text-heading_medium car6">Notes</h2>
+                </div>
+                <div class="slds-modal__content slds-p-around_small">
+                    <div class="modal-body">
+                        <lightning-input
+                            label="Title"
+                            required
+                            class="slds-m-bottom_small"
+                            value={newNote.Title}
+                                onchange={handleTitleChange}
+                        ></lightning-input>
+
+                        <lightning-input
+                            type="checkbox"
+                            label="Private"
+                            class="slds-m-bottom_small"
+                            checked={newNote.isPrivate}
+                                onchange={handlePrivateChange}
+                        ></lightning-input>
+
+                        <lightning-textarea
+                            label="Body"
+                            value={newNote.Body}
+                                onchange={handleBodyChange}
+                            ></lightning-textarea>
+                    </div>
+                </div>
+                <div class="slds-modal__footer car7">
+                    <lightning-button
+                        label="Save"
+                        variant="brand"
+                        onclick={handleSaveNote}
+                        class="slds-m-right_small"
+                    ></lightning-button>
+                    <lightning-button
+                        label="Cancel"
+                        variant="neutral"
+                        onclick={handleCloseNoteModal}
+                    ></lightning-button>
+                </div>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+    </template>

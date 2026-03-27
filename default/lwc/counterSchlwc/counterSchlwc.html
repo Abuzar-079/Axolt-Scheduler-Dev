@@ -1,0 +1,8 @@
+<template>
+    <template if:true={countTime}>
+       <div class={computedClass}>{countTime}</div>
+       <template if:true={timerActive}>
+           <span class="timer-tick" onanimationiteration={handleTimerIteration} aria-hidden="true"></span>
+       </template>
+    </template>
+</template>
