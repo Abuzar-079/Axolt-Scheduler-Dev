@@ -12,7 +12,7 @@ const DEV_BRANCH = "imran-khan";
 const DEPLOY_BRANCH = "deploy-scheduler";
 
 const ALLOWED_ORG_DOMAIN = "https://orgfarm-2a16d57383-dev-ed.develop.my.salesforce.com";
-const TARGET_ORG_ALIAS = "sched";
+const TARGET_ORG_ALIAS = "Scheduler";
 
 // 🔥 Toggle auto commit ON/OFF
 const autoCommit = false;   // if true → skip asking for commit msg
