@@ -56,7 +56,7 @@ public with sharing class Queue_Expert_Sch {
      * @param eDate End date and time for the registration.
      * @return Wrapper containing update status or error details.
      */
-    @AuraEnabled
+    @AuraEnabled(cacheable=false)
     @SuppressWarnings('PMD.ExcessiveParameterList')
     public static Wrapper updateRecordValues(String regId, String recValues, String userID, String recordType, String queueId, String accountId, String event, String location, DateTime sDate, DateTime eDate) {
         Wrapper wrapper = new Wrapper();
@@ -204,7 +204,7 @@ public with sharing class Queue_Expert_Sch {
      * @param waitingTime Wait time to store on the registration.
      * @return Wrapper containing refreshed registration details.
      */
-    @AuraEnabled
+    @AuraEnabled(cacheable=false)
     public static Wrapper popUpRecordsOfId(string id, String location,String waitingTime){
         Wrapper wrapper=new Wrapper(); Registration_SCH__c registrationToUpdate;
         try {
@@ -281,7 +281,7 @@ public with sharing class Queue_Expert_Sch {
      * @param purpose Cancellation or completion reason.
      * @return Wrapper indicating whether the update succeeded.
      */
-    @AuraEnabled
+    @AuraEnabled(cacheable=false)
     @SuppressWarnings('PMD.ExcessiveParameterList')
     public static Wrapper setStatus(String passedId, String location,String status,String purpose){
         Wrapper wrapper = new Wrapper();
@@ -337,7 +337,7 @@ public with sharing class Queue_Expert_Sch {
      * @param eDate Updated end date and time.
      * @return Wrapper containing refreshed registration details or an error message.
      */
-    @AuraEnabled
+    @AuraEnabled(cacheable=false)
     @SuppressWarnings('PMD.ExcessiveParameterList')
     public static Wrapper getRegRecordUpdate(String regId, String recValues,String userID, String recordType,String queueId, String accountId, String event, String location,DateTime sDate, DateTime eDate) {
         Wrapper wrapper=new Wrapper();
@@ -657,7 +657,7 @@ public with sharing class Queue_Expert_Sch {
      * @param objName API name of the object to delete from.
      * @return Wrapper indicating completion state.
      */
-    @AuraEnabled
+    @AuraEnabled(cacheable=false)
     public static wrapper  deleteAT(String raId, String objName){
         Wrapper wrapper=new Wrapper();
         try{
