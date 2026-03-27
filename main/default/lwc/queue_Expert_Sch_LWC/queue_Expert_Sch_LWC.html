@@ -436,21 +436,9 @@
                                                 </label>
                                             </div>
                                         </div>
-                                        <template if:true={hasPendingUpload}>
-                                            <div class="slds-m-top_x-small slds-text-body_small">
-                                                Selected file: {pendingUploadFileName}
-                                            </div>
-                                        </template>
                                     </div>
 
                                     <div class="slds-col slds-size_3-of-12 slds-grid slds-grid_align-end">
-                                        <lightning-button
-                                            class="slds-m-left_x-small"
-                                            label="Upload"
-                                            onclick={handleUploadFileClick}
-                                            disabled={isUploadDisabled}
-                                            variant="brand"
-                                        ></lightning-button>
 
                                         <lightning-button-icon
                                             class="slds-m-left_x-small"

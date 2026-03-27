@@ -130,14 +130,12 @@ export default class QueueExpertSch extends LightningElement {
     @track selectedRecordIds;
     @track selectedUserName = '';
     @track infoRender = true;
-    @track pendingUploadFileName = '';
     // commented by abuzar on 2026-03-13 for the scanning issue and added below line "Restricted async operation setInterval"
     // @track _refreshIntervalId = null;
     // @track _refreshFrameId = null;
     // @track _refreshFrameStartTime = null;
     refreshPulseEnabled = false;
     refreshPulseStyle = '';
-    pendingUploadPayload = null;
     //changes end here by abuzar
 
     connectedCallback() {
@@ -544,48 +542,31 @@ export default class QueueExpertSch extends LightningElement {
     handleFileUploaded(event) {
         const files = event.target.files;
         if (files && files.length > 0) {
+            this.spinner = true;
             const file = files[0];
             const reader = new FileReader();
             reader.onloadend = () => {
                 const base64Mark = 'base64,';
                 const dataStart = reader.result.indexOf(base64Mark) + base64Mark.length;
-                this.pendingUploadPayload = {
+                const fileContents = reader.result.substring(dataStart);
+                uploadFile({
                     parent: this.recordValues[0]?.Id,
                     fileName: file.name,
-                    base64Data: encodeURIComponent(reader.result.substring(dataStart)),
+                    base64Data: encodeURIComponent(fileContents),
                     contentType: file.type
-                };
-                this.pendingUploadFileName = file.name;
+                })
+                    .then(result => {
+                        this.refAttach = false;
+                        this.selectedAttachments = result;
+                        this.refAttach = true;
+                        this.spinner = false;
+                    })
+                    .catch(error => {
+                        console.error('Error in uploadFile:', error);
+                        this.spinner = false;
+                    });
             };
             reader.readAsDataURL(file);
-        }
-    }
-
-    handleUploadFileClick() {
-        if (!this.pendingUploadPayload?.parent) {
-            return;
-        }
-        this.spinner = true;
-        uploadFile(this.pendingUploadPayload)
-            .then(result => {
-                this.refAttach = false;
-                this.selectedAttachments = result;
-                this.refAttach = true;
-                this.clearPendingUpload();
-                this.spinner = false;
-            })
-            .catch(error => {
-                console.error('Error in uploadFile:', error);
-                this.spinner = false;
-            });
-    }
-
-    clearPendingUpload() {
-        this.pendingUploadPayload = null;
-        this.pendingUploadFileName = '';
-        const fileInput = this.template.querySelector('#file-upload-input');
-        if (fileInput) {
-            fileInput.value = null;
         }
     }
 
@@ -1420,14 +1401,6 @@ export default class QueueExpertSch extends LightningElement {
 
     get selectedRecordId() {
         return this.recordValues && this.recordValues.length > 0 ? this.recordValues[0].Id : null;
-    }
-
-    get hasPendingUpload() {
-        return !!this.pendingUploadPayload;
-    }
-
-    get isUploadDisabled() {
-        return this.isRecordValuesEmpty || !this.hasPendingUpload;
     }
 
     renderedCallback() {
