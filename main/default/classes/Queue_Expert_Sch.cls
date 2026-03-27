@@ -2,6 +2,10 @@
  * @description Provides queue expert scheduling operations for appointment management.
  */
 public with sharing class Queue_Expert_Sch {
+    private static final Set<String> SUPPORTED_RELATED_RECORD_OBJECTS = new Set<String>{
+        'Attachment',
+        'Note'
+    };
     private static final String TODAYS_APPOINTMENTS = 'Todays Appointments';
     private static final String CHECK_IN_APPOINTMENTS = 'Check In Appointments';
     private static final String FUTURE_APPOINTMENTS = 'Future Appointments';
@@ -384,25 +388,38 @@ public with sharing class Queue_Expert_Sch {
 
  // REMOVED: generateSlots method - uses Time_Off__c for slot generation // REMOVED: getNextSlots method - queries Resource__c, Time_Off__c and calls generateSlots // REMOVED: fetchPreSlot method - queries Resource__c, Time_Off__c and calls generateSlots // REMOVED: confirmSlot method - queries and updates Resource__c related fields // REMOVED: slotOnDateChange method - queries Resource__c, Time_Off__c and calls generateSlots // REMOVED: getSlot method - queries Work_Planner__c, Resource__c, Resource_Requirement__c, Time_Off__c and calls generateSlots
 
-    private static Id validateParentRecordId(String parent) {
-        if (String.isBlank(parent)) {
-            throw new AuraHandledException('Parent record id is required.');
+    private static Id validateRecordId(String recordIdValue, String errorMessage) {
+        if (String.isBlank(recordIdValue)) {
+            throw new AuraHandledException(errorMessage);
         }
         try {
-            return (Id) parent;
+            return (Id) recordIdValue;
         } catch (Exception ex) {
-            throw new AuraHandledException('Invalid parent record id.');
+            throw new AuraHandledException(errorMessage);
         }
     }
 
-    private static void assertParentRecordAccessible(Id parentId) {
+    private static Id validateParentRecordId(String parent) {
+        return validateRecordId(parent, 'Invalid parent record id.');
+    }
+
+    private static String getParentObjectApiName(Id parentId) {
+        return parentId.getSObjectType().getDescribe().getName();
+    }
+
+    public static void assertParentRecordAccessible(Id parentId) {
         Schema.DescribeSObjectResult parentDescribe = parentId.getSObjectType().getDescribe();
         if (!parentDescribe.isAccessible()) {
             throw new AuraHandledException('Insufficient access to the parent record.');
         }
 
-        List<SObject> parentRecords = Database.query(
-            'SELECT Id FROM ' + parentDescribe.getName() + ' WHERE Id = :parentId WITH USER_MODE LIMIT 1'
+        Map<String, Object> bindVars = new Map<String, Object>{
+            'parentId' => parentId
+        };
+        List<SObject> parentRecords = Database.queryWithBinds(
+            'SELECT Id FROM ' + getParentObjectApiName(parentId) + ' WHERE Id = :parentId LIMIT 1',
+            bindVars,
+            AccessLevel.USER_MODE
         );
         if (parentRecords.isEmpty()) {
             throw new AuraHandledException('Parent record is not accessible.');
@@ -422,6 +439,16 @@ public with sharing class Queue_Expert_Sch {
         }
     }
 
+    private static void assertAttachmentDeleteAccess(Id parentId) {
+        assertParentRecordAccessible(parentId);
+        if (
+            !Schema.sObjectType.Attachment.isDeletable() ||
+            !Schema.sObjectType.Attachment.fields.ParentId.isAccessible()
+        ) {
+            throw new AuraHandledException('Insufficient access to delete attachments.');
+        }
+    }
+
     private static void assertAttachmentReadAccess(Id parentId) {
         assertParentRecordAccessible(parentId);
         if (
@@ -434,7 +461,52 @@ public with sharing class Queue_Expert_Sch {
         }
     }
 
-    private static List<Attachment> getAttachmentsByParent(Id parentId) {
+    private static void assertNoteCreateAccess(Id parentId) {
+        assertParentRecordAccessible(parentId);
+        if (
+            !Schema.sObjectType.Note.isCreateable() ||
+            !Schema.sObjectType.Note.fields.ParentId.isCreateable() ||
+            !Schema.sObjectType.Note.fields.Title.isCreateable() ||
+            !Schema.sObjectType.Note.fields.Body.isCreateable()
+        ) {
+            throw new AuraHandledException('Insufficient access to create notes.');
+        }
+    }
+
+    private static void assertNoteUpdateAccess(Id parentId) {
+        assertParentRecordAccessible(parentId);
+        if (
+            !Schema.sObjectType.Note.isUpdateable() ||
+            !Schema.sObjectType.Note.fields.ParentId.isUpdateable() ||
+            !Schema.sObjectType.Note.fields.Title.isUpdateable() ||
+            !Schema.sObjectType.Note.fields.Body.isUpdateable()
+        ) {
+            throw new AuraHandledException('Insufficient access to update notes.');
+        }
+    }
+
+    private static void assertNoteReadAccess(Id parentId) {
+        assertParentRecordAccessible(parentId);
+        if (
+            !Schema.sObjectType.Note.isAccessible() ||
+            !Schema.sObjectType.Note.fields.ParentId.isAccessible() ||
+            !Schema.sObjectType.Note.fields.Title.isAccessible()
+        ) {
+            throw new AuraHandledException('Insufficient access to view notes.');
+        }
+    }
+
+    private static void assertNoteDeleteAccess(Id parentId) {
+        assertParentRecordAccessible(parentId);
+        if (
+            !Schema.sObjectType.Note.isDeletable() ||
+            !Schema.sObjectType.Note.fields.ParentId.isAccessible()
+        ) {
+            throw new AuraHandledException('Insufficient access to delete notes.');
+        }
+    }
+
+    public static List<Attachment> getAttachmentsByParent(Id parentId) {
         assertAttachmentReadAccess(parentId);
         return [
             SELECT Id, Name, ParentId, ContentType
@@ -444,6 +516,63 @@ public with sharing class Queue_Expert_Sch {
             ORDER BY CreatedDate ASC
             LIMIT 1000
         ];
+    }
+
+    public static List<Note> getNotesByParent(Id parentId) {
+        assertNoteReadAccess(parentId);
+        return [
+            SELECT Id, Title, ParentId
+            FROM Note
+            WHERE ParentId = :parentId
+            WITH USER_MODE
+            ORDER BY CreatedDate ASC
+            LIMIT 1000
+        ];
+    }
+
+    private static Note parseNotePayload(String noteJson) {
+        try {
+            return (Note) JSON.deserialize(noteJson, Note.class);
+        } catch (Exception ex) {
+            throw new AuraHandledException('Invalid note payload.');
+        }
+    }
+
+    private static Note getAccessibleNoteById(Id noteId) {
+        List<Note> notes = [
+            SELECT Id, ParentId
+            FROM Note
+            WHERE Id = :noteId
+            WITH USER_MODE
+            LIMIT 1
+        ];
+        if (notes.isEmpty()) {
+            throw new AuraHandledException('Note record is not accessible.');
+        }
+        return notes[0];
+    }
+
+    private static SObject getAccessibleRelatedRecordForDelete(Id relatedRecordId, String objName) {
+        if (objName == 'Attachment') {
+            List<Attachment> attachments = [
+                SELECT Id, ParentId
+                FROM Attachment
+                WHERE Id = :relatedRecordId
+                WITH USER_MODE
+                LIMIT 1
+            ];
+            if (attachments.isEmpty()) {
+                throw new AuraHandledException('Attachment record is not accessible.');
+            }
+            assertAttachmentDeleteAccess(attachments[0].ParentId);
+            return attachments[0];
+        }
+        if (objName == 'Note') {
+            Note noteRecord = getAccessibleNoteById(relatedRecordId);
+            assertNoteDeleteAccess(noteRecord.ParentId);
+            return noteRecord;
+        }
+        throw new AuraHandledException('Unsupported related record type.');
     }
 
     /**
@@ -476,6 +605,10 @@ public with sharing class Queue_Expert_Sch {
         return getAttachmentsByParent(parentId);
     }
 
+    public static List<Attachment> uploadFile(String parent, String fileName, String base64Data, String contentType) {
+        return uploadFile(parent, fileName, base64Data, contentType, true);
+    }
+
     /**
      * @description Saves a note for the specified registration and returns related notes.
      * @param nn Serialized note payload.
@@ -484,19 +617,38 @@ public with sharing class Queue_Expert_Sch {
      */
     @AuraEnabled
     public static List<Note> saveNotes(String nn, String regID) {
-        Note myNote = (Note) JSON.deserialize(nn, Note.class);
-        try{
-          // upsert myNote;
-          Database.upsert(myNote, false, AccessLevel.USER_MODE);
-        } catch(Exception e) {
-            return null;
-            //System.debug(LoggingLevel.DEBUG, 'Errro=>'+e.getMessage());wrapper.errorMsg = e.getMessage() +' Line Number @ : '+ e.getLineNumber();
+        Id parentId = validateRecordId(regID, 'Invalid parent record id.');
+        Note requestedNote = parseNotePayload(nn);
+        if (requestedNote.ParentId != null && requestedNote.ParentId != parentId) {
+            throw new AuraHandledException('Mismatched note parent record.');
         }
-        // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
-        // List<Note> myAtt = [Select Id, Title, ParentId From Note Where ParentId=:regID WITH USER_MODE Order By CreatedDate Asc LIMIT 1000];
-        List<Note> myAtt = [Select Id, Title, ParentId From Note Where ParentId=:regID WITH USER_MODE Order By CreatedDate Asc LIMIT 1000];
-        //changes end here by Abuzar
-        return myAtt;
+
+        try {
+            if (requestedNote.Id == null) {
+                assertNoteCreateAccess(parentId);
+                Note noteToInsert = new Note();
+                noteToInsert.ParentId = parentId;
+                noteToInsert.Title = requestedNote.Title;
+                noteToInsert.Body = requestedNote.Body;
+                Database.insert(noteToInsert, false, AccessLevel.USER_MODE);
+            } else {
+                Note existingNote = getAccessibleNoteById(requestedNote.Id);
+                if (existingNote.ParentId != parentId) {
+                    throw new AuraHandledException('Mismatched note parent record.');
+                }
+                assertNoteUpdateAccess(parentId);
+                Note noteToUpdate = new Note(
+                    Id = existingNote.Id,
+                    ParentId = parentId,
+                    Title = requestedNote.Title,
+                    Body = requestedNote.Body
+                );
+                Database.update(noteToUpdate, false, AccessLevel.USER_MODE);
+            }
+        } catch (Exception e) {
+            return null;
+        }
+        return getNotesByParent(parentId);
     }
 
     /**
@@ -509,19 +661,12 @@ public with sharing class Queue_Expert_Sch {
     public static wrapper  deleteAT(String raId, String objName){
         Wrapper wrapper=new Wrapper();
         try{
-          //! Commnented by Aymaan, Apex SOQL Injecttion Vulnerability
-          // String query = 'select Id from ' +ObjName+ ' Where Id =:RAId'; SObject AT = Database.query(query);
-          //! Fix for Apex SOQL Injection Vulnerability by Aymaan
-          String query =
-                'SELECT Id FROM ' + objName +
-                ' WHERE Id = :raId LIMIT 1000';
-          Map<String, Object> bindVars = new Map<String, Object>{
-              'raId' => raId
-          };
-          SObject att = Database.queryWithBinds(query, bindVars, AccessLevel.USER_MODE);
-          //! End Fix
-        // delete att;
-        Database.delete(att, false, AccessLevel.USER_MODE);
+          if (!SUPPORTED_RELATED_RECORD_OBJECTS.contains(objName)) {
+              throw new AuraHandledException('Unsupported related record type.');
+          }
+          Id relatedRecordId = validateRecordId(raId, 'Invalid related record id.');
+          SObject relatedRecord = getAccessibleRelatedRecordForDelete(relatedRecordId, objName);
+          Database.delete(relatedRecord, false, AccessLevel.USER_MODE);
       } catch(Exception e) {
         return null;
         //System.debug(LoggingLevel.DEBUG, 'Errorr occured...'+e.getMessage()); wrapper.errorMsg = e.getMessage() +' Line Number @ : '+ e.getLineNumber();
@@ -706,7 +851,7 @@ public with sharing class Queue_Expert_Sch {
             return;
         }
         Registration_SCH__c primaryRecord = wrapper.objectValues[0];
-        wrapper.notes = [Select Id, Title, ParentId From Note Where ParentId = :primaryRecord.Id Order By CreatedDate Asc LIMIT 1000];
+        wrapper.notes = getNotesByParent(primaryRecord.Id);
         wrapper.attachments = getAttachmentsByParent(primaryRecord.Id);
         wrapper.userName = [SELECT Name FROM User WHERE Id = :primaryRecord.OwnerId LIMIT 1000];
         wrapper.recordTypeName = [Select Id, Name From RecordType where id = :primaryRecord.RecordTypeId LIMIT 1000];

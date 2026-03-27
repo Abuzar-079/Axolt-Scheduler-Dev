@@ -82,8 +82,8 @@ public with sharing class QueueExpertSchSupportHelper {
             return;
         }
         Registration_SCH__c primaryRecord = wrapper.objectValues[0];
-        wrapper.notes = [Select Id, Title, ParentId From Note Where ParentId = :primaryRecord.Id Order By CreatedDate Asc LIMIT 1000];
-        wrapper.attachments = [Select Id, Name, ParentId, ContentType From Attachment Where ParentId = :primaryRecord.Id Order By CreatedDate Asc LIMIT 1000];
+        wrapper.notes = Queue_Expert_Sch.getNotesByParent(primaryRecord.Id);
+        wrapper.attachments = Queue_Expert_Sch.getAttachmentsByParent(primaryRecord.Id);
         wrapper.userName = [SELECT Name FROM User WHERE Id = :primaryRecord.OwnerId LIMIT 1000];
         wrapper.recordTypeName = [Select Id, Name From RecordType where id = :primaryRecord.RecordTypeId LIMIT 1000];
     }
