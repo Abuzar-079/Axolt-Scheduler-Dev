@@ -4539,7 +4539,7 @@ public with sharing class EventBooking_Sch {
     private static Boolean canCreateAndUpdateRegistrationField(Schema.DescribeFieldResult describeResult) {
         return describeResult.isCreateable() && describeResult.isUpdateable();
     }
-    //changes end here by abuzar
+    //changes end here by abuzar 
 
     // ============================================================
     // updateFilledEvent
