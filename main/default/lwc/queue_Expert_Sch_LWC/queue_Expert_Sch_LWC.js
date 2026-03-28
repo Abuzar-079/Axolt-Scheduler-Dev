@@ -1,4 +1,4 @@
-import { LightningElement, track } from 'lwc';
+import { LightningElement, track, api } from 'lwc';
 import { notifyRecordUpdateAvailable } from 'lightning/uiRecordApi';
 import { loadStyle } from 'lightning/platformResourceLoader';
 import initSetUp from '@salesforce/apex/Queue_Expert_Sch.initSetUp';
@@ -138,10 +138,16 @@ export default class QueueExpertSch extends LightningElement {
     refreshPulseEnabled = false;
     refreshPulseStyle = '';
     pendingUploadPayload = null;
+
+            @api
+        loadRecord() {
+            this.initializeComponent();
+        }
     //changes end here by abuzar
 
     connectedCallback() {
-        this.initializeComponent();
+        //removed by abuzar
+        // this.initializeComponent();
         console.log('c-search-comp-sch initialized');
         console.log('objName:', this.objName);
         console.log('fields:', this.fields);
@@ -159,6 +165,12 @@ export default class QueueExpertSch extends LightningElement {
 
         this.init();
     }
+
+                // ✅ Only call initializeComponent from explicit user actions
+            handleChangeLabelGetRecord(event) {
+                // existing logic...
+                this.initializeComponent(); // safe — user clicked a button
+            }
 
     initializeComponent() {
         if (this.recordId) {
@@ -1033,7 +1045,10 @@ export default class QueueExpertSch extends LightningElement {
                 //     attachmentCount: result.Attachments ? result.Attachments.length : 0,
                 //     noteCount: result.Notes ? result.Notes.length : 0,
                 // });
-                console.log('popUpRecordsOfId response received. attachmentCount:', result.Attachments ? result.Attachments.length : 0, 'noteCount:', result.Notes ? result.Notes.length : 0, 'hasUpdatedRecord:', !!(result.mapOfRecords && result.mapOfRecords[selId]));
+                console.log('Response received. attachmentCount:', result.Attachments?.length ?? 0,
+                    'noteCount:', result.Notes?.length ?? 0,
+                    'hasUpdatedRecord:', !!(result.mapOfRecords && result.mapOfRecords[selId]));
+                console.warn('No record values returned for selected appointment.');
                 this.selectedNotes = result.Notes || [];
                 this.selectedAttachments = result.Attachments || [];
 

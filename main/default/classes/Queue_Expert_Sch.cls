@@ -212,6 +212,12 @@ public with sharing class Queue_Expert_Sch {
     @AuraEnabled(cacheable=false)
     public static Wrapper popUpRecordsOfId(string id, String location,String waitingTime){
         Wrapper wrapper=new Wrapper(); Registration_SCH__c registrationToUpdate;
+       
+         if (String.isBlank(UserInfo.getSessionId()) || String.isBlank(UserInfo.getUserId())) {
+        wrapper.errmsg = 'UNAUTHORIZED: Invalid or missing session. Request rejected.';
+        return wrapper;
+    }
+       
         try {
             registrationToUpdate = [SELECT Booked_Current_Status__c,waiting_Time__c FROM Registration_SCH__c
                                     WHERE id=: id WITH USER_MODE LIMIT 1];
