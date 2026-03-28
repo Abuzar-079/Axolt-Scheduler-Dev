@@ -517,24 +517,6 @@ public class EventBooking_SchTestClass {
     }
 
     @IsTest
-    static void testUpdateFilledEvent() {
-        System.runAs(getRunAsUser()) {
-            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
-            // Event__c evt = [SELECT Id, Name, Description__c FROM Event__c LIMIT 1];
-            Event__c evt = [SELECT Id, Name, Description__c FROM Event__c WITH USER_MODE LIMIT 1];
-            //changes end here by Abuzar
-            evt.Description__c = 'Updated Description';
-            String eventJSON = JSON.serialize(evt);
-
-            Test.startTest();
-            Map<String, String> result = EventBooking_Sch.updateFilledEvent(eventJSON);
-            Test.stopTest();
-
-            System.assertNotEquals(null, result, 'Result should not be null');
-        }
-    }
-
-    @IsTest
     static void testFetchObjTypes() {
         System.runAs(getRunAsUser()) {
             Test.startTest();

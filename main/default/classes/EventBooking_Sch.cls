@@ -4542,31 +4542,6 @@ public with sharing class EventBooking_Sch {
     //changes end haere by abuzar
 
     // ============================================================
-    // updateFilledEvent
-    // ============================================================
-    /**
-     * @description  Updates an event record from serialized client data.
-     * @param currentEvent Serialized event payload.
-     * @return Status map describing the update result.
-     */
-    @AuraEnabled(cacheable=false)
-    public static Map<String, String> updateFilledEvent(String currentEvent) {
-        Map<String, String> result = new Map<String, String>();
-        Event__c fullEvent = (Event__c) JSON.deserialize(currentEvent, Event__c.class);
-        if (Schema.sObjectType.Event__c.isAccessible() && Schema.sObjectType.Event__c.isUpdateable()) {
-            update fullEvent;
-            result.put('title', 'SUCCESS!');
-            result.put('type', 'success');
-            result.put('message', 'Event Updated Successfully.');
-        } else {
-            result.put('title', 'INSUFFICIENT PERMISSIONS!');
-            result.put('type', 'warning');
-            result.put('message', 'Could not update Event.');
-        }
-        return result;
-    }
-
-    // ============================================================
     // fetchObjTypes
     // FIX: OperationWithLimitsInLoop - cache getGlobalDescribe() outside loop
     // ============================================================

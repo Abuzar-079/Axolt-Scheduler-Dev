@@ -5,7 +5,6 @@ import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getEventList from '@salesforce/apex/EventBooking_Sch.fetchEventList';
 import getAllDaysCon from '@salesforce/apex/EventBooking_Sch.getAllDaysCon';
 import getEventDetail from '@salesforce/apex/EventBooking_Sch.getEventDetail';
-import updateFilledEvent from '@salesforce/apex/EventBooking_Sch.updateFilledEvent';
 import createEventBookings from '@salesforce/apex/EventBooking_Sch.createEventBookings';
 import getSearchRecords from '@salesforce/apex/EventBooking_Sch.getSearchRecords';
 import schedulingapp from '@salesforce/resourceUrl/schedulingapp';
@@ -888,32 +887,6 @@ this.LocOptions = LocOptions;
             this.eventId = eventId;
 
             window.scrollTo({ top: 0, behavior: 'smooth' });
-            this.isLoading = false;
-        } catch (error) {
-            this.showToast('Error', error.body.message, 'error');
-            this.isLoading = false;
-            setTimeout(() => {
-                this.errorMessage = '';
-            }, 5000);
-        }
-    }
-
-    async updateFullEvent(currentEvent, eIndex) {
-        this.isLoading = true;
-        try {
-            await updateFilledEvent({ currentEvent: JSON.stringify(currentEvent) });
-            await this.getEventList();
-            if (this.view === 'grid' && this.eventListWP[eIndex].EVT.Id === currentEvent.Id) {
-                this.isFullEvent = [{ index: parseInt(eIndex), isFull: true }];
-                setTimeout(() => {
-                    this.isFullEvent = [{ index: -1, isFull: false }];
-                }, 5000);
-            } else {
-                this.showToast('Error', 'This Event Registrations are full.', 'error');
-                setTimeout(() => {
-                    this.errorMessage = '';
-                }, 5000);
-            }
             this.isLoading = false;
         } catch (error) {
             this.showToast('Error', error.body.message, 'error');
