@@ -803,10 +803,9 @@ export default class QueueExpertSch extends LightningElement {
                 this.spinner = false;
             })
             .catch(error => {
-    console.error('Failed to save record:', error);
-    this.showToast('Error', 'Failed to save record. Please try again.', 'error');
-    this.spinner = false;
-});
+                console.error('Error in updateRecordValues:', error);
+                this.spinner = false;
+            });
     }
 
     handleWorkbenchOperation(event) {
