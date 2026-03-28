@@ -588,7 +588,7 @@ public with sharing class Queue_Expert_Sch {
      * @param contentType MIME type of the uploaded file.
      * @return Attachments currently associated with the parent record.
      */
-   // @AuraEnabled
+    @AuraEnabled
     @SuppressWarnings('PMD.ExcessiveParameterList')
     public static List<Attachment> uploadFile(String parent, String fileName, String base64Data, String contentType, Boolean userInitiated) {
        
@@ -620,7 +620,7 @@ public with sharing class Queue_Expert_Sch {
      * @param regID Parent registration identifier.
      * @return Notes related to the provided registration.
      */
-    //@AuraEnabled
+    @AuraEnabled
     public static List<Note> saveNotes(String nn, String regID) {
         Id parentId = validateRecordId(regID, 'Invalid parent record id.');
         Note requestedNote = parseNotePayload(nn);
