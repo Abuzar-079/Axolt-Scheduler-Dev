@@ -297,6 +297,10 @@ public with sharing class Queue_Expert_Sch {
     public static Wrapper setStatus(String passedId, String location,String status,String purpose){
         Wrapper wrapper = new Wrapper();
         //System.debug(LoggingLevel.DEBUG, 'purpose==>'+purpose);
+         if (String.isBlank(UserInfo.getSessionId()) || String.isBlank(UserInfo.getUserId())) {
+        wrapper.errmsg = 'UNAUTHORIZED: Invalid or missing session. Request rejected.';
+        return wrapper;
+    }
         Registration_SCH__c registrationToUpdate;
         try {
             // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
