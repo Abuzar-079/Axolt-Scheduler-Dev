@@ -64,6 +64,11 @@ public with sharing class Queue_Expert_Sch {
         try {
             // commented by abuzar on 2026-03-13 for the scanning issue and added below line "centralized record value parsing and conditional field updates to reduce class cyclomatic complexity"
             // recordValues = (List<String>)JSON.deserialize(recValues, List<String>.class);
+            
+             if (String.isBlank(UserInfo.getSessionId()) || String.isBlank(UserInfo.getUserId())) {
+            wrapper.errmsg = 'UNAUTHORIZED: Invalid or missing session. Request rejected.';
+            return wrapper;
+        }
             recordValues = QueueExpertSchSupport.deserializeRecordValues(recValues, wrapper);
             if (wrapper.errmsg != null) {
                 return wrapper;
