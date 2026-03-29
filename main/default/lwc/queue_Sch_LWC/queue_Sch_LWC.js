@@ -110,8 +110,6 @@ export default class Queue_Sch_LWC extends LightningElement {
         const status = event.detail.value;
         const recordId = event.target.dataset.id;
         this.isLoading = true;
-        console.log('status', status);
-        console.log('recordId', recordId);
 
         try {
             if (status === 'Cancelled') {
@@ -127,12 +125,10 @@ export default class Queue_Sch_LWC extends LightningElement {
                 this.showCancelModal = true;
             } else {
                 const result = await updateReg({ rId: String(recordId), status: status });
-                console.log('Apex response:', result);
                 this.toastMessage = 'Registration marked as ' + status + ' succesfully.';
                 await this.handleFind();
             }
         } catch (error) {
-            console.log('Error updating status:', error);
             // ✅ FIX (line 59): replaced setTimeout with Promise.resolve()
             Promise.resolve().then(() => {
                 this.errorMessage = '';
@@ -143,18 +139,14 @@ export default class Queue_Sch_LWC extends LightningElement {
     }
 
     async handleFind() {
-        console.log('Inside');
         this.Spinner = true;
-        console.log('Inside 2');
 
         if (!this.initLocation) {
-            console.log('Inside 3');
             this.AllBookedAppointments = [];
             this.ExistReg = [];
             this.Spinner = false;
             return;
         }
-        console.log(' this.SearchFilterBy:', this.searchFilterBy);
         try {
             // commented by abuzar on 2026-03-12 for the scanning issue and added below line "updated Apex request payload after getBookedRegsList signature fix"
             /*
@@ -174,7 +166,6 @@ export default class Queue_Sch_LWC extends LightningElement {
                 }
             });
             //changes end here by abuzar
-            console.log('Inside res', result);
             this.AllBookedAppointments = result;
             this.ExistReg = [];
 
@@ -239,10 +230,9 @@ export default class Queue_Sch_LWC extends LightningElement {
             loadStyle(this, schedulingapp + '/scheduling-bootstrapcss/css/queue-custom.css'),
         ])
         .then(() => {
-            console.log('Static Resource Loaded');
         })
         .catch(error => {
-            console.log('Static Resource Error', error);
+            console.error('Static resource load failed.', error);
         });
     }
 
@@ -265,11 +255,6 @@ export default class Queue_Sch_LWC extends LightningElement {
                 locId: this.locId,
                 filterType: this.filterType
             });
-            console.log('this.locId:', this.locId);
-            // commented by Abuzar on 2026-03-25 for the Checkmarkx issue and added below line "Logging full queue response objects can expose sensitive data and trigger JS Crypto Secrets findings."
-            // console.log('Inside getQueueRecords result ', JSON.stringify(result));
-            console.log('Inside getQueueRecords result. queueRecordCount:', result.queueRecords ? result.queueRecords.length : 0, 'bookedRecordCount:', result.bookedRecords ? result.bookedRecords.length : 0);
-            //changes end here by Abuzar
             this.queueRecords = result.queueRecords.map(record => ({
                 ...record,
                 waitingTime: this.calculateWaitingTime(record.Registration_Time__c)
@@ -309,54 +294,26 @@ export default class Queue_Sch_LWC extends LightningElement {
 
     async refreshRecords() {
         try {
-            console.log('Inside refreshRecords');
             await this.getQueueRecords();
         } catch (error) {
-            console.log('error', error);
+            console.error('Queue refresh failed.', error);
         }
     }
 
     applyQueueResponseState(response) {
         this.selectedQueue = response.getLocation?.[0]?.Id || '';
         this.LocationName = response.getLocation?.[0]?.Location__r?.Name || '';
-        console.log('this.initLocation~>', this.initLocation);
-        console.log('this.locId~>', this.locId);
         this.locations = response.allLocations || [];
         this.services = response.allServices || [];
         this.orginalMap = response.mapOfRecords || {};
         this.message = response.existLocation ? 'Queue already exists.' : '';
 
-        // commented by Abuzar on 2026-03-27 for the Checkmarkx issue and added below line "Use of Object.keys can be flagged by JS Crypto Secrets scanning, so queue entries are built without Object.keys while preserving the same data shape."
-        // const custs = Object.keys(this.orginalMap).map(key => ({ key, value: this.orginalMap[key] }));
-        const custs = this.buildQueueMapEntries(this.orginalMap);
-        this.maps = custs;
-        this.maps = this.maps.map(r => {
-            return {
-                ...r,
-                cssClass: r.Id === this.selectedRecordId
-                    ? 'axolt-list-card-active'
-                    : 'axolt-list-card'
-            };
-        });
-        // commented by Abuzar on 2026-03-25 for the Checkmarkx issue and added below line "Logging queue map objects can expose sensitive data and trigger JS Crypto Secrets findings."
-        // console.log('response init~>', JSON.stringify(this.maps));
-        console.log('response init completed. queueCount:', this.maps.length, 'selectedRecordPresent:', Boolean(this.selectedRecordId));
-        this.queueCount = custs.length;
+        const queueEntries = this.buildQueueEntries(this.orginalMap);
+        this.maps = this.applySelectedCssClass(queueEntries);
+        this.queueCount = queueEntries.length;
 
         this.allBookedAppointments = response.bookedAppointment || [];
-        this.ExistReg = [...this.allBookedAppointments];
-        this.ExistReg = this.ExistReg.map(r => {
-            return {
-                ...r,
-                cssClass: r.Id === this.selectedRecordId
-                    ? 'axolt-list-card-active'
-                    : 'axolt-list-card'
-            };
-        });
-        // commented by Abuzar on 2026-03-25 for the Checkmarkx issue and added below line "Logging booked registration objects can expose sensitive data and trigger JS Crypto Secrets findings."
-        // console.log('this.ExistReg~>', JSON.stringify(this.ExistReg));
-        console.log('Existing registrations updated. bookedCount:', this.ExistReg.length);
-        //changes end here by Abuzar
+        this.ExistReg = this.applySelectedCssClass([...this.allBookedAppointments]);
         this.qry = this.buildIdQuery(this.locations);
         this.qryForServices = this.services.length > 0 ? this.buildIdQuery(this.services) : 'And Id = Null';
         this.qryserheader = this.qryForServices;
@@ -378,16 +335,9 @@ export default class Queue_Sch_LWC extends LightningElement {
     }
 
     async getRecords() {
-        console.log('Inside getRecords');
         this.Spinner = true;
         try {
             const response = await getRegLocationqueueRecords({ location: this.locId, service: this.setServiceID, eventid: this.setExpert });
-            // commented by Abuzar on 2026-03-25 for the Checkmarkx issue and added below line "Logging full queue response objects can expose sensitive data and trigger JS Crypto Secrets findings."
-            // console.log('response getRecords~>', JSON.stringify(response));
-            // commented by Abuzar on 2026-03-27 for the Checkmarkx issue and added below line "Use of Object.keys in queue-count logging can be flagged by JS Crypto Secrets scanning, so the count is computed without Object.keys."
-            // console.log('response getRecords completed. queueCount:', response.mapOfRecords ? Object.keys(response.mapOfRecords).length : 0, 'locationCount:', response.allLocations ? response.allLocations.length : 0, 'serviceCount:', response.allServices ? response.allServices.length : 0);
-            console.log('response getRecords completed. queueCount:', this.getQueueMapCount(response.mapOfRecords), 'locationCount:', response.allLocations ? response.allLocations.length : 0, 'serviceCount:', response.allServices ? response.allServices.length : 0);
-            //changes end here by Abuzar
             // commented by abuzar on 2026-03-14 for the scanning issue and added below line "Duplicate code detected for language 'javascript'. Found 2 code locations containing the same block of code consisting of 419 tokens across 50 lines."
             // this.selectedQueue = response.getLocation?.[0]?.Id || '';
             // this.LocationName = response.getLocation?.[0]?.Location__r?.Name || '';
@@ -438,7 +388,6 @@ export default class Queue_Sch_LWC extends LightningElement {
             // }
             this.applyQueueResponseState(response);
             //changes end here by abuzar
-            console.log('this.locId in getRecords:', this.locId);
         } catch (error) {
             console.error('Error fetching location data:', error);
         } finally {
@@ -450,12 +399,6 @@ export default class Queue_Sch_LWC extends LightningElement {
         this.Spinner = true;
         try {
             const response = await setLocations({ location: this.locId });
-            // commented by Abuzar on 2026-03-25 for the Checkmarkx issue and added below line "Logging full location response objects can expose sensitive data and trigger JS Crypto Secrets findings."
-            // console.log('response init~>', JSON.stringify(response));
-            // commented by Abuzar on 2026-03-27 for the Checkmarkx issue and added below line "Use of Object.keys in queue-count logging can be flagged by JS Crypto Secrets scanning, so the count is computed without Object.keys."
-            // console.log('response init completed. queueCount:', response.mapOfRecords ? Object.keys(response.mapOfRecords).length : 0, 'locationCount:', response.allLocations ? response.allLocations.length : 0, 'serviceCount:', response.allServices ? response.allServices.length : 0);
-            console.log('response init completed. queueCount:', this.getQueueMapCount(response.mapOfRecords), 'locationCount:', response.allLocations ? response.allLocations.length : 0, 'serviceCount:', response.allServices ? response.allServices.length : 0);
-            //changes end here by Abuzar
             this.selectedQueue = response.getLocation?.[0]?.Id || '';
             this.LocationName = response.getLocation?.[0]?.Location__r?.Name || '';
             this.initLocation = response.floc;
@@ -523,34 +466,30 @@ export default class Queue_Sch_LWC extends LightningElement {
         }, '') + ')';
     }
 
-    buildQueueMapEntries(recordMap) {
-        if (!recordMap) {
+    buildQueueEntries(recordLookup) {
+        if (!recordLookup || typeof recordLookup !== 'object') {
             return [];
         }
-        // Avoid Object.entries with destructured key variable names containing 'Id'
-        // to prevent false-positive JS Crypto Secrets scanner findings.
-        // Using for...in with explicit property access achieves the same result safely.
-        const entries = [];
-        for (const recordKey in recordMap) {
-            if (Object.prototype.hasOwnProperty.call(recordMap, recordKey)) {
-                entries.push(Object.assign({}, recordMap[recordKey], { mapKey: recordKey }));
-            }
-        }
-        return entries;
+        return Object.entries(recordLookup).map(([entryId, entryValue]) => ({
+            ...(entryValue || {}),
+            entryId
+        }));
     }
 
-    getQueueMapCount(recordMap) {
-        if (!recordMap) {
+    getQueueMapCount(recordLookup) {
+        if (!recordLookup || typeof recordLookup !== 'object') {
             return 0;
         }
-        // Avoid Object.entries/Object.keys to prevent false-positive JS Crypto Secrets scanner findings.
-        let count = 0;
-        for (const recordKey in recordMap) {
-            if (Object.prototype.hasOwnProperty.call(recordMap, recordKey)) {
-                count += 1;
-            }
-        }
-        return count;
+        return Object.keys(recordLookup).length;
+    }
+
+    applySelectedCssClass(records) {
+        return (records || []).map(record => ({
+            ...record,
+            cssClass: record.Id === this.selectedRecordId
+                ? 'axolt-list-card-active'
+                : 'axolt-list-card'
+        }));
     }
 
     calculateWaitingTime(regTime) {
@@ -564,10 +503,6 @@ export default class Queue_Sch_LWC extends LightningElement {
     handleInputChange(event) {
         const field = event.target.name;
         this.queueRecord = { ...this.queueRecord, [field]: event.target.value };
-        // commented by Abuzar on 2026-03-25 for the Checkmarkx issue and added below line "Logging full queueRecord objects can expose sensitive data and trigger JS Crypto Secrets findings."
-        // console.log('this.queueRecord :', JSON.stringify(this.queueRecord));
-        console.log('queueRecord field updated. field:', field, 'hasRecordId:', Boolean(this.queueRecord?.Id));
-        //changes end here by Abuzar
     }
 
     get checkInLabel() {
@@ -579,9 +514,7 @@ export default class Queue_Sch_LWC extends LightningElement {
     }
 
     handleLocationChange(event) {
-        console.log('Inside handleLocationChange before locId:', this.locId);
         this.locId = event.detail.data.recordId;
-        console.log('Inside handleLocationChange locId after ', this.locId);
         this.isLoading = true;
         this.fetchLocationData();
         this.refreshRecords();
@@ -599,10 +532,9 @@ export default class Queue_Sch_LWC extends LightningElement {
     }
 
     handleExpertChange(event) {
-        const selected = event.detail.data;
-        this.setExpertId = selected.recordId;
-        this.setExpert = selected.recordId;
-        console.log('this.setExpert', this.setExpert);
+        const selectedEntry = event.detail.data;
+        this.setExpertId = selectedEntry.recordId;
+        this.setExpert = selectedEntry.recordId;
         this.getRecords();
     }
 
@@ -612,12 +544,10 @@ export default class Queue_Sch_LWC extends LightningElement {
 
     handleSearchChange(event) {
         this.searchFilterBy = event.target.value;
-        console.log('this.searchFilterBy:', this.searchFilterBy);
     }
 
     handleDateFilterChange(event) {
         this.dateFilterBy = event.detail.value;
-        console.log('Selected filter:', this.dateFilterBy);
         this.handleFind();
     }
 
@@ -696,16 +626,10 @@ export default class Queue_Sch_LWC extends LightningElement {
                 Slot_Start_Time__c: startTime,
                 Slot_End_Time__c: endTime
             };
-            console.log('record.Id:', record.Id);
-            console.log('record.Location__c:', record.Location__c);
-            console.log('record.Slot_Start_Time__c:', record.Slot_Start_Time__c);
-            console.log('record.Slot_End_Time__c:', record.Slot_End_Time__c);
 
             if (record.Id) {
-                console.log('Going here?');
                 await this.handleUpdateRecord();
             } else {
-                console.log('Should come here!');
                 // commented by abuzar on 2026-03-12 for the scanning issue and added below line "updated Apex request payload after insertRecords signature fix"
                 /*
                 await addQueueRecord({
@@ -764,12 +688,10 @@ export default class Queue_Sch_LWC extends LightningElement {
     }
 
     async handleUpdateRecord() {
-        console.log('Going In 1?');
         if (!this.queueRecord?.Id) {
-            console.warn('queueRecord is missing or has no Id', JSON.stringify(this.queueRecord));
+            console.warn('Queue record is missing an Id.');
             return;
         }
-        console.log('Going In 2?');
         const { startTime } = this.queueRecord;
         let endTime = null;
         if (startTime) {
@@ -826,7 +748,6 @@ export default class Queue_Sch_LWC extends LightningElement {
                 }
             });
             //changes end here by abuzar
-            console.log('Going In 3?');
 
             if (result?.errMsg) {
                 this.errorMessage = result.errMsg;
@@ -835,13 +756,11 @@ export default class Queue_Sch_LWC extends LightningElement {
                     this.errorMessage = '';
                 });
             } else {
-                console.log('Going In 4?');
                 this.slotStartTime = null;
                 this.setExpert = null;
                 this.setServiceID = null;
                 this.displayReschedule = false;
                 this.serviceBoolean = true;
-                console.log('Going In 5?');
 
                 this.toastMessage = 'Registration updated successfully.';
                 // ✅ FIX (line 788): replaced setTimeout with Promise.resolve()
@@ -906,11 +825,6 @@ export default class Queue_Sch_LWC extends LightningElement {
             lookupComp6.handleClose();
             this.setExpert = null;
         }
-        // commented by Abuzar on 2026-03-25 for the Checkmarkx issue and added below line "Logging selected service or expert identifiers can expose sensitive data and trigger JS Crypto Secrets findings."
-        // console.log('this.setServiceID:' + this.setServiceID);
-        // console.log('this.setExpert:' + this.setExpert);
-        console.log('Selection state cleared. hasServiceId:', Boolean(this.setServiceID), 'hasExpert:', Boolean(this.setExpert));
-        //changes end here by Abuzar
     }
 
     handleQueueRowAction(event) {
@@ -1001,7 +915,6 @@ export default class Queue_Sch_LWC extends LightningElement {
 
     handleCancellationReasonChange(event) {
         this.cancellationReason = event.detail.value;
-        console.log('cancellationReason:', this.cancellationReason);
     }
 
     filterRecords() {
@@ -1037,146 +950,55 @@ export default class Queue_Sch_LWC extends LightningElement {
         this.dispatchEvent(evt);
     }
 
-    buildQueueRecord(selected) {
+    buildQueueRecord(selectedRecord) {
         return {
-            Id: selected.Id || null,
-            firstName: selected.Customer_Name__c || '',
-            lastName: selected.Customer_Lastname__c || '',
-            email: selected.Customer_Email__c || '',
-            phone: selected.Customer_Contact__c || '',
-            startTime: selected.Registration_Time__c || '',
-            expertId: selected.User__c || null,
+            Id: selectedRecord?.Id || null,
+            firstName: selectedRecord?.Customer_Name__c || '',
+            lastName: selectedRecord?.Customer_Lastname__c || '',
+            email: selectedRecord?.Customer_Email__c || '',
+            phone: selectedRecord?.Customer_Contact__c || '',
+            startTime: selectedRecord?.Registration_Time__c || '',
+            expertId: selectedRecord?.User__c || null,
         };
     }
 
-    async updateSelectedRecordState(selected) {
-        this.queueRecord = this.buildQueueRecord(selected);
-        // commented by Abuzar on 2026-03-25 for the Checkmarkx issue and added below line "Logging selected queue record objects can expose sensitive data and trigger JS Crypto Secrets findings."
-        // console.log(' this.queueRecord: ', JSON.stringify(this.queueRecord));
-        // console.log('selected.ExpertId: ', this.queueRecord.expertId);
-        console.log('Selected queue record state prepared. hasQueueRecordId:', Boolean(this.queueRecord?.Id), 'hasExpertId:', Boolean(this.queueRecord?.expertId));
-        this.setServiceID = '000000000000000AAA';
+    getRecordByIndex(recordList, rawIndex) {
+        const index = Number(rawIndex);
+        if (!Array.isArray(recordList) || !Number.isInteger(index) || index < 0 || index >= recordList.length) {
+            return null;
+        }
+        return recordList[index] || null;
+    }
+
+    async updateSelectedRecordState(selectedRecord) {
+        if (!selectedRecord || typeof selectedRecord !== 'object') {
+            return;
+        }
+        this.queueRecord = this.buildQueueRecord(selectedRecord);
+        this.setServiceID = null;
         await Promise.resolve();
-        this.setServiceID = selected.Product2__c || null;
-        this.setExpert = '000000000000000AAA';
+        this.setServiceID = selectedRecord.Product2__c || null;
+        this.setExpert = null;
         await Promise.resolve();
         this.setExpert = this.queueRecord.expertId || null;
-        // commented by Abuzar on 2026-03-25 for the Checkmarkx issue and added below line "Logging selected expert identifiers can expose sensitive data and trigger JS Crypto Secrets findings."
-        // console.log('this.setExpert: ', this.setExpert);
-        console.log('Selected queue record state applied. hasServiceId:', Boolean(this.setServiceID), 'hasExpert:', Boolean(this.setExpert));
-        this.selectedRecordId = selected.Id;
-        this.maps = this.maps.map(r => {
-            return {
-                ...r,
-                cssClass: r.Id === this.selectedRecordId
-                    ? 'axolt-list-card-active'
-                    : 'axolt-list-card'
-            };
-        });
-        this.ExistReg = this.ExistReg.map(r => {
-            return {
-                ...r,
-                cssClass: r.Id === this.selectedRecordId
-                    ? 'axolt-list-card-active'
-                    : 'axolt-list-card'
-            };
-        });
+        this.selectedRecordId = selectedRecord.Id || '';
+        this.maps = this.applySelectedCssClass(this.maps);
+        this.ExistReg = this.applySelectedCssClass(this.ExistReg);
     }
 
     async handleRecordSelect(event) {
-        const index = event.currentTarget.dataset.index;
-        console.log('Clicked index: ', index);
-        const selected = this.maps[index];
-        // commented by Abuzar on 2026-03-25 for the Checkmarkx issue and added below line "Logging selected queue entry objects can expose sensitive data and trigger JS Crypto Secrets findings."
-        // console.log('selected: ', JSON.stringify(selected));
-        console.log('Queue record selected. hasSelectedRecord:', Boolean(selected?.Id), 'hasServiceId:', Boolean(selected?.Product2__c));
-
-        // commented by abuzar on 2026-03-14 for the scanning issue and added below line "Duplicate code detected for language 'javascript'. Found 2 code locations containing the same block of code."
-        // this.queueRecord = {
-        //     Id: selected.Id || null,
-        //     firstName: selected.Customer_Name__c || '',
-        //     lastName: selected.Customer_Lastname__c || '',
-        //     email: selected.Customer_Email__c || '',
-        //     phone: selected.Customer_Contact__c || '',
-        //     startTime: selected.Registration_Time__c || '',
-        //     expertId: selected.User__c || null,
-        // };
-        // console.log(' this.queueRecord: ', JSON.stringify(this.queueRecord));
-        // console.log('selected.ExpertId: ', this.queueRecord.expertId);
-        // this.setServiceID = '000000000000000AAA';
-        // await Promise.resolve();
-        // this.setServiceID = selected.Product2__c || null;
-        // this.setExpert = '000000000000000AAA';
-        // await Promise.resolve();
-        // this.setExpert = this.queueRecord.expertId || null;
-        // console.log('this.setExpert: ', this.setExpert);
-        // this.selectedRecordId = selected.Id;
-        // this.maps = this.maps.map(r => {
-        //     return {
-        //         ...r,
-        //         cssClass: r.Id === this.selectedRecordId
-        //             ? 'axolt-list-card-active'
-        //             : 'axolt-list-card'
-        //     };
-        // });
-        // this.ExistReg = this.ExistReg.map(r => {
-        //     return {
-        //         ...r,
-        //         cssClass: r.Id === this.selectedRecordId
-        //             ? 'axolt-list-card-active'
-        //             : 'axolt-list-card'
-        //     };
-        // });
-        await this.updateSelectedRecordState(selected);
-        //changes end here by abuzar
+        const selectedRecord = this.getRecordByIndex(this.maps, event.currentTarget.dataset.index);
+        if (!selectedRecord) {
+            return;
+        }
+        await this.updateSelectedRecordState(selectedRecord);
     }
 
     async handleEditRecordSelect(event) {
-        const index = event.currentTarget.dataset.index;
-        console.log('Clicked index: ', index);
-        const selected = this.ExistReg[index];
-        // commented by Abuzar on 2026-03-25 for the Checkmarkx issue and added below line "Logging selected booked registration objects can expose sensitive data and trigger JS Crypto Secrets findings."
-        // console.log('selected: ', JSON.stringify(selected));
-        console.log('Booked record selected. hasSelectedRecord:', Boolean(selected?.Id), 'hasServiceId:', Boolean(selected?.Product2__c));
-        //changes end here by Abuzar
-
-        // commented by abuzar on 2026-03-14 for the scanning issue and added below line "Duplicate code detected for language 'javascript'. Found 2 code locations containing the same block of code."
-        // this.queueRecord = {
-        //     Id: selected.Id || null,
-        //     firstName: selected.Customer_Name__c || '',
-        //     lastName: selected.Customer_Lastname__c || '',
-        //     email: selected.Customer_Email__c || '',
-        //     phone: selected.Customer_Contact__c || '',
-        //     startTime: selected.Registration_Time__c || '',
-        //     expertId: selected.User__c || null,
-        // };
-        // console.log(' this.queueRecord: ', JSON.stringify(this.queueRecord));
-        // console.log('selected.ExpertId: ', this.queueRecord.expertId);
-        // this.setServiceID = '000000000000000AAA';
-        // await Promise.resolve();
-        // this.setServiceID = selected.Product2__c || null;
-        // this.setExpert = '000000000000000AAA';
-        // await Promise.resolve();
-        // this.setExpert = this.queueRecord.expertId || null;
-        // console.log('this.setExpert: ', this.setExpert);
-        // this.selectedRecordId = selected.Id;
-        // this.ExistReg = this.ExistReg.map(r => {
-        //     return {
-        //         ...r,
-        //         cssClass: r.Id === this.selectedRecordId
-        //             ? 'axolt-list-card-active'
-        //             : 'axolt-list-card'
-        //     };
-        // });
-        // this.maps = this.maps.map(r => {
-        //     return {
-        //         ...r,
-        //         cssClass: r.Id === this.selectedRecordId
-        //             ? 'axolt-list-card-active'
-        //             : 'axolt-list-card'
-        //     };
-        // });
-        await this.updateSelectedRecordState(selected);
-        //changes end here by abuzar
+        const selectedRecord = this.getRecordByIndex(this.ExistReg, event.currentTarget.dataset.index);
+        if (!selectedRecord) {
+            return;
+        }
+        await this.updateSelectedRecordState(selectedRecord);
     }
 }
