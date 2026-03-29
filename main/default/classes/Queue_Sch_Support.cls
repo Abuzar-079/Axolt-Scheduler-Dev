@@ -222,34 +222,8 @@ public with sharing class Queue_Sch_Support {
     public static Queue_Sch_Wrapper updateCancelReg(String reg, String cancelReason) {
         Queue_Sch_Wrapper wrapper = new Queue_Sch_Wrapper();
         try{
-            Registration_SCH__c regNew = new Registration_SCH__c();
-            if(Schema.sObjectType.Registration_SCH__c.isAccessible() && String.isNotEmpty(reg)){
-                // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
-                // regNew = [
-                //     SELECT Id, Name, Status__c, Registration_Time__c, Total_Registration_Price__c, Customer_Email__c
-                //     FROM Registration_SCH__c
-                //     WHERE Id = :reg
-                //     LIMIT 1000
-                // ];
-                regNew = [
-                    SELECT Id, Name, Status__c, Registration_Time__c, Total_Registration_Price__c, Customer_Email__c
-                    FROM Registration_SCH__c
-                    WHERE Id = :reg
-                    WITH USER_MODE
-                    LIMIT 1000
-                ];
-                //changes end here by Abuzar
-            }
-            regNew.Status__c = 'Cancelled';
-            if(String.isNotEmpty(cancelReason)) {
-                regNew.Cancellation_Reasons__c = cancelReason;
-            }
-            if(Schema.sObjectType.Registration_SCH__c.isAccessible() && Schema.sObjectType.Registration_SCH__c.isUpdateable()) {
-                // commented by Abuzar on 2026-03-27 for the Checkmarkx issue and added below line "Move the Registration_SCH__c update into a dedicated helper so the scanner no longer traces unrelated collection-building loops to this bulk-safe DML operation."
-                // Database.update(regNew, false, AccessLevel.USER_MODE);
-                updateCancellationRegistration(regNew);
-                //changes end here by Abuzar
-            }
+            List<Registration_SCH__c> registrationsToUpdate = prepareCancellationRegistrationsForUpdate(reg, cancelReason);
+            updateCancellationRegistrations(registrationsToUpdate);
         }catch(Exception e){
             wrapper.errMsg = e.getMessage();
         }
@@ -341,8 +315,81 @@ public with sharing class Queue_Sch_Support {
         return cancellationReasonList;
     }
 
-    private static void updateCancellationRegistration(Registration_SCH__c regNew) {
-        Database.update(regNew, false, AccessLevel.USER_MODE);
+    private static List<Registration_SCH__c> prepareCancellationRegistrationsForUpdate(String regId, String cancelReason) {
+        List<Registration_SCH__c> registrationsToUpdate = new List<Registration_SCH__c>();
+        if (String.isBlank(regId)) {
+            return registrationsToUpdate;
+        }
+
+        assertRegistrationCancellationUpdateAccess(String.isNotEmpty(cancelReason));
+        Registration_SCH__c existingRegistration = [
+            SELECT Id
+            FROM Registration_SCH__c
+            WHERE Id = :regId
+            WITH USER_MODE
+            LIMIT 1
+        ];
+
+        Registration_SCH__c pendingUpdate = new Registration_SCH__c(
+            Id = existingRegistration.Id,
+            Status__c = 'Cancelled'
+        );
+        if (String.isNotEmpty(cancelReason)) {
+            pendingUpdate.Cancellation_Reasons__c = cancelReason;
+        }
+        registrationsToUpdate.add(pendingUpdate);
+        return sanitizeCancellationRegistrationsForUpdate(registrationsToUpdate);
+    }
+
+    private static void assertRegistrationCancellationUpdateAccess(Boolean updatesCancellationReason) {
+        if (!Schema.sObjectType.Registration_SCH__c.isAccessible() ||
+            !Schema.sObjectType.Registration_SCH__c.isUpdateable()) {
+            throw new AuraHandledException('Insufficient access to update registrations.');
+        }
+        if (!Registration_SCH__c.Status__c.getDescribe().isUpdateable()) {
+            throw new AuraHandledException('Insufficient access to update the registration status.');
+        }
+        if (updatesCancellationReason &&
+            !Registration_SCH__c.Cancellation_Reasons__c.getDescribe().isUpdateable()) {
+            throw new AuraHandledException('Insufficient access to update the cancellation reason.');
+        }
+    }
+
+    private static List<Registration_SCH__c> sanitizeCancellationRegistrationsForUpdate(
+        List<Registration_SCH__c> registrationsToUpdate
+    ) {
+        if (registrationsToUpdate.isEmpty()) {
+            return registrationsToUpdate;
+        }
+        return (List<Registration_SCH__c>) Security.stripInaccessible(
+            AccessType.UPDATABLE,
+            registrationsToUpdate
+        ).getRecords();
+    }
+
+    private static void updateCancellationRegistrations(List<Registration_SCH__c> regsToUpdate) {
+        if (regsToUpdate.isEmpty()) {
+            return;
+        }
+        Database.SaveResult[] saveResults = Database.update(regsToUpdate, false, AccessLevel.USER_MODE);
+        handleCancellationUpdateResults(saveResults);
+    }
+
+    private static void handleCancellationUpdateResults(Database.SaveResult[] saveResults) {
+        List<String> errors = new List<String>();
+        for (Database.SaveResult saveResult : saveResults) {
+            if (saveResult.isSuccess()) {
+                continue;
+            }
+            for (Database.Error saveError : saveResult.getErrors()) {
+                if (saveError != null && String.isNotBlank(saveError.getMessage())) {
+                    errors.add(saveError.getMessage());
+                }
+            }
+        }
+        if (!errors.isEmpty()) {
+            throw new AuraHandledException('Unable to cancel the registration. ' + String.join(errors, ' '));
+        }
     }
 
     @AuraEnabled

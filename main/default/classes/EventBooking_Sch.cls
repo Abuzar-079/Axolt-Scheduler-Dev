@@ -4,6 +4,26 @@
  */
 @SuppressWarnings('PMD.NcssCount,PMD.CognitiveComplexity,PMD.CyclomaticComplexity,PMD.ExcessivePublicCount')
 public with sharing class EventBooking_Sch {
+    private static final Set<String> REGISTRATION_CONTACT_ASSIGNMENT_FIELDS = new Set<String>{
+        'Contact__c',
+        'Customer_Contact__c',
+        'Customer_Email__c',
+        'Customer_Lastname__c',
+        'Customer_Name__c',
+        'End_Time__c',
+        'Event__c',
+        'Event_Zone__c',
+        'Expert_Location__c',
+        'LastModified__c',
+        'Override_duplicate_registration__c',
+        'Product2__c',
+        'RecordTypeId',
+        'Registration_SCH__c',
+        'Registration_Time__c',
+        'Registration_Type__c',
+        'Send_Email__c',
+        'Status__c'
+    };
 
     
     /** @description Stores the event allocation record type identifier. */
@@ -3518,13 +3538,12 @@ public with sharing class EventBooking_Sch {
         }
 
         RegistrationBuildContext context = buildRegistrationContext(regList[0], contactId);
-        List<Registration_SCH__c> rList = buildRegistrationContactAssignments(regList, context);
-        List<Registration_SCH__c> registrationsToInsert = buildSafeRegistrationInserts(rList, context);
-        List<Registration_SCH__c> registrationsToUpdate = buildSafeRegistrationUpdates(rList, context);
+        List<Registration_SCH__c> preparedRegistrations = buildRegistrationContactAssignments(regList, context);
+        RegistrationContactAssignmentDmlPlan dmlPlan =
+            prepareRegistrationContactAssignmentDmlPlan(preparedRegistrations, context);
 
-        insertRegistrationsInUserMode(registrationsToInsert);
-        updateRegistrationsInUserMode(registrationsToUpdate);
-        return getFirstRegistrationId(rList);
+        persistRegistrationContactAssignments(dmlPlan);
+        return getFirstRegistrationId(preparedRegistrations);
     }
 
     private static List<Registration_SCH__c> deserializeRegistrationList(String regs) {
@@ -3604,6 +3623,16 @@ public with sharing class EventBooking_Sch {
         }
     }
 
+    private static RegistrationContactAssignmentDmlPlan prepareRegistrationContactAssignmentDmlPlan(
+        List<Registration_SCH__c> registrations,
+        RegistrationBuildContext context
+    ) {
+        RegistrationContactAssignmentDmlPlan dmlPlan = new RegistrationContactAssignmentDmlPlan();
+        dmlPlan.registrationsToInsert = buildSafeRegistrationInserts(registrations, context);
+        dmlPlan.registrationsToUpdate = buildSafeRegistrationUpdates(registrations, context);
+        return dmlPlan;
+    }
+
     private static List<Registration_SCH__c> buildSafeRegistrationInserts(
         List<Registration_SCH__c> registrations,
         RegistrationBuildContext context
@@ -3618,20 +3647,7 @@ public with sharing class EventBooking_Sch {
             if (regRecord.Id != null) {
                 continue;
             }
-            Registration_SCH__c sanitized = new Registration_SCH__c();
-            Map<String, Object> populated = regRecord.getPopulatedFieldsAsMap();
-            for (String fieldName : populated.keySet()) {
-                if (fieldName == 'Id' || !regFieldSchema.containsKey(fieldName)) {
-                    continue;
-                }
-                if (!regFieldSchema.get(fieldName).getDescribe().isCreateable()) {
-                    continue;
-                }
-                if (fieldName == 'Contact__c' && !context.canCreateRegContact) {
-                    continue;
-                }
-                sanitized.put(fieldName, populated.get(fieldName));
-            }
+            Registration_SCH__c sanitized = sanitizeRegistrationForCreate(regRecord, regFieldSchema, context);
             registrationsToInsert.add(sanitized);
         }
         if (registrationsToInsert.isEmpty()) {
@@ -4093,6 +4109,16 @@ public with sharing class EventBooking_Sch {
         }
     }
 
+    private class RegistrationContactAssignmentDmlPlan {
+        private List<Registration_SCH__c> registrationsToInsert;
+        private List<Registration_SCH__c> registrationsToUpdate;
+
+        private RegistrationContactAssignmentDmlPlan() {
+            registrationsToInsert = new List<Registration_SCH__c>();
+            registrationsToUpdate = new List<Registration_SCH__c>();
+        }
+    }
+
     // Builds a Contact record from Registration fields, respecting field-level security
     private static Contact buildContactFromReg(Registration_SCH__c reg, ContactFieldAccess access) {
         Contact con = new Contact();
@@ -4126,12 +4152,20 @@ public with sharing class EventBooking_Sch {
         return con;
      }
 
-    private static Registration_SCH__c sanitizeRegistrationForCreate(Registration_SCH__c sourceRegistration) {
+    private static Registration_SCH__c sanitizeRegistrationForCreate(
+        Registration_SCH__c sourceRegistration,
+        Map<String, Schema.SObjectField> registrationFields,
+        RegistrationBuildContext context
+    ) {
         Registration_SCH__c sanitizedRegistration = new Registration_SCH__c();
         Map<String, Object> populatedFields = sourceRegistration.getPopulatedFieldsAsMap();
-        Map<String, Schema.SObjectField> registrationFields = Schema.sObjectType.Registration_SCH__c.fields.getMap();
         for (String fieldName : populatedFields.keySet()) {
-            if (fieldName == 'Id' || !registrationFields.containsKey(fieldName)) {
+            if (fieldName == 'Id' ||
+                !REGISTRATION_CONTACT_ASSIGNMENT_FIELDS.contains(fieldName) ||
+                !registrationFields.containsKey(fieldName)) {
+                continue;
+            }
+            if (fieldName == 'Contact__c' && !context.canCreateRegContact) {
                 continue;
             }
             if (registrationFields.get(fieldName).getDescribe().isCreateable()) {
@@ -4156,20 +4190,34 @@ public with sharing class EventBooking_Sch {
         return sanitizedContact;
     }
 
-    private static void persistRegistrationContactAssignments(
-        List<Registration_SCH__c> registrationsToInsert,
-        List<Registration_SCH__c> registrationsToUpdate
-    ) {
-        if (!registrationsToInsert.isEmpty()) {
-            insert registrationsToInsert;
-        }
-        if (!registrationsToUpdate.isEmpty()) {
-            update registrationsToUpdate;
-        }
+    private static void persistRegistrationContactAssignments(RegistrationContactAssignmentDmlPlan dmlPlan) {
+        insertRegistrationsInUserMode(dmlPlan.registrationsToInsert);
+        updateRegistrationsInUserMode(dmlPlan.registrationsToUpdate);
     }
 
     private static void insertContactsForRegistrations(List<Contact> contactsToInsert) {
-        insert contactsToInsert;
+        if (contactsToInsert.isEmpty()) {
+            return;
+        }
+        Database.SaveResult[] saveResults = Database.insert(contactsToInsert, false, AccessLevel.USER_MODE);
+        handleContactSaveResults(saveResults);
+    }
+
+    private static void handleContactSaveResults(Database.SaveResult[] saveResults) {
+        List<String> errors = new List<String>();
+        for (Database.SaveResult saveResult : saveResults) {
+            if (saveResult.isSuccess()) {
+                continue;
+            }
+            for (Database.Error saveError : saveResult.getErrors()) {
+                if (saveError != null && String.isNotBlank(saveError.getMessage())) {
+                    errors.add(saveError.getMessage());
+                }
+            }
+        }
+        if (!errors.isEmpty()) {
+            throw new AuraHandledException('Unable to create registration contacts. ' + String.join(errors, ' '));
+        }
     }
 
     private class ContactFieldAssignment {
