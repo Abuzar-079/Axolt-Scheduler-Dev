@@ -155,9 +155,12 @@ public with sharing class Queue_Expert_Sch {
     @AuraEnabled
     public static List<String> getFieldsSetApiName(String sObjectName, string fieldSetApiName) {
         List<String> fields = new List<String>();
-        for (Schema.FieldSetMember field : schema.getGlobalDescribe().get(sObjectName).getDescribe().fieldSets.getMap().get(fieldSetApiName).getFields()) {
+        // commented by abuzar on 2026-03-30 for the scanning issue and added below line "DescribeSObjectResult could be loaded eagerly with all child relationships, which triggers the EagerlyLoadedDescribeSObjectResult PMD violation."
+        // for (Schema.FieldSetMember field : schema.getGlobalDescribe().get(sObjectName).getDescribe().fieldSets.getMap().get(fieldSetApiName).getFields()) {
+        for (Schema.FieldSetMember field : schema.getGlobalDescribe().get(sObjectName).getDescribe(SObjectDescribeOptions.DEFERRED).fieldSets.getMap().get(fieldSetApiName).getFields()) {
             fields.add(field.getFieldPath());
         }
+        //changes end here by abuzar
         return fields;
     }
 
@@ -488,7 +491,10 @@ public with sharing class Queue_Expert_Sch {
     }
 
     private static void checkObjectAccess(Schema.SObjectType sObjectType, FieldAccessType accessType, String errorMessage) {
-        Schema.DescribeSObjectResult describeResult = sObjectType.getDescribe();
+        // commented by abuzar on 2026-03-30 for the scanning issue and added below line "DescribeSObjectResult could be loaded eagerly with all child relationships, which triggers the EagerlyLoadedDescribeSObjectResult PMD violation."
+        // Schema.DescribeSObjectResult describeResult = sObjectType.getDescribe();
+        Schema.DescribeSObjectResult describeResult = sObjectType.getDescribe(SObjectDescribeOptions.DEFERRED);
+        //changes end here by abuzar
         Boolean hasAccess = accessType == FieldAccessType.READ
             ? describeResult.isAccessible()
             : accessType == FieldAccessType.CREATE
@@ -500,9 +506,12 @@ public with sharing class Queue_Expert_Sch {
     }
 
     private static void checkDeleteAccess(Schema.SObjectType sObjectType, String errorMessage) {
-        if (!sObjectType.getDescribe().isDeletable()) {
+        // commented by abuzar on 2026-03-30 for the scanning issue and added below line "DescribeSObjectResult could be loaded eagerly with all child relationships, which triggers the EagerlyLoadedDescribeSObjectResult PMD violation."
+        // if (!sObjectType.getDescribe().isDeletable()) {
+        if (!sObjectType.getDescribe(SObjectDescribeOptions.DEFERRED).isDeletable()) {
             throw new AuraHandledException(errorMessage);
         }
+        //changes end here by abuzar
     }
 
     private static void checkFieldAccess(
@@ -511,7 +520,10 @@ public with sharing class Queue_Expert_Sch {
         FieldAccessType accessType,
         String errorMessage
     ) {
-        Map<String, Schema.SObjectField> fieldMap = sObjectType.getDescribe().fields.getMap();
+        // commented by abuzar on 2026-03-30 for the scanning issue and added below line "DescribeSObjectResult could be loaded eagerly with all child relationships, which triggers the EagerlyLoadedDescribeSObjectResult PMD violation."
+        // Map<String, Schema.SObjectField> fieldMap = sObjectType.getDescribe().fields.getMap();
+        Map<String, Schema.SObjectField> fieldMap = sObjectType.getDescribe(SObjectDescribeOptions.DEFERRED).fields.getMap();
+        //changes end here by abuzar
         for (String fieldApiName : fieldApiNames) {
             if (!fieldMap.containsKey(fieldApiName)) {
                 throw new AuraHandledException('Unsupported field requested: ' + fieldApiName);
@@ -584,7 +596,10 @@ public with sharing class Queue_Expert_Sch {
     }
 
     private static String getParentObjectApiName(Id parentId) {
-        return parentId.getSObjectType().getDescribe().getName();
+        // commented by abuzar on 2026-03-30 for the scanning issue and added below line "DescribeSObjectResult could be loaded eagerly with all child relationships, which triggers the EagerlyLoadedDescribeSObjectResult PMD violation."
+        // return parentId.getSObjectType().getDescribe().getName();
+        return parentId.getSObjectType().getDescribe(SObjectDescribeOptions.DEFERRED).getName();
+        //changes end here by abuzar
     }
 
     public static void assertParentRecordAccessible(Id parentId) {
