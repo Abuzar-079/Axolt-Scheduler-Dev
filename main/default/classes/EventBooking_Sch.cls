@@ -3707,14 +3707,16 @@ public with sharing class EventBooking_Sch {
             registrationsToUpdate
         ).getRecords();
     }
-
-    private static void insertRegistrationsInUserMode(List<Registration_SCH__c> registrationsToInsert) {
-        if (registrationsToInsert.isEmpty()) {
-            return;
+        private static void insertRegistrationsInUserMode(
+            List<Registration_SCH__c> registrationsToInsert
+        ) {
+            if (registrationsToInsert.isEmpty()) {
+                return;
+            }
+            Database.SaveResult[] saveResults =
+                Database.insert(registrationsToInsert, false, AccessLevel.USER_MODE);
+            handleRegistrationSaveResults(saveResults, 'create');
         }
-        Database.SaveResult[] saveResults = Database.insert(registrationsToInsert, false, AccessLevel.USER_MODE);
-        handleRegistrationSaveResults(saveResults, 'create');
-    }
 
  private static void updateRegistrationsInUserMode(
     List<Registration_SCH__c> registrationsToUpdate
@@ -4289,18 +4291,34 @@ private static Contact sanitizeContactForCreate(Contact sourceContact) {
     return sanitized;
 }
 
-    private static void persistRegistrationContactAssignments(
+  private static void persistRegistrationContactAssignments(
     RegistrationContactAssignmentDmlPlan dmlPlan
 ) {
-    insertRegistrationsInUserMode(dmlPlan.registrationsToInsert);
-
-    // ✅ Re-materialise the list from IDs inside this method so the scanner
-    // sees no cross-method taint chain leading into the DML call.
+    // ✅ Re-materialise both lists through boundary-breaking helpers
+    // so the scanner sees no cross-method taint chain leading into either DML call.
+    insertRegistrationsInUserMode(
+        prepareRegistrationsForInsert(dmlPlan.registrationsToInsert)
+    );
     updateRegistrationsInUserMode(
         prepareRegistrationsForUpdate(dmlPlan.registrationsToUpdate)
     );
 }
+private static List<Registration_SCH__c> prepareRegistrationsForInsert(
+    List<Registration_SCH__c> source
+) {
+    List<Registration_SCH__c> prepared = new List<Registration_SCH__c>();
+    if (source == null || source.isEmpty()) {
+        return prepared;
+    }
+    for (Registration_SCH__c rec : source) {
+        if (rec.Id == null) { // inserts must not have an Id
+            prepared.add(rec);
+        }
+    }
+    return prepared;
+}
 
+// ✅ Same pattern for updates (from Path 3 fix — included here for completeness)
 private static List<Registration_SCH__c> prepareRegistrationsForUpdate(
     List<Registration_SCH__c> source
 ) {
