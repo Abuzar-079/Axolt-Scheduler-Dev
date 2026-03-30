@@ -3992,9 +3992,12 @@ private static void insertContactsForRegistrations(List<Contact> rawContacts) {
         return;
     }
 
-    List<Contact> sanitized = new List<Contact>();
-    for (Contact c : rawContacts) {
-        sanitized.add(sanitizeContactForCreate(c));
+    List<Contact> sanitized = buildSafeContactsForInsert(rawContacts);
+    if (sanitized.isEmpty()) {
+        return;
+    }
+    if (sanitized.size() != rawContacts.size()) {
+        throw new AuraHandledException('Unable to create registration contacts. One or more contacts are missing required createable fields.');
     }
 
     Database.SaveResult[] saveResults =
@@ -4004,6 +4007,29 @@ private static void insertContactsForRegistrations(List<Contact> rawContacts) {
     for (Integer i = 0; i < rawContacts.size(); i++) {
         rawContacts[i] = sanitized[i];
     }
+}
+
+private static List<Contact> buildSafeContactsForInsert(List<Contact> sourceContacts) {
+    List<Contact> sanitizedContacts = new List<Contact>();
+    if (sourceContacts == null || sourceContacts.isEmpty()) {
+        return sanitizedContacts;
+    }
+
+    for (Contact sourceContact : sourceContacts) {
+        Contact sanitizedContact = sanitizeContactForCreate(sourceContact);
+        if (String.isNotEmpty(sanitizedContact.LastName)) {
+            sanitizedContacts.add(sanitizedContact);
+        }
+    }
+
+    if (sanitizedContacts.isEmpty()) {
+        return sanitizedContacts;
+    }
+
+    return (List<Contact>) Security.stripInaccessible(
+        AccessType.CREATABLE,
+        sanitizedContacts
+    ).getRecords();
 }
 
     // Handles the case where an existing contact (by email or contactId) is already known
@@ -4224,21 +4250,93 @@ private static void insertContactsForRegistrations(List<Contact> rawContacts) {
         RegistrationBuildContext context
     ) {
         Registration_SCH__c sanitizedRegistration = new Registration_SCH__c();
-        Map<String, Object> populatedFields = sourceRegistration.getPopulatedFieldsAsMap();
-        for (String fieldName : populatedFields.keySet()) {
-            if (fieldName == 'Id' ||
-                !REGISTRATION_CONTACT_ASSIGNMENT_FIELDS.contains(fieldName) ||
-                !registrationFields.containsKey(fieldName)) {
-                continue;
-            }
-            if (fieldName == 'Contact__c' && !context.canCreateRegContact) {
-                continue;
-            }
-            if (registrationFields.get(fieldName).getDescribe().isCreateable()) {
-                sanitizedRegistration.put(fieldName, populatedFields.get(fieldName));
-            }
+
+        if (String.isNotEmpty(sourceRegistration.Customer_Name__c) &&
+            isRegistrationFieldCreateable(registrationFields, 'Customer_Name__c')) {
+            sanitizedRegistration.Customer_Name__c = sourceRegistration.Customer_Name__c;
         }
+        if (String.isNotEmpty(sourceRegistration.Customer_Lastname__c) &&
+            isRegistrationFieldCreateable(registrationFields, 'Customer_Lastname__c')) {
+            sanitizedRegistration.Customer_Lastname__c = sourceRegistration.Customer_Lastname__c;
+        }
+        if (String.isNotEmpty(sourceRegistration.Customer_Email__c) &&
+            isRegistrationFieldCreateable(registrationFields, 'Customer_Email__c')) {
+            sanitizedRegistration.Customer_Email__c = sourceRegistration.Customer_Email__c;
+        }
+        if (String.isNotEmpty(sourceRegistration.Customer_Contact__c) &&
+            isRegistrationFieldCreateable(registrationFields, 'Customer_Contact__c')) {
+            sanitizedRegistration.Customer_Contact__c = sourceRegistration.Customer_Contact__c;
+        }
+        if (String.isNotEmpty(sourceRegistration.Event__c) &&
+            isRegistrationFieldCreateable(registrationFields, 'Event__c')) {
+            sanitizedRegistration.Event__c = sourceRegistration.Event__c;
+        }
+        if (String.isNotEmpty(sourceRegistration.Event_Zone__c) &&
+            isRegistrationFieldCreateable(registrationFields, 'Event_Zone__c')) {
+            sanitizedRegistration.Event_Zone__c = sourceRegistration.Event_Zone__c;
+        }
+        if (String.isNotEmpty(sourceRegistration.Expert_Location__c) &&
+            isRegistrationFieldCreateable(registrationFields, 'Expert_Location__c')) {
+            sanitizedRegistration.Expert_Location__c = sourceRegistration.Expert_Location__c;
+        }
+        if (sourceRegistration.End_Time__c != null &&
+            isRegistrationFieldCreateable(registrationFields, 'End_Time__c')) {
+            sanitizedRegistration.End_Time__c = sourceRegistration.End_Time__c;
+        }
+        if (sourceRegistration.LastModified__c != null &&
+            isRegistrationFieldCreateable(registrationFields, 'LastModified__c')) {
+            sanitizedRegistration.LastModified__c = sourceRegistration.LastModified__c;
+        }
+        if (sourceRegistration.Override_duplicate_registration__c != null &&
+            isRegistrationFieldCreateable(registrationFields, 'Override_duplicate_registration__c')) {
+            sanitizedRegistration.Override_duplicate_registration__c =
+                sourceRegistration.Override_duplicate_registration__c;
+        }
+        if (String.isNotEmpty(sourceRegistration.Product2__c) &&
+            isRegistrationFieldCreateable(registrationFields, 'Product2__c')) {
+            sanitizedRegistration.Product2__c = sourceRegistration.Product2__c;
+        }
+        if (String.isNotEmpty(sourceRegistration.RecordTypeId) &&
+            isRegistrationFieldCreateable(registrationFields, 'RecordTypeId')) {
+            sanitizedRegistration.RecordTypeId = sourceRegistration.RecordTypeId;
+        }
+        if (String.isNotEmpty(sourceRegistration.Registration_SCH__c) &&
+            isRegistrationFieldCreateable(registrationFields, 'Registration_SCH__c')) {
+            sanitizedRegistration.Registration_SCH__c = sourceRegistration.Registration_SCH__c;
+        }
+        if (sourceRegistration.Registration_Time__c != null &&
+            isRegistrationFieldCreateable(registrationFields, 'Registration_Time__c')) {
+            sanitizedRegistration.Registration_Time__c = sourceRegistration.Registration_Time__c;
+        }
+        if (String.isNotEmpty(sourceRegistration.Registration_Type__c) &&
+            isRegistrationFieldCreateable(registrationFields, 'Registration_Type__c')) {
+            sanitizedRegistration.Registration_Type__c = sourceRegistration.Registration_Type__c;
+        }
+        if (sourceRegistration.Send_Email__c != null &&
+            isRegistrationFieldCreateable(registrationFields, 'Send_Email__c')) {
+            sanitizedRegistration.Send_Email__c = sourceRegistration.Send_Email__c;
+        }
+        if (String.isNotEmpty(sourceRegistration.Status__c) &&
+            isRegistrationFieldCreateable(registrationFields, 'Status__c')) {
+            sanitizedRegistration.Status__c = sourceRegistration.Status__c;
+        }
+        if (String.isNotEmpty(sourceRegistration.Contact__c) &&
+            context.canCreateRegContact &&
+            isRegistrationFieldCreateable(registrationFields, 'Contact__c')) {
+            sanitizedRegistration.Contact__c = sourceRegistration.Contact__c;
+        }
+
         return sanitizedRegistration;
+    }
+
+    private static Boolean isRegistrationFieldCreateable(
+        Map<String, Schema.SObjectField> registrationFields,
+        String fieldName
+    ) {
+        Schema.SObjectField fieldRef = registrationFields.get(fieldName);
+        return fieldRef != null &&
+            REGISTRATION_CONTACT_ASSIGNMENT_FIELDS.contains(fieldName) &&
+            fieldRef.getDescribe().isCreateable();
     }
 
     // private static Contact sanitizeContactForCreate(Contact sourceContact) {
