@@ -58,7 +58,7 @@ public with sharing class EventBooking_Sch {
     @AuraEnabled public static String eventDescription {get; set;}
     /** @description Stores the selected event venue label. */
     @AuraEnabled public static String eventVenue {get; set;}
-    @SuppressWarnings('PMD.AvoidBooleanMethodParameters') 
+    @SuppressWarnings('PMD.AvoidBooleanMethodParameters')
     /** @description Indicates whether captcha validation is required. */
     @AuraEnabled public static Boolean isCaptchaRequired {get; set;}
     /** @description Stores the selected event zone name. */
@@ -4040,8 +4040,6 @@ public with sharing class EventBooking_Sch {
     appendRegistrationsUsingExistingContact(rList, regsUsingExistingContact, context);
     return rList;
 }
-
-
 private static void insertContactsForRegistrations(List<Contact> rawContacts) {
     if (rawContacts.isEmpty()) {
         return;
@@ -4558,16 +4556,6 @@ private static Registration_SCH__c buildPreparedRegistrationInsertRecord(
 
     return preparedInsert;
 }
-
-
-    // private static void insertContactsForRegistrations(List<Contact> contactsToInsert) {
-    //     if (contactsToInsert.isEmpty()) {
-    //         return;
-    //     }
-    //     Database.SaveResult[] saveResults = Database.insert(contactsToInsert, false, AccessLevel.USER_MODE);
-    //     handleContactSaveResults(saveResults);
-    // }
-
     private static void handleContactSaveResults(Database.SaveResult[] saveResults) {
         List<String> errors = new List<String>();
         for (Database.SaveResult saveResult : saveResults) {
@@ -5203,7 +5191,7 @@ private static Registration_SCH__c buildPreparedRegistrationInsertRecord(
                 Map<String, Id> zoneToParentIdMap = new Map<String, Id>();
                 for (Registration_SCH__c pr : parentRegs) {
                     if (pr.Event_Zone__c != null) {
-                        zoneToParentIdMap.put(pr.Event_Zone__c, pr.Id);
+                    zoneToParentIdMap.put(pr.Event_Zone__c, pr.Id);
                     }
                 }
                 for (Registration_SCH__c cr : childRegs) {
@@ -5310,17 +5298,8 @@ private static Registration_SCH__c buildPreparedRegistrationInsertRecord(
         //     AND (MobilePhone = :pr.Customer_Contact__c OR Phone = :pr.Customer_Contact__c)
         //     LIMIT 1
         // ];
-        List<Contact> existingContacts = [
-            SELECT Id FROM Contact
-            WHERE FirstName = :pr.Customer_Name__c
-            AND LastName = :pr.Customer_Lastname__c
-            AND Email = :pr.Customer_Email__c
-            AND (MobilePhone = :pr.Customer_Contact__c OR Phone = :pr.Customer_Contact__c)
-            WITH USER_MODE
-            LIMIT 1
-        ];
+        List<Contact> existingContacts = [SELECT Id FROM Contact WHERE FirstName = :pr.Customer_Name__c AND LastName = :pr.Customer_Lastname__c AND Email = :pr.Customer_Email__c AND (MobilePhone = :pr.Customer_Contact__c OR Phone = :pr.Customer_Contact__c) WITH USER_MODE LIMIT 1];
         //changes end here by Abuzar
-
         Boolean canSetParentContact = Schema.sObjectType.Registration_SCH__c.fields.Contact__c.isCreateable();
 
         if (!existingContacts.isEmpty()) {

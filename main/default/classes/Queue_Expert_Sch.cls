@@ -767,17 +767,11 @@ public with sharing class Queue_Expert_Sch {
         ];
     }
 /**
- * @description Verifies that the current user has read access to the specified parent record.
- *              Performs both object-level permission checks and a USER_MODE query to confirm
- *              the record exists and is accessible to the running user.
- *
- * @param parentId The Salesforce record Id of the parent object to validate access for.
- *
- * @throws AuraHandledException If the parent record is not found or is inaccessible to the current user.
- *
- * @example
- * Id accountId = '001XXXXXXXXXXXXXXX';
- * assertParentRecordAccessible(accountId);
+ * @description Retrieves all notes associated with the specified parent record.
+ *              Validates object and field-level access before querying.
+ * @param parentId The Id of the parent record whose notes are to be retrieved.
+ * @return List of Notes linked to the given parent, ordered by creation date ascending.
+ * @throws AuraHandledException If the user lacks access to the parent registration or Note object/fields.
  */
     public static List<Note> getNotesByParent(Id parentId) {
         if (!Schema.sObjectType.Registration_SCH__c.isAccessible()) {
@@ -910,14 +904,15 @@ public with sharing class Queue_Expert_Sch {
         }
     }
 
-    /**
-     * @description Uploads an attachment to the specified parent record.
-     * @param parent Parent record identifier.
-     * @param fileName File name to save.
-     * @param base64Data Base64-encoded file contents.
-     * @param contentType MIME type of the uploaded file.
-     * @return Attachments currently associated with the parent record.
-     */
+   /**
+ * @description Uploads an attachment to the specified parent record.
+ * @param parent Parent record identifier.
+ * @param fileName File name to save.
+ * @param base64Data Base64-encoded file contents.
+ * @param contentType MIME type of the uploaded file.
+ * @param userInitiated Indicates whether the upload was triggered by a user action.
+ * @return Attachments currently associated with the parent record.
+ */
     @AuraEnabled
     @SuppressWarnings('PMD.ExcessiveParameterList')
     public static List<Attachment> uploadFile(String parent, String fileName, String base64Data, String contentType, Boolean userInitiated) {
@@ -948,7 +943,19 @@ public with sharing class Queue_Expert_Sch {
 
         return getAttachmentsByParent(parentId);
     }
-
+/**
+ * @description Verifies that the current user has read access to the specified parent record.
+ *              Performs both object-level permission checks and a USER_MODE query to confirm
+ *              the record exists and is accessible to the running user.
+ *
+ * @param parentId The Salesforce record Id of the parent object to validate access for.
+ *
+ * @throws AuraHandledException If the parent record is not found or is inaccessible to the current user.
+ *
+ * @example
+ * Id accountId = '001XXXXXXXXXXXXXXX';
+ * assertParentRecordAccessible(accountId);
+ */
     public static List<Attachment> uploadFile(String parent, String fileName, String base64Data, String contentType) {
         return uploadFile(parent, fileName, base64Data, contentType, true);
     }
