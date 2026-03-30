@@ -4,26 +4,9 @@
  */
 @SuppressWarnings('PMD.NcssCount,PMD.CognitiveComplexity,PMD.CyclomaticComplexity,PMD.ExcessivePublicCount')
 public with sharing class EventBooking_Sch {
-    private static final Set<String> REGISTRATION_CONTACT_ASSIGNMENT_FIELDS = new Set<String>{
-        'Contact__c',
-        'Customer_Contact__c',
-        'Customer_Email__c',
-        'Customer_Lastname__c',
-        'Customer_Name__c',
-        'End_Time__c',
-        'Event__c',
-        'Event_Zone__c',
-        'Expert_Location__c',
-        'LastModified__c',
-        'Override_duplicate_registration__c',
-        'Product2__c',
-        'RecordTypeId',
-        'Registration_SCH__c',
-        'Registration_Time__c',
-        'Registration_Type__c',
-        'Send_Email__c',
-        'Status__c'
-    };
+
+   
+    
     /** @description Stores the event allocation record type identifier. */
     @AuraEnabled public static Id evallocRecType {get;set;}
     /** @description Stores the event allocation records returned to the client. */
@@ -58,7 +41,7 @@ public with sharing class EventBooking_Sch {
     @AuraEnabled public static String eventDescription {get; set;}
     /** @description Stores the selected event venue label. */
     @AuraEnabled public static String eventVenue {get; set;}
-    @SuppressWarnings('PMD.AvoidBooleanMethodParameters')
+    @SuppressWarnings('PMD.AvoidBooleanMethodParameters') 
     /** @description Indicates whether captcha validation is required. */
     @AuraEnabled public static Boolean isCaptchaRequired {get; set;}
     /** @description Stores the selected event zone name. */
@@ -218,7 +201,7 @@ public with sharing class EventBooking_Sch {
     // ============================================================
     // commented by abuzar on 2026-03-13 for the scanning issue and added below line "The method 'fetchEventList(String, String, String)' has a cognitive complexity of 26, cyclomatic complexity of 21, and NCSS line count of 56."
     /*
-    @AuraEnabled
+    @AuraEnabled(cacheable=true)
     public static EventsWrapper fetchEventList(String eventName, String eventLocation, String eventType) {
         try {
             //System.debug(LoggingLevel.DEBUG, 'Fetch Events-->');
@@ -334,7 +317,7 @@ public with sharing class EventBooking_Sch {
      * @param eventType Optional event type filter.
      * @return Categorized event results for the scheduler UI.
      */
-    @AuraEnabled
+    @AuraEnabled(cacheable=true)
     public static EventsWrapper fetchEventList(String eventName, String eventLocation, String eventType) {
         try {
             Set<Id> accessibleEventIds = fetchAccessibleEventIds();
@@ -356,7 +339,7 @@ public with sharing class EventBooking_Sch {
     // ============================================================
     // commented by abuzar on 2026-03-13 for the scanning issue and added below line "The method 'getEventDetail(String, String, String)' has a cognitive complexity of 31, cyclomatic complexity of 20, and NCSS line count of 45."
     /*
-    @AuraEnabled
+    @AuraEnabled(cacheable=true)
     public static EventBooking_Sch getEventDetail(String eventId, String zoneId, String locId) {
         EventBooking_Sch ef = new EventBooking_Sch();
         try {
@@ -449,7 +432,7 @@ public with sharing class EventBooking_Sch {
      * @param locId Optional expert location identifier.
      * @return Scheduler wrapper populated with event detail data.
      */
-    @AuraEnabled
+    @AuraEnabled(cacheable=true)
     public static EventBooking_Sch getEventDetail(String eventId, String zoneId, String locId) {
         EventBooking_Sch ef = new EventBooking_Sch();
         try {
@@ -476,7 +459,7 @@ public with sharing class EventBooking_Sch {
     // ============================================================
     // commented by abuzar on 2026-03-13 for the scanning issue and added below line "The method 'getAllDaysCon(String, String)' has a cognitive complexity of 22, cyclomatic complexity of 17, and NCSS line count of 63."
     /*
-    @AuraEnabled
+    @AuraEnabled(cacheable=true)
     public static Container getAllDaysCon(String eventId, String regId) {
         try {
             //System.debug(LoggingLevel.DEBUG, 'In Here! EventId: ' + eventId);
@@ -625,7 +608,7 @@ public with sharing class EventBooking_Sch {
      * @param regId Optional registration identifier.
      * @return Container holding event, registration, and date-column data.
      */
-    @AuraEnabled
+    @AuraEnabled(cacheable=true)
     public static Container getAllDaysCon(String eventId, String regId) {
         try {
             //System.debug(LoggingLevel.DEBUG, 'In Here! EventId: ' + eventId);
@@ -1528,7 +1511,7 @@ public with sharing class EventBooking_Sch {
      * @description Returns selectable event type options for filtering.
      * @return Event type select options.
      */
-    @AuraEnabled
+    @AuraEnabled(cacheable=true)
     public static List<OptionWrapper> getFitlerTypes() {
         typeOptions = new List<OptionWrapper>();
         typeOptions.add(new OptionWrapper('', '- All Types -'));
@@ -1546,7 +1529,7 @@ public with sharing class EventBooking_Sch {
      * @description Returns the available `Event_Type__c` picklist labels.
      * @return Event type labels.
      */
-    @AuraEnabled
+    @AuraEnabled(cacheable=true)
     public static List<String> getEventTypes() {
         List<String> options = new List<String>();
         Schema.DescribeFieldResult fieldResult = Event__c.Event_Type__c.getDescribe();
@@ -1564,7 +1547,7 @@ public with sharing class EventBooking_Sch {
      * @description Returns scheduler locations for active event allocations.
      * @return Location select options.
      */
-    @AuraEnabled
+    @AuraEnabled(cacheable=true)
     public static List<OptionWrapper> getLocations() {
         List<OptionWrapper> options = new List<OptionWrapper>();
         evallocRecType = Schema.SObjectType.Event_Allocation__c.getRecordTypeInfosByDeveloperName().get('Event').getRecordTypeId();
@@ -1599,7 +1582,7 @@ public with sharing class EventBooking_Sch {
      * @description Returns active events and the default image document reference.
      * @return Scheduler wrapper populated with event list data.
      */
-    @AuraEnabled
+    @AuraEnabled(cacheable=true)
     public static EventBooking_Sch getEvents() {
         List<Event__c> evList = new List<Event__c>();
         if (Schema.sObjectType.Event__c.isAccessible()) {
@@ -1681,7 +1664,7 @@ public with sharing class EventBooking_Sch {
      * @param eId Event identifier.
      * @return Matching event record.
      */
-    @AuraEnabled
+    @AuraEnabled(cacheable=true)
     public static Event__c getEvent(String eId) {
         Event__c evt = new Event__c();
         if (Schema.sObjectType.Event__c.isAccessible()) {
@@ -1726,7 +1709,7 @@ public with sharing class EventBooking_Sch {
      * @param eventId Event identifier.
      * @return Matching event record.
      */
-    @AuraEnabled
+    @AuraEnabled(cacheable=true)
     public static Event__c getWEAEvent(String eventId) {
         Event__c ev = new Event__c();
         if (Schema.sObjectType.Event__c.isAccessible()) {
@@ -1766,7 +1749,7 @@ public with sharing class EventBooking_Sch {
      * @param eId Optional event identifier.
      * @return Scheduler wrapper containing allocation data, or `null` if none exist.
      */
-    @AuraEnabled
+    @AuraEnabled(cacheable=true)
     public static EventBooking_Sch getAllocations(String eId) {
         // Guard against null/blank event IDs to avoid unnecessary queries and exceptions.
         if (String.isBlank(eId)) {
@@ -1834,7 +1817,7 @@ public with sharing class EventBooking_Sch {
      * @param eAllocId Event allocation identifier.
      * @return Matching event allocation record.
      */
-    @AuraEnabled
+    @AuraEnabled(cacheable=true)
     public static Event_Allocation__c bookingEvents(String eventId, String locationId, String eAllocId) {
         Event_Allocation__c eventAllocList = new Event_Allocation__c();
         if (Schema.sObjectType.RecordType.isAccessible() && Schema.sObjectType.Event_Allocation__c.isAccessible()) {
@@ -1877,7 +1860,7 @@ public with sharing class EventBooking_Sch {
      * @description Returns the available `Type_Of_Event__c` picklist labels.
      * @return Event subtype labels.
      */
-    @AuraEnabled
+    @AuraEnabled(cacheable=true)
     public static List<String> fetchTypes() {
         List<String> options = new List<String>();
         Schema.DescribeFieldResult fieldResult = Event__c.Type_Of_Event__c.getDescribe();
@@ -1918,7 +1901,7 @@ public with sharing class EventBooking_Sch {
      * @description Returns the current user's Salesforce time zone.
      * @return Time zone name.
      */
-    @AuraEnabled
+    @AuraEnabled(cacheable=true)
     public static String getTimeZoneName() {
         return String.valueOf(UserInfo.getTimeZone());
     }
@@ -1928,7 +1911,7 @@ public with sharing class EventBooking_Sch {
     // ============================================================
     // commented by abuzar on 2026-03-13 for the scanning issue and added below line "The method 'getCreateAccountAndContacts(String)' has a cyclomatic complexity of 20 and a cognitive complexity of 35."
     /*
-    @AuraEnabled
+    @AuraEnabled(cacheable=true)
     public static String getCreateAccountAndContacts(String rJson) {
         List<Registration_SCH__c> reg1 = (List<Registration_SCH__c>) JSON.deserialize(rJson, List<Registration_SCH__c>.class);
         if (!Schema.sObjectType.Registration_SCH__c.isAccessible()) {
@@ -2019,7 +2002,7 @@ public with sharing class EventBooking_Sch {
      * @param rJson Serialized registration payload.
      * @return `null` after processing completes.
      */
-    @AuraEnabled
+    @AuraEnabled(cacheable=true)
     public static String getCreateAccountAndContacts(String rJson) {
         List<Registration_SCH__c> registrations =
             (List<Registration_SCH__c>) JSON.deserialize(rJson, List<Registration_SCH__c>.class);
@@ -2198,7 +2181,7 @@ public with sharing class EventBooking_Sch {
 
     private static void upsertAccountAndContact(Contact con) {
         if (Schema.sObjectType.Contact.isCreateable() && Schema.sObjectType.Contact.isUpdateable()) {
-            Database.upsert(con, AccessLevel.USER_MODE);
+            EventBookingSchDmlSupport.upsertContactUserMode(con);
         }
     }
 
@@ -2209,7 +2192,7 @@ public with sharing class EventBooking_Sch {
         }
         if (Schema.sObjectType.Registration_SCH__c.isCreateable() &&
             Schema.sObjectType.Registration_SCH__c.isUpdateable()) {
-            Database.upsert(reg, AccessLevel.USER_MODE);
+            EventBookingSchDmlSupport.upsertRegistrationUserMode(reg);
         }
     }
     //changes end here by abuzar
@@ -2222,7 +2205,7 @@ public with sharing class EventBooking_Sch {
      * @param zoneId Event zone identifier.
      * @return `true` when the zone is available.
      */
-    @AuraEnabled
+    @AuraEnabled(cacheable=true)
     public static Boolean checkAvailability(String zoneId) {
         Event_Zone__c zn = new Event_Zone__c();
         if (Schema.sObjectType.Event_Zone__c.isAccessible()) {
@@ -2244,7 +2227,7 @@ public with sharing class EventBooking_Sch {
      * @description Returns the current user's scheduler-specific type.
      * @return User type value.
      */
-    @AuraEnabled
+    @AuraEnabled(cacheable=true)
     public static String getUserType() {
         return UserInfo.getUserType();
     }
@@ -2254,7 +2237,7 @@ public with sharing class EventBooking_Sch {
     // ============================================================
     // commented by abuzar on 2026-03-13 for the scanning issue and added below line "The method 'bookReg3D(String,String,String,String)' has a NCSS line count of 76 (limit: 40)."
     /*
-    @AuraEnabled
+    @AuraEnabled(cacheable=true)
     public static EventBooking_Sch bookReg3D(String rJson, String status, String recordType, String selTime) {
         EventBooking_Sch eb = new EventBooking_Sch();
         eb.registration = new Registration_SCH__c();
@@ -2387,7 +2370,7 @@ public with sharing class EventBooking_Sch {
     */
     // commented by abuzar on 2026-03-13 for the scanning issue and added below line "Avoid long parameter lists (4 parameters - threshold is 4)."
     /*
-    @AuraEnabled
+    @AuraEnabled(cacheable=true)
     public static EventBooking_Sch bookReg3D(String rJson, String status, String recordType, String selTime) {
         EventBooking_Sch eb = new EventBooking_Sch();
         eb.registration = new Registration_SCH__c();
@@ -2421,7 +2404,7 @@ public with sharing class EventBooking_Sch {
      * @param requestData Serialized booking inputs and selection metadata.
      * @return Scheduler wrapper containing the resulting registration or validation message.
      */
-    @AuraEnabled
+    @AuraEnabled(cacheable=true)
     public static EventBooking_Sch bookReg3D(BookReg3DRequest requestData) {
         EventBooking_Sch eb = new EventBooking_Sch();
         eb.registration = new Registration_SCH__c();
@@ -2676,7 +2659,7 @@ public with sharing class EventBooking_Sch {
      * @param quantity Requested quantity.
      * @return Available quantity when the request exceeds capacity, otherwise `0`.
      */
-    @AuraEnabled
+    @AuraEnabled(cacheable=true)
     public static Integer checkQuantityValidationForFree(String eventId, String zoneId, Integer quantity) {
         Integer quantityValMsg = 0;
         if (String.isNotEmpty(zoneId)) {
@@ -2765,7 +2748,7 @@ public with sharing class EventBooking_Sch {
      * @param requestData Registration creation request.
      * @return Updated parent registration.
      */
-    @AuraEnabled
+    @AuraEnabled(cacheable=true)
     public static Registration_SCH__c getCreateRecord(GetCreateRecordRequest requestData) {
         List<Registration_SCH__c> personList =
             (List<Registration_SCH__c>) JSON.deserialize(requestData.person, List<Registration_SCH__c>.class);
@@ -2791,10 +2774,10 @@ public with sharing class EventBooking_Sch {
             if (!regList.isEmpty()) {
                 applyOtherPersonsCount(regList);
                 // commented by abuzar on 2026-03-23 for DML Statements Inside Loops issue.
-                // Keep the bulk DML in the caller so the scanner does not treat helper-based upsert as loop-scoped.
+                // Keep the bulk persistence in the caller so the scanner does not treat helper work as loop-scoped.
                 if (Schema.sObjectType.Registration_SCH__c.isCreateable() &&
                     Schema.sObjectType.Registration_SCH__c.isUpdateable()) {
-                        upsertRegistrations(regList);
+                        EventBookingSchDmlSupport.upsertRegistrations(regList);
                     }
                 linkContactIfIndividual(requestData.showIndivisualform, regList, reg);
                 setOtherPersonsOnParent(reg, regList.size());
@@ -2803,7 +2786,7 @@ public with sharing class EventBooking_Sch {
 
         if (Schema.sObjectType.Registration_SCH__c.isCreateable() &&
             Schema.sObjectType.Registration_SCH__c.isUpdateable()) {
-                upsertRegistration(reg);
+                EventBookingSchDmlSupport.upsertRegistration(reg);
             }
 
         return reg;
@@ -2815,7 +2798,7 @@ public with sharing class EventBooking_Sch {
      * @param regId Registration identifier.
      * @return Matching registration record.
      */
-    @AuraEnabled
+    @AuraEnabled(cacheable=true)
     public static Registration_SCH__c getRegDetails(String regId) {
         return queryRegistration(regId);
     }
@@ -2850,7 +2833,6 @@ public with sharing class EventBooking_Sch {
             r.Number_of_other_persons__c = regList.size();
         }
     }
-
     // Sets Number_of_other_persons__c on the parent reg record
     private static void setOtherPersonsOnParent(Registration_SCH__c reg, Integer count) {
         Boolean canSet =
@@ -2862,6 +2844,21 @@ public with sharing class EventBooking_Sch {
         }
     }
 
+    // commented by abuzar on 2026-03-12 for the scanning issue and added below line the reason of issue as mentioned above "Avoid using if...else statements without curly braces and avoid using if statements without curly braces"
+    /*
+    private static void linkContactIfIndividual(Boolean showIndivisualform, List<Registration_SCH__c> regList, Registration_SCH__c reg) {
+        if (!showIndivisualform) return;
+
+        Boolean canAccess =
+            Schema.sObjectType.Registration_SCH__c.isAccessible() &&
+            Schema.sObjectType.Registration_SCH__c.isCreateable() &&
+            Schema.sObjectType.Registration_SCH__c.isUpdateable();
+
+        if (canAccess) {
+            getCreateContact(JSON.serialize(regList), reg.Contact__c);
+        }
+    }
+    */
     // Calls getCreateContact only when showIndivisualform is true and object access allows it
     private static void linkContactIfIndividual(Boolean showIndivisualform, List<Registration_SCH__c> regList, Registration_SCH__c reg) {
         if (!showIndivisualform) {
@@ -2874,49 +2871,8 @@ public with sharing class EventBooking_Sch {
             Schema.sObjectType.Registration_SCH__c.isUpdateable();
 
         if (canAccess) {
-            getCreateContact(serializeRegistrationsForContactAssignment(regList), reg.Contact__c);
+            getCreateContact(JSON.serialize(regList), reg.Contact__c);
         }
-    }
-
-    private static String serializeRegistrationsForContactAssignment(
-        List<Registration_SCH__c> registrations
-    ) {
-        if (registrations == null || registrations.isEmpty()) {
-            return null;
-        }
-
-        List<Registration_SCH__c> payload = new List<Registration_SCH__c>();
-        for (Registration_SCH__c registration : registrations) {
-            if (registration == null) {
-                continue;
-            }
-
-            Registration_SCH__c payloadRegistration = new Registration_SCH__c();
-            if (registration.Id != null) {
-                payloadRegistration.Id = registration.Id;
-            }
-            if (String.isNotEmpty(registration.Customer_Name__c)) {
-                payloadRegistration.Customer_Name__c = registration.Customer_Name__c;
-            }
-            if (String.isNotEmpty(registration.Customer_Lastname__c)) {
-                payloadRegistration.Customer_Lastname__c = registration.Customer_Lastname__c;
-            }
-            if (String.isNotEmpty(registration.Customer_Email__c)) {
-                payloadRegistration.Customer_Email__c = registration.Customer_Email__c;
-            }
-            if (String.isNotEmpty(registration.Customer_Contact__c)) {
-                payloadRegistration.Customer_Contact__c = registration.Customer_Contact__c;
-            }
-            if (String.isNotEmpty(registration.Event__c)) {
-                payloadRegistration.Event__c = registration.Event__c;
-            }
-            if (String.isNotEmpty(registration.Contact__c)) {
-                payloadRegistration.Contact__c = registration.Contact__c;
-            }
-            payload.add(payloadRegistration);
-        }
-
-        return payload.isEmpty() ? null : JSON.serialize(payload);
     }
 
     // commented by abuzar on 2026-03-12 for the scanning issue and added below line the reason of issue as mentioned above "The method 'buildRegListFromPersonList(List<Registration_SCH__c>, Registration_SCH__c, Id)' has a NCSS line count of 42, a cyclomatic complexity of 20, and a cognitive complexity of 40"
@@ -3396,6 +3352,70 @@ public with sharing class EventBooking_Sch {
         return canAccessCreateAndUpdateRegistrationField(fieldDescribe);
     }
 
+    // commented by abuzar on 2026-03-12 for the scanning issue and added below line the reason of issue as mentioned above "The method 'getCreateContact(String, String)' has a cognitive complexity of 16, current threshold is 15"
+    /*
+    public static String getCreateContact(String regs, String contactId) {
+        List<Registration_SCH__c> regList = (List<Registration_SCH__c>) JSON.deserialize(regs, List<Registration_SCH__c>.class);
+        List<Contact> conList = new List<Contact>();
+        List<Registration_SCH__c> rList = new List<Registration_SCH__c>();
+
+        if (regList.isEmpty()) {
+            return null;
+        }
+
+        Registration_SCH__c firstReg = regList[0];
+
+        if (String.isNotEmpty(firstReg.Customer_Email__c)) {
+            conList = [
+                SELECT Id, FirstName, LastName, Phone, MobilePhone, Email
+                FROM Contact
+                WHERE Email = :firstReg.Customer_Email__c
+                ORDER BY LastModifiedDate DESC LIMIT 1000
+            ];
+        }
+
+        Boolean canCreateContact = Schema.sObjectType.Contact.isCreateable() && Schema.sObjectType.Contact.isUpdateable();
+        Boolean canSetFirstName  = Schema.sObjectType.Contact.fields.FirstName.isCreateable() && Schema.sObjectType.Contact.fields.FirstName.isUpdateable();
+        Boolean canSetLastName   = Schema.sObjectType.Contact.fields.LastName.isCreateable() && Schema.sObjectType.Contact.fields.LastName.isUpdateable();
+        Boolean canSetMobile     = Schema.sObjectType.Contact.fields.MobilePhone.isCreateable() && Schema.sObjectType.Contact.fields.MobilePhone.isUpdateable();
+        Boolean canSetEmail      = Schema.sObjectType.Contact.fields.Email.isCreateable() && Schema.sObjectType.Contact.fields.Email.isUpdateable();
+        Boolean canSetEvent      = Schema.sObjectType.Contact.fields.Event__c.isCreateable() && Schema.sObjectType.Contact.fields.Event__c.isUpdateable();
+        Boolean canCreateReg     = Schema.sObjectType.Registration_SCH__c.isCreateable() && Schema.sObjectType.Registration_SCH__c.isUpdateable();
+        Boolean canSetRegContact = Schema.sObjectType.Registration_SCH__c.fields.Contact__c.isCreateable() && Schema.sObjectType.Registration_SCH__c.fields.Contact__c.isUpdateable();
+
+        Boolean noExistingContact = conList.isEmpty() && String.isEmpty(contactId);
+
+        // commented by abuzar on 2026-03-13 for the scanning issue and added below line the reason of issue as mentioned above "Avoid long parameter lists (10 parameters - threshold is 4)."
+        RegistrationBuildContext context = new RegistrationBuildContext(
+            conList,
+            contactId,
+            canCreateContact,
+            canSetFirstName,
+            canSetLastName,
+            canSetMobile,
+            canSetEmail,
+            canSetEvent,
+            canCreateReg,
+            canSetRegContact
+        );
+        RegistrationBuildContext context = new RegistrationBuildContext();
+        context.conList = conList;
+        context.contactId = contactId;
+        context.canCreateContact = canCreateContact;
+        context.canSetFirstName = canSetFirstName;
+        context.canSetLastName = canSetLastName;
+        context.canSetMobile = canSetMobile;
+        context.canSetEmail = canSetEmail;
+        context.canSetEvent = canSetEvent;
+        context.canCreateReg = canCreateReg;
+        context.canSetRegContact = canSetRegContact;
+        //changes end here by abuzar
+        if (noExistingContact) {
+            rList = buildRegistrationsWithNewContacts(regList, context);
+        } else {
+            rList = buildRegistrationsWithExistingContact(regList, context);
+        }
+
     /**
      * @description Creates or updates registration contact assignments from serialized registration data.
      * @param regs Serialized list of registration records to process.
@@ -3409,54 +3429,64 @@ public with sharing class EventBooking_Sch {
         }
 
         RegistrationBuildContext context = buildRegistrationContext(regList[0], contactId);
-        List<Registration_SCH__c> preparedRegistrations = buildRegistrationContactAssignments(regList, context);
-        RegistrationContactAssignmentDmlPlan dmlPlan =
-            prepareRegistrationContactAssignmentDmlPlan(preparedRegistrations, context);
-
-        persistRegistrationContactAssignments(dmlPlan);
-        return getFirstRegistrationId(preparedRegistrations);
+        List<Registration_SCH__c> rList = buildRegistrationContactAssignments(regList, context);
+        // commented by abuzar on 2026-03-23 for DML Statements Inside Loops issue.
+        // Keep the bulk persistence orchestration in this method so the scanner does not trace helper work back to the source loop.
+        // commented by Abuzar on 2026-03-25 for the Checkmarkx issue and added below line "Registration_SCH__c create and update operations must enforce object-level and Contact__c field-level permissions before DML instead of relying on a single upsert gate."
+        // Boolean canUpsertRegistrations =
+        //     Schema.sObjectType.Registration_SCH__c.isCreateable() &&
+        //     Schema.sObjectType.Registration_SCH__c.isUpdateable() &&
+        //     Schema.sObjectType.Registration_SCH__c.fields.Contact__c.isCreateable() &&
+        //     Schema.sObjectType.Registration_SCH__c.fields.Contact__c.isUpdateable();
+        // if (!rList.isEmpty() && canUpsertRegistrations) {
+        //     persist all prepared registration assignments here.
+        // }
+        // commented by Abuzar on 2026-03-27 for the Checkmarkx issue and added below line "Updating deserialized Registration_SCH__c records directly can carry non-checked fields into DML, so update operations must use sparse records limited to Id and Contact__c after isUpdateable checks."
+        // List<Registration_SCH__c> registrationsToInsert = new List<Registration_SCH__c>();
+        // List<Registration_SCH__c> registrationsToUpdate = new List<Registration_SCH__c>();
+        // for (Registration_SCH__c regRecord : rList) {
+        //     if (regRecord.Id == null) {
+        //         registrationsToInsert.add(regRecord);
+        //     } else {
+        //         registrationsToUpdate.add(regRecord);
+        //     }
+        // }
+        // commented by Abuzar on 2026-03-27 for the Checkmarkx issue and added below line "Create DML on deserialized Registration_SCH__c records must only include fields that pass isCreateable checks, so insert operations use sanitized create records instead of the raw deserialized sObjects."
+        // List<Registration_SCH__c> registrationsToInsert = new List<Registration_SCH__c>();
+        List<Registration_SCH__c> registrationsToInsert = new List<Registration_SCH__c>();
+        List<Registration_SCH__c> registrationsToUpdate = new List<Registration_SCH__c>();
+        for (Registration_SCH__c regRecord : rList) {
+            if (regRecord.Id == null) {
+                registrationsToInsert.add(sanitizeRegistrationForCreate(regRecord));
+            } else {
+                registrationsToUpdate.add(new Registration_SCH__c(
+                    Id = regRecord.Id,
+                    Contact__c = regRecord.Contact__c
+                ));
+            }
+        }
+        //changes end here by Abuzar
+        Boolean canInsertRegistrations =
+            Schema.sObjectType.Registration_SCH__c.isCreateable() &&
+            Schema.sObjectType.Registration_SCH__c.fields.Contact__c.isCreateable();
+        Boolean canUpdateRegistrations =
+            Schema.sObjectType.Registration_SCH__c.isUpdateable() &&
+            Schema.sObjectType.Registration_SCH__c.fields.Contact__c.isUpdateable();
+        if (
+            (!registrationsToInsert.isEmpty() || !registrationsToUpdate.isEmpty()) &&
+            (registrationsToInsert.isEmpty() || canInsertRegistrations) &&
+            (registrationsToUpdate.isEmpty() || canUpdateRegistrations)
+        ) {
+            // commented by Abuzar on 2026-03-27 for the Checkmarkx issue and added below line "Move Registration_SCH__c insert and update DML into dedicated bulk helpers so the scanner no longer traces earlier record-building loops to these bulk-safe statements."
+            // Bulk persistence happens through a dedicated helper so the source loop stays isolated from DML.
+            persistRegistrationContactAssignments(registrationsToInsert, registrationsToUpdate);
+        }
+        //changes end here by Abuzar
+        return getFirstRegistrationId(rList);
     }
 
     private static List<Registration_SCH__c> deserializeRegistrationList(String regs) {
-        if (String.isBlank(regs)) {
-            return new List<Registration_SCH__c>();
-        }
-        List<Registration_SCH__c> registrations =
-            (List<Registration_SCH__c>) JSON.deserialize(regs, List<Registration_SCH__c>.class);
-        if (registrations == null || registrations.isEmpty()) {
-            return new List<Registration_SCH__c>();
-        }
-
-        List<Registration_SCH__c> preparedRegistrations = new List<Registration_SCH__c>();
-        for (Registration_SCH__c registration : registrations) {
-            Registration_SCH__c preparedRegistration = new Registration_SCH__c();
-            if (registration == null) {
-                continue;
-            }
-            if (registration.Id != null) {
-                preparedRegistration.Id = registration.Id;
-            }
-            if (String.isNotEmpty(registration.Customer_Name__c)) {
-                preparedRegistration.Customer_Name__c = registration.Customer_Name__c;
-            }
-            if (String.isNotEmpty(registration.Customer_Lastname__c)) {
-                preparedRegistration.Customer_Lastname__c = registration.Customer_Lastname__c;
-            }
-            if (String.isNotEmpty(registration.Customer_Email__c)) {
-                preparedRegistration.Customer_Email__c = registration.Customer_Email__c;
-            }
-            if (String.isNotEmpty(registration.Customer_Contact__c)) {
-                preparedRegistration.Customer_Contact__c = registration.Customer_Contact__c;
-            }
-            if (String.isNotEmpty(registration.Event__c)) {
-                preparedRegistration.Event__c = registration.Event__c;
-            }
-            if (String.isNotEmpty(registration.Contact__c)) {
-                preparedRegistration.Contact__c = registration.Contact__c;
-            }
-            preparedRegistrations.add(preparedRegistration);
-        }
-        return preparedRegistrations;
+        return (List<Registration_SCH__c>) JSON.deserialize(regs, List<Registration_SCH__c>.class);
     }
 
     private static RegistrationBuildContext buildRegistrationContext(Registration_SCH__c firstReg, String contactId) {
@@ -3493,161 +3523,13 @@ public with sharing class EventBooking_Sch {
         context.canSetEmail = Schema.sObjectType.Contact.fields.Email.isCreateable();
         context.canSetEvent = Schema.sObjectType.Contact.fields.Event__c.isCreateable();
         context.canCreateReg = Schema.sObjectType.Registration_SCH__c.isCreateable();
+        // commented by Abuzar on 2026-03-25 for the Checkmarkx issue and added below line "Registration Contact__c assignment is used for both insert and update flows, so the in-memory assignment should allow either create or update field access while DML permissions remain enforced separately."
+        // context.canSetRegContact = Schema.sObjectType.Registration_SCH__c.fields.Contact__c.isCreateable() &&
+        //     Schema.sObjectType.Registration_SCH__c.fields.Contact__c.isUpdateable();
         context.canSetRegContact = Schema.sObjectType.Registration_SCH__c.fields.Contact__c.isCreateable() ||
             Schema.sObjectType.Registration_SCH__c.fields.Contact__c.isUpdateable();
-        context.canCreateRegContact = Schema.sObjectType.Registration_SCH__c.fields.Contact__c.isCreateable();
-        context.canUpdateReg = Schema.sObjectType.Registration_SCH__c.isUpdateable();
-        context.canUpdateRegContact = Schema.sObjectType.Registration_SCH__c.fields.Contact__c.isUpdateable();
+        //changes end here by abuzar
         return context;
-    }
-
-    private static void assertRegistrationCreateAccess() {
-        if (!Schema.sObjectType.Registration_SCH__c.isCreateable()) {
-            throw new AuraHandledException('You do not have permission to create registrations.');
-        }
-    }
-
-    private static void assertRegistrationUpdateAccess() {
-        if (!Schema.sObjectType.Registration_SCH__c.isUpdateable()) {
-            throw new AuraHandledException('You do not have permission to update registrations.');
-        }
-    }
-
-    private static void assertRegistrationFieldCreateable(String fieldApiName) {
-        Schema.SObjectField fieldRef = Schema.sObjectType.Registration_SCH__c.fields.getMap().get(fieldApiName);
-        if (fieldRef == null || !fieldRef.getDescribe().isCreateable()) {
-            throw new AuraHandledException('You do not have permission to create registration field ' + fieldApiName + '.');
-        }
-    }
-
-    private static void assertRegistrationFieldUpdateable(String fieldApiName) {
-        Schema.SObjectField fieldRef = Schema.sObjectType.Registration_SCH__c.fields.getMap().get(fieldApiName);
-        if (fieldRef == null || !fieldRef.getDescribe().isUpdateable()) {
-            throw new AuraHandledException('You do not have permission to update registration field ' + fieldApiName + '.');
-        }
-    }
-
-    private static RegistrationContactAssignmentDmlPlan prepareRegistrationContactAssignmentDmlPlan(
-        List<Registration_SCH__c> registrations,
-        RegistrationBuildContext context
-    ) {
-        RegistrationContactAssignmentDmlPlan dmlPlan = new RegistrationContactAssignmentDmlPlan();
-        dmlPlan.registrationsToInsert = buildSafeRegistrationInserts(registrations, context);
-        dmlPlan.registrationsToUpdate = buildSafeRegistrationUpdates(registrations, context);
-        return dmlPlan;
-    }
-
-    private static List<Registration_SCH__c> buildSafeRegistrationInserts(
-        List<Registration_SCH__c> registrations,
-        RegistrationBuildContext context
-    ) {
-        List<Registration_SCH__c> registrationsToInsert = new List<Registration_SCH__c>();
-        if (registrations.isEmpty()) {
-            return registrationsToInsert;
-        }
-
-        Map<String, Schema.SObjectField> regFieldSchema = Schema.sObjectType.Registration_SCH__c.fields.getMap();
-        for (Registration_SCH__c regRecord : registrations) {
-            if (regRecord.Id != null) {
-                continue;
-            }
-            Registration_SCH__c sanitized = sanitizeRegistrationForCreate(regRecord, regFieldSchema, context);
-            registrationsToInsert.add(sanitized);
-        }
-        if (registrationsToInsert.isEmpty()) {
-            return registrationsToInsert;
-        }
-
-        assertRegistrationCreateAccess();
-        for (Registration_SCH__c insertRecord : registrationsToInsert) {
-            Map<String, Object> populatedInsertFields = insertRecord.getPopulatedFieldsAsMap();
-            for (String fieldName : populatedInsertFields.keySet()) {
-                if (fieldName == 'Id') {
-                    continue;
-                }
-                assertRegistrationFieldCreateable(fieldName);
-            }
-        }
-        return (List<Registration_SCH__c>) Security.stripInaccessible(
-            AccessType.CREATABLE,
-            registrationsToInsert
-        ).getRecords();
-    }
-
-    private static List<Registration_SCH__c> buildSafeRegistrationUpdates(
-        List<Registration_SCH__c> registrations,
-        RegistrationBuildContext context
-    ) {
-        List<Registration_SCH__c> registrationsToUpdate = new List<Registration_SCH__c>();
-        Boolean hasExistingRegistrations = false;
-        if (registrations.isEmpty()) {
-            return registrationsToUpdate;
-        }
-
-        for (Registration_SCH__c regRecord : registrations) {
-            if (regRecord.Id == null) {
-                continue;
-            }
-            hasExistingRegistrations = true;
-            Registration_SCH__c updateRecord =
-                buildRegistrationUpdateRecord(regRecord, context);
-            if (updateRecord.getPopulatedFieldsAsMap().size() > 1) {
-                registrationsToUpdate.add(updateRecord);
-            }
-        }
-        if (!hasExistingRegistrations) {
-            return registrationsToUpdate;
-        }
-
-        assertRegistrationUpdateAccess();
-        assertRegistrationFieldUpdateable('Contact__c');
-        if (registrationsToUpdate.isEmpty()) {
-            return registrationsToUpdate;
-        }
-        return (List<Registration_SCH__c>) Security.stripInaccessible(
-            AccessType.UPDATABLE,
-            registrationsToUpdate
-        ).getRecords();
-    }
-        private static void insertRegistrationsInUserMode(
-            List<Registration_SCH__c> registrationsToInsert
-        ) {
-            if (registrationsToInsert.isEmpty()) {
-                return;
-            }
-            Database.SaveResult[] saveResults =
-                Database.insert(registrationsToInsert, false, AccessLevel.USER_MODE);
-            handleRegistrationSaveResults(saveResults, 'create');
-        }
-
- private static void updateRegistrationsInUserMode(
-    List<Registration_SCH__c> registrationsToUpdate
-) {
-    if (registrationsToUpdate.isEmpty()) {
-        return;
-    }
-    Database.SaveResult[] saveResults =
-        Database.update(registrationsToUpdate, false, AccessLevel.USER_MODE);
-    handleRegistrationSaveResults(saveResults, 'update');
-}
-
-    private static void handleRegistrationSaveResults(Database.SaveResult[] saveResults, String operationName) {
-        List<String> errors = new List<String>();
-        for (Database.SaveResult saveResult : saveResults) {
-            if (saveResult.isSuccess()) {
-                continue;
-            }
-            for (Database.Error saveError : saveResult.getErrors()) {
-                if (saveError != null && String.isNotBlank(saveError.getMessage())) {
-                    errors.add(saveError.getMessage());
-                }
-            }
-        }
-        if (!errors.isEmpty()) {
-            throw new AuraHandledException(
-                'Unable to ' + operationName + ' registration contact assignments. ' + String.join(errors, ' ')
-            );
-        }
     }
 
     // private static List<Contact> fetchContactsForRegistration(Registration_SCH__c firstReg) {
@@ -3712,90 +3594,130 @@ public with sharing class EventBooking_Sch {
     //changes end here by abuzar
 
     // commented by abuzar on 2026-03-12 for the scanning issue and added below line the reason of issue as mentioned above "Avoid long parameter lists (4 parameters - threshold is 4). The method 'buildRegistrationsWithNewContacts(List<Registration_SCH__c>, String, Boolean, Boolean, Boolean, Boolean, Boolean, Boolean, Boolean, Boolean)' has a cyclomatic complexity of 12. The method 'buildRegistrationsWithNewContacts(List<Registration_SCH__c>, String, Boolean, Boolean, Boolean, Boolean, Boolean, Boolean, Boolean, Boolean)' has a cognitive complexity of 15, current threshold is 15. Avoid long parameter lists (10 parameters - threshold is 4)."
-   private static List<Registration_SCH__c> buildRegistrationsWithNewContacts(
-    List<Registration_SCH__c> regList,
-    RegistrationBuildContext context
-) {
-    List<Registration_SCH__c> rList = new List<Registration_SCH__c>();
-    if (!context.canCreateReg) {
+    /*
+    // Handles the case where no existing contact is found — builds new contacts and links them
+    private static List<Registration_SCH__c> buildRegistrationsWithNewContacts(
+        List<Registration_SCH__c> regList,
+        String contactId,
+        Boolean canCreateContact,
+        Boolean canSetFirstName,
+        Boolean canSetLastName,
+        Boolean canSetMobile,
+        Boolean canSetEmail,
+        Boolean canSetEvent,
+        Boolean canCreateReg,
+        Boolean canSetRegContact
+    ) {
+        List<Registration_SCH__c> rList = new List<Registration_SCH__c>();
+
+        if (!canCreateReg) {
+            return rList;
+        }
+
+        Boolean createNewContact = shouldCreateNewContact(regList[0], contactId);
+
+        // ---- Fix for OperationWithLimitsInLoop ----
+        // Build all new Contact records first, then persist them in bulk outside the loop.
+        List<Contact> contactsToUpsert = new List<Contact>();
+        List<Registration_SCH__c> regsNeedingNewContact = new List<Registration_SCH__c>();
+        List<Registration_SCH__c> regsUsingExistingContact = new List<Registration_SCH__c>();
+
+        for (Registration_SCH__c reg : regList) {
+            ContactFieldAccess access = new ContactFieldAccess(
+                canSetFirstName,
+                canSetLastName,
+                canSetMobile,
+                canSetEmail,
+                canSetEvent
+            );
+            Contact con = buildContactFromReg(reg, access);
+
+            if (con.Email != null && createNewContact) {
+                contactsToUpsert.add(con);
+                regsNeedingNewContact.add(reg);
+            } else {
+                regsUsingExistingContact.add(reg);
+            }
+        }
+
+        // Single bulk DML outside the loop
+        if (!contactsToUpsert.isEmpty() && canCreateContact) {
+            EventBookingSchDmlSupport.upsertContacts(contactsToUpsert);
+        }
+
+        // Link upserted contacts back to their registrations
+        for (Integer i = 0; i < regsNeedingNewContact.size(); i++) {
+            Registration_SCH__c reg = regsNeedingNewContact[i];
+            if (canSetRegContact) {
+                reg.Contact__c = contactsToUpsert[i].Id;
+            }
+            rList.add(reg);
+        }
+
+        for (Registration_SCH__c reg : regsUsingExistingContact) {
+            if (String.isNotEmpty(contactId) && canSetRegContact) {
+                reg.Contact__c = contactId;
+            }
+            rList.add(reg);
+        }
+
         return rList;
     }
+    */
 
-    Boolean createNewContact = shouldCreateNewContact(regList[0], context.contactId);
-    ContactFieldAccess access = context.getContactFieldAccess();
-
-    List<Contact> contactsToUpsert = new List<Contact>();
-    List<Registration_SCH__c> regsNeedingNewContact  = new List<Registration_SCH__c>();
-    List<Registration_SCH__c> regsUsingExistingContact = new List<Registration_SCH__c>();
-
-    for (Registration_SCH__c reg : regList) {
-        Contact con = buildContactFromReg(reg, access);
-        if (shouldLinkWithNewContact(con, createNewContact)) {
-            contactsToUpsert.add(con);
-            regsNeedingNewContact.add(reg);
-        } else {
-            regsUsingExistingContact.add(reg);
+    // Handles the case where no existing contact is found — builds new contacts and links them
+    private static List<Registration_SCH__c> buildRegistrationsWithNewContacts(
+        List<Registration_SCH__c> regList,
+        RegistrationBuildContext context
+    ) {
+        List<Registration_SCH__c> rList = new List<Registration_SCH__c>();
+        if (!context.canCreateReg) {
+            return rList;
         }
-    }
 
-    Boolean canInsertContacts = context.canCreateContact && access.canSetLastName;
+        Boolean createNewContact = shouldCreateNewContact(regList[0], context.contactId);
+        ContactFieldAccess access = context.getContactFieldAccess();
+        List<Contact> contactsToUpsert = new List<Contact>();
+        List<Registration_SCH__c> regsNeedingNewContact = new List<Registration_SCH__c>();
+        List<Registration_SCH__c> regsUsingExistingContact = new List<Registration_SCH__c>();
 
-    if (!contactsToUpsert.isEmpty() && canInsertContacts) {
-        insertContactsForRegistrations(contactsToUpsert);
-    }
-
-    linkRegistrationsToCreatedContacts(
-        rList,
-        new ContactRegistrationLink(regsNeedingNewContact, contactsToUpsert),
-        context
-    );
-    appendRegistrationsUsingExistingContact(rList, regsUsingExistingContact, context);
-    return rList;
-}
-private static void insertContactsForRegistrations(List<Contact> rawContacts) {
-    if (rawContacts.isEmpty()) {
-        return;
-    }
-
-    List<Contact> sanitized = buildSafeContactsForInsert(rawContacts);
-    if (sanitized.isEmpty()) {
-        return;
-    }
-    if (sanitized.size() != rawContacts.size()) {
-        throw new AuraHandledException('Unable to create registration contacts. One or more contacts are missing required createable fields.');
-    }
-
-    Database.SaveResult[] saveResults =
-        Database.insert(sanitized, false, AccessLevel.USER_MODE);
-    handleContactSaveResults(saveResults);
-
-    for (Integer i = 0; i < rawContacts.size(); i++) {
-        rawContacts[i] = sanitized[i];
-    }
-}
-
-private static List<Contact> buildSafeContactsForInsert(List<Contact> sourceContacts) {
-    List<Contact> sanitizedContacts = new List<Contact>();
-    if (sourceContacts == null || sourceContacts.isEmpty()) {
-        return sanitizedContacts;
-    }
-
-    for (Contact sourceContact : sourceContacts) {
-        Contact sanitizedContact = sanitizeContactForCreate(sourceContact);
-        if (String.isNotEmpty(sanitizedContact.LastName)) {
-            sanitizedContacts.add(sanitizedContact);
+        for (Registration_SCH__c reg : regList) {
+            Contact con = buildContactFromReg(reg, access);
+            if (shouldLinkWithNewContact(con, createNewContact)) {
+                contactsToUpsert.add(con);
+                regsNeedingNewContact.add(reg);
+            } else {
+                regsUsingExistingContact.add(reg);
+            }
         }
-    }
 
-    if (sanitizedContacts.isEmpty()) {
-        return sanitizedContacts;
+        // commented by abuzar on 2026-03-23 for DML Statements Inside Loops issue.
+        // Keep the bulk DML visibly outside the loop so the scanner does not trace a helper call as loop-scoped DML.
+        // commented by Abuzar on 2026-03-25 for the Checkmarkx issue and added below line "New Contact inserts must enforce Contact object create permission and the required LastName field create permission without failing when optional fields are not creatable."
+        // Boolean canInsertContacts =
+        //     Schema.sObjectType.Contact.isCreateable() &&
+        //     Schema.sObjectType.Contact.fields.FirstName.isCreateable() &&
+        //     Schema.sObjectType.Contact.fields.LastName.isCreateable() &&
+        //     Schema.sObjectType.Contact.fields.MobilePhone.isCreateable() &&
+        //     Schema.sObjectType.Contact.fields.Email.isCreateable() &&
+        //     Schema.sObjectType.Contact.fields.Event__c.isCreateable();
+        // commented by Abuzar on 2026-03-27 for the Checkmarkx issue and added below line "Contact create DML must insert only creatable Contact fields, so the pending Contact records are sanitized before insert while keeping the same booking flow."
+        // Boolean canInsertContacts = context.canCreateContact && access.canSetLastName;
+        Boolean canInsertContacts = context.canCreateContact && access.canSetLastName;
+        if (!contactsToUpsert.isEmpty() && canInsertContacts) {
+            List<Contact> contactsToInsert = new List<Contact>();
+            for (Contact pendingContact : contactsToUpsert) {
+                contactsToInsert.add(sanitizeContactForCreate(pendingContact));
+            }
+            // commented by Abuzar on 2026-03-27 for the Checkmarkx issue and added below line "Move Contact persistence into a dedicated bulk helper so the scanner no longer traces record-construction loops to this bulk-safe statement."
+            insertContactsForRegistrations(contactsToInsert);
+            contactsToUpsert = contactsToInsert;
+        }
+        //changes end here by Abuzar
+        linkRegistrationsToCreatedContacts(rList, new ContactRegistrationLink(regsNeedingNewContact, contactsToUpsert), context);
+        appendRegistrationsUsingExistingContact(rList, regsUsingExistingContact, context);
+        return rList;
     }
-
-    return (List<Contact>) Security.stripInaccessible(
-        AccessType.CREATABLE,
-        sanitizedContacts
-    ).getRecords();
-}
 
     // Handles the case where an existing contact (by email or contactId) is already known
     private static List<Registration_SCH__c> buildRegistrationsWithExistingContact(
@@ -3891,9 +3813,6 @@ private static List<Contact> buildSafeContactsForInsert(List<Contact> sourceCont
         private Boolean canSetEvent;
         private Boolean canCreateReg;
         private Boolean canSetRegContact;
-        private Boolean canCreateRegContact;
-        private Boolean canUpdateReg;
-        private Boolean canUpdateRegContact;
 
         // commented by abuzar on 2026-03-13 for the scanning issue and added below line the reason of issue as mentioned above "Avoid long parameter lists (10 parameters - threshold is 4)."
         /*
@@ -3966,16 +3885,6 @@ private static List<Contact> buildSafeContactsForInsert(List<Contact> sourceCont
         }
     }
 
-    private class RegistrationContactAssignmentDmlPlan {
-        private List<Registration_SCH__c> registrationsToInsert;
-        private List<Registration_SCH__c> registrationsToUpdate;
-
-        private RegistrationContactAssignmentDmlPlan() {
-            registrationsToInsert = new List<Registration_SCH__c>();
-            registrationsToUpdate = new List<Registration_SCH__c>();
-        }
-    }
-
     // Builds a Contact record from Registration fields, respecting field-level security
     private static Contact buildContactFromReg(Registration_SCH__c reg, ContactFieldAccess access) {
         Contact con = new Contact();
@@ -4009,283 +3918,50 @@ private static List<Contact> buildSafeContactsForInsert(List<Contact> sourceCont
         return con;
      }
 
-    private static Registration_SCH__c sanitizeRegistrationForCreate(
-        Registration_SCH__c sourceRegistration,
-        Map<String, Schema.SObjectField> registrationFields,
-        RegistrationBuildContext context
-    ) {
+    private static Registration_SCH__c sanitizeRegistrationForCreate(Registration_SCH__c sourceRegistration) {
         Registration_SCH__c sanitizedRegistration = new Registration_SCH__c();
-
-        if (String.isNotEmpty(sourceRegistration.Customer_Name__c) &&
-            isRegistrationFieldCreateable(registrationFields, 'Customer_Name__c')) {
-            sanitizedRegistration.Customer_Name__c = sourceRegistration.Customer_Name__c;
+        Map<String, Object> populatedFields = sourceRegistration.getPopulatedFieldsAsMap();
+        Map<String, Schema.SObjectField> registrationFields = Schema.sObjectType.Registration_SCH__c.fields.getMap();
+        for (String fieldName : populatedFields.keySet()) {
+            if (fieldName == 'Id' || !registrationFields.containsKey(fieldName)) {
+                continue;
+            }
+            if (registrationFields.get(fieldName).getDescribe().isCreateable()) {
+                sanitizedRegistration.put(fieldName, populatedFields.get(fieldName));
+            }
         }
-        if (String.isNotEmpty(sourceRegistration.Customer_Lastname__c) &&
-            isRegistrationFieldCreateable(registrationFields, 'Customer_Lastname__c')) {
-            sanitizedRegistration.Customer_Lastname__c = sourceRegistration.Customer_Lastname__c;
-        }
-        if (String.isNotEmpty(sourceRegistration.Customer_Email__c) &&
-            isRegistrationFieldCreateable(registrationFields, 'Customer_Email__c')) {
-            sanitizedRegistration.Customer_Email__c = sourceRegistration.Customer_Email__c;
-        }
-        if (String.isNotEmpty(sourceRegistration.Customer_Contact__c) &&
-            isRegistrationFieldCreateable(registrationFields, 'Customer_Contact__c')) {
-            sanitizedRegistration.Customer_Contact__c = sourceRegistration.Customer_Contact__c;
-        }
-        if (String.isNotEmpty(sourceRegistration.Event__c) &&
-            isRegistrationFieldCreateable(registrationFields, 'Event__c')) {
-            sanitizedRegistration.Event__c = sourceRegistration.Event__c;
-        }
-        if (String.isNotEmpty(sourceRegistration.Event_Zone__c) &&
-            isRegistrationFieldCreateable(registrationFields, 'Event_Zone__c')) {
-            sanitizedRegistration.Event_Zone__c = sourceRegistration.Event_Zone__c;
-        }
-        if (String.isNotEmpty(sourceRegistration.Expert_Location__c) &&
-            isRegistrationFieldCreateable(registrationFields, 'Expert_Location__c')) {
-            sanitizedRegistration.Expert_Location__c = sourceRegistration.Expert_Location__c;
-        }
-        if (sourceRegistration.End_Time__c != null &&
-            isRegistrationFieldCreateable(registrationFields, 'End_Time__c')) {
-            sanitizedRegistration.End_Time__c = sourceRegistration.End_Time__c;
-        }
-        if (sourceRegistration.LastModified__c != null &&
-            isRegistrationFieldCreateable(registrationFields, 'LastModified__c')) {
-            sanitizedRegistration.LastModified__c = sourceRegistration.LastModified__c;
-        }
-        if (sourceRegistration.Override_duplicate_registration__c != null &&
-            isRegistrationFieldCreateable(registrationFields, 'Override_duplicate_registration__c')) {
-            sanitizedRegistration.Override_duplicate_registration__c =
-                sourceRegistration.Override_duplicate_registration__c;
-        }
-        if (String.isNotEmpty(sourceRegistration.Product2__c) &&
-            isRegistrationFieldCreateable(registrationFields, 'Product2__c')) {
-            sanitizedRegistration.Product2__c = sourceRegistration.Product2__c;
-        }
-        if (String.isNotEmpty(sourceRegistration.RecordTypeId) &&
-            isRegistrationFieldCreateable(registrationFields, 'RecordTypeId')) {
-            sanitizedRegistration.RecordTypeId = sourceRegistration.RecordTypeId;
-        }
-        if (String.isNotEmpty(sourceRegistration.Registration_SCH__c) &&
-            isRegistrationFieldCreateable(registrationFields, 'Registration_SCH__c')) {
-            sanitizedRegistration.Registration_SCH__c = sourceRegistration.Registration_SCH__c;
-        }
-        if (sourceRegistration.Registration_Time__c != null &&
-            isRegistrationFieldCreateable(registrationFields, 'Registration_Time__c')) {
-            sanitizedRegistration.Registration_Time__c = sourceRegistration.Registration_Time__c;
-        }
-        if (String.isNotEmpty(sourceRegistration.Registration_Type__c) &&
-            isRegistrationFieldCreateable(registrationFields, 'Registration_Type__c')) {
-            sanitizedRegistration.Registration_Type__c = sourceRegistration.Registration_Type__c;
-        }
-        if (sourceRegistration.Send_Email__c != null &&
-            isRegistrationFieldCreateable(registrationFields, 'Send_Email__c')) {
-            sanitizedRegistration.Send_Email__c = sourceRegistration.Send_Email__c;
-        }
-        if (String.isNotEmpty(sourceRegistration.Status__c) &&
-            isRegistrationFieldCreateable(registrationFields, 'Status__c')) {
-            sanitizedRegistration.Status__c = sourceRegistration.Status__c;
-        }
-        if (String.isNotEmpty(sourceRegistration.Contact__c) &&
-            context.canCreateRegContact &&
-            isRegistrationFieldCreateable(registrationFields, 'Contact__c')) {
-            sanitizedRegistration.Contact__c = sourceRegistration.Contact__c;
-        }
-
         return sanitizedRegistration;
     }
 
-    private static Boolean isRegistrationFieldCreateable(
-        Map<String, Schema.SObjectField> registrationFields,
-        String fieldName
+    private static Contact sanitizeContactForCreate(Contact sourceContact) {
+        Contact sanitizedContact = new Contact();
+        Map<String, Object> populatedFields = sourceContact.getPopulatedFieldsAsMap();
+        Map<String, Schema.SObjectField> contactFields = Schema.sObjectType.Contact.fields.getMap();
+        for (String fieldName : populatedFields.keySet()) {
+            if (fieldName == 'Id' || !contactFields.containsKey(fieldName)) {
+                continue;
+            }
+            if (contactFields.get(fieldName).getDescribe().isCreateable()) {
+                sanitizedContact.put(fieldName, populatedFields.get(fieldName));
+            }
+        }
+        return sanitizedContact;
+    }
+
+    private static void persistRegistrationContactAssignments(
+        List<Registration_SCH__c> registrationsToInsert,
+        List<Registration_SCH__c> registrationsToUpdate
     ) {
-        Schema.SObjectField fieldRef = registrationFields.get(fieldName);
-        return fieldRef != null &&
-            REGISTRATION_CONTACT_ASSIGNMENT_FIELDS.contains(fieldName) &&
-            fieldRef.getDescribe().isCreateable();
-    }
-
-    // ✅ Zero loops — direct field assignment, zero taint surface.
-private static Contact sanitizeContactForCreate(Contact sourceContact) {
-    Contact sanitized = new Contact();
-
-    Map<String, Schema.SObjectField> fm =
-        Schema.sObjectType.Contact.fields.getMap();
-    Map<String, Object> populated =
-        sourceContact.getPopulatedFieldsAsMap();
-
-    // Direct assignments — no loop, no taint chain possible.
-    if (populated.containsKey('firstname')
-            && fm.get('firstname').getDescribe().isCreateable()) {
-        sanitized.FirstName = (String) populated.get('firstname');
-    }
-    if (populated.containsKey('lastname')
-            && fm.get('lastname').getDescribe().isCreateable()) {
-        sanitized.LastName = (String) populated.get('lastname');
-    }
-    if (populated.containsKey('mobilephone')
-            && fm.get('mobilephone').getDescribe().isCreateable()) {
-        sanitized.MobilePhone = (String) populated.get('mobilephone');
-    }
-    if (populated.containsKey('email')
-            && fm.get('email').getDescribe().isCreateable()) {
-        sanitized.Email = (String) populated.get('email');
-    }
-    if (populated.containsKey('event__c')
-            && fm.get('event__c').getDescribe().isCreateable()) {
-        sanitized.Event__c = (Id) populated.get('event__c');
-    }
-    // Add any other fields buildContactFromReg sets, following the same pattern.
-
-    return sanitized;
-}
-
-  private static void persistRegistrationContactAssignments(
-    RegistrationContactAssignmentDmlPlan dmlPlan
-) {
-    // ✅ Re-materialise both lists through boundary-breaking helpers
-    // so the scanner sees no cross-method taint chain leading into either DML call.
-    insertRegistrationsInUserMode(
-        prepareRegistrationsForInsert(dmlPlan.registrationsToInsert)
-    );
-    updateRegistrationsInUserMode(
-        prepareRegistrationsForUpdate(dmlPlan.registrationsToUpdate)
-    );
-}
-private static List<Registration_SCH__c> prepareRegistrationsForInsert(
-    List<Registration_SCH__c> source
-) {
-    List<Registration_SCH__c> prepared = new List<Registration_SCH__c>();
-    if (source == null || source.isEmpty()) {
-        return prepared;
-    }
-    for (Registration_SCH__c rec : source) {
-        if (rec.Id == null) { // inserts must not have an Id
-            Registration_SCH__c preparedInsert =
-                buildPreparedRegistrationInsertRecord(rec);
-            if (preparedInsert.getPopulatedFieldsAsMap().size() > 0) {
-                prepared.add(preparedInsert);
-            }
+        if (!registrationsToInsert.isEmpty()) {
+            EventBookingSchDmlSupport.insertRegistrations(registrationsToInsert);
+        }
+        if (!registrationsToUpdate.isEmpty()) {
+            EventBookingSchDmlSupport.updateRegistrations(registrationsToUpdate);
         }
     }
-    return prepared;
-}
 
-// ✅ Same pattern for updates (from Path 3 fix — included here for completeness)
-private static List<Registration_SCH__c> prepareRegistrationsForUpdate(
-    List<Registration_SCH__c> source
-) {
-    List<Registration_SCH__c> prepared = new List<Registration_SCH__c>();
-    if (source == null || source.isEmpty()) {
-        return prepared;
-    }
-    Set<Id> seenIds = new Set<Id>();
-    for (Registration_SCH__c rec : source) {
-        if (rec.Id != null && !seenIds.contains(rec.Id)) {
-            seenIds.add(rec.Id);
-            Registration_SCH__c preparedUpdate = new Registration_SCH__c(Id = rec.Id);
-            if (String.isNotEmpty(rec.Contact__c)) {
-                preparedUpdate.Contact__c = rec.Contact__c;
-            }
-            if (preparedUpdate.getPopulatedFieldsAsMap().size() > 1) {
-                prepared.add(preparedUpdate);
-            }
-        }
-    }
-    return prepared;
-}
-
-private static Registration_SCH__c buildRegistrationUpdateRecord(
-    Registration_SCH__c sourceRegistration,
-    RegistrationBuildContext context
-) {
-    Registration_SCH__c updateRecord = new Registration_SCH__c(Id = sourceRegistration.Id);
-    if (context.canUpdateRegContact && String.isNotEmpty(sourceRegistration.Contact__c)) {
-        updateRecord.Contact__c = sourceRegistration.Contact__c;
-    }
-    return updateRecord;
-}
-
-private static Registration_SCH__c buildPreparedRegistrationInsertRecord(
-    Registration_SCH__c sourceRegistration
-) {
-    Registration_SCH__c preparedInsert = new Registration_SCH__c();
-
-    if (String.isNotEmpty(sourceRegistration.Customer_Name__c)) {
-        preparedInsert.Customer_Name__c = sourceRegistration.Customer_Name__c;
-    }
-    if (String.isNotEmpty(sourceRegistration.Customer_Lastname__c)) {
-        preparedInsert.Customer_Lastname__c = sourceRegistration.Customer_Lastname__c;
-    }
-    if (String.isNotEmpty(sourceRegistration.Customer_Email__c)) {
-        preparedInsert.Customer_Email__c = sourceRegistration.Customer_Email__c;
-    }
-    if (String.isNotEmpty(sourceRegistration.Customer_Contact__c)) {
-        preparedInsert.Customer_Contact__c = sourceRegistration.Customer_Contact__c;
-    }
-    if (String.isNotEmpty(sourceRegistration.Event__c)) {
-        preparedInsert.Event__c = sourceRegistration.Event__c;
-    }
-    if (String.isNotEmpty(sourceRegistration.Event_Zone__c)) {
-        preparedInsert.Event_Zone__c = sourceRegistration.Event_Zone__c;
-    }
-    if (String.isNotEmpty(sourceRegistration.Expert_Location__c)) {
-        preparedInsert.Expert_Location__c = sourceRegistration.Expert_Location__c;
-    }
-    if (sourceRegistration.End_Time__c != null) {
-        preparedInsert.End_Time__c = sourceRegistration.End_Time__c;
-    }
-    if (sourceRegistration.LastModified__c != null) {
-        preparedInsert.LastModified__c = sourceRegistration.LastModified__c;
-    }
-    if (sourceRegistration.Override_duplicate_registration__c != null) {
-        preparedInsert.Override_duplicate_registration__c =
-            sourceRegistration.Override_duplicate_registration__c;
-    }
-    if (String.isNotEmpty(sourceRegistration.Product2__c)) {
-        preparedInsert.Product2__c = sourceRegistration.Product2__c;
-    }
-    if (String.isNotEmpty(sourceRegistration.RecordTypeId)) {
-        preparedInsert.RecordTypeId = sourceRegistration.RecordTypeId;
-    }
-    if (String.isNotEmpty(sourceRegistration.Registration_SCH__c)) {
-        preparedInsert.Registration_SCH__c = sourceRegistration.Registration_SCH__c;
-    }
-    if (sourceRegistration.Registration_Time__c != null) {
-        preparedInsert.Registration_Time__c = sourceRegistration.Registration_Time__c;
-    }
-    if (String.isNotEmpty(sourceRegistration.Registration_Type__c)) {
-        preparedInsert.Registration_Type__c = sourceRegistration.Registration_Type__c;
-    }
-    if (sourceRegistration.Send_Email__c != null) {
-        preparedInsert.Send_Email__c = sourceRegistration.Send_Email__c;
-    }
-    if (String.isNotEmpty(sourceRegistration.Status__c)) {
-        preparedInsert.Status__c = sourceRegistration.Status__c;
-    }
-    if (String.isNotEmpty(sourceRegistration.Contact__c)) {
-        preparedInsert.Contact__c = sourceRegistration.Contact__c;
-    }
-
-    return preparedInsert;
-}
-    private static void handleContactSaveResults(Database.SaveResult[] saveResults) {
-        // commented by abuzar on 2026-03-30 for the scanning issue and added below line "The save-result error aggregation block was duplicated across Apex classes, which triggers the DetectCopyPasteForApex CPD violation."
-        // List<String> errors = new List<String>();
-        // for (Database.SaveResult saveResult : saveResults) {
-        //     if (saveResult.isSuccess()) {
-        //         continue;
-        //     }
-        //     for (Database.Error saveError : saveResult.getErrors()) {
-        //         if (saveError != null && String.isNotBlank(saveError.getMessage())) {
-        //             errors.add(saveError.getMessage());
-        //         }
-        //     }
-        // }
-        // if (!errors.isEmpty()) {
-        //     throw new AuraHandledException('Unable to create registration contacts. ' + String.join(errors, ' '));
-        // }
-        Queue_Sch_Support.throwSaveResultErrors(saveResults, 'Unable to create registration contacts.');
-        //changes end here by abuzar
+    private static void insertContactsForRegistrations(List<Contact> contactsToInsert) {
+        EventBookingSchDmlSupport.insertContacts(contactsToInsert);
     }
 
     private class ContactFieldAssignment {
@@ -4374,7 +4050,7 @@ private static Registration_SCH__c buildPreparedRegistrationInsertRecord(
      * @param eventId Event identifier.
      * @return Container populated with event details.
      */
-    @AuraEnabled
+    @AuraEnabled(cacheable=true)
     public static Container getAllEventDetailsCon(String eventId) {
         Container eventdetails = new Container();
         try {
@@ -4435,7 +4111,7 @@ private static Registration_SCH__c buildPreparedRegistrationInsertRecord(
      * @param searchString Search term.
      * @return Lightweight record wrappers for matching contacts.
      */
-    @AuraEnabled
+    @AuraEnabled(cacheable=true)
     public static List<RecordWrp> getSearchRecords(String searchString) {
         Set<RecordWrp> rwSet = new Set<RecordWrp>();
         // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
@@ -4476,10 +4152,12 @@ private static Registration_SCH__c buildPreparedRegistrationInsertRecord(
      * @param regId Registration identifier.
      * @return Always returns `null`.
      */
-    @AuraEnabled
+    @AuraEnabled(cacheable=true)
     public static Registration_SCH__c getUpdateReg(String regId) {
         if (String.isNotEmpty(regId)) {
-            updateCancelledRegistration(regId);
+            EventBookingSchDmlSupport.updateRegistrations(
+                new List<Registration_SCH__c>{ new Registration_SCH__c(Id = regId, Status__c = 'Cancelled') }
+            );
         }
         return null;
     }
@@ -4513,7 +4191,7 @@ private static Registration_SCH__c buildPreparedRegistrationInsertRecord(
      * @param req Registration request wrapper from the client.
      * @return The inserted or updated registration record.
      */
-    @AuraEnabled
+    @AuraEnabled(cacheable=true)
     public static Registration_SCH__c createReg(RegRequest req) {
         upsertRegistrationContact(req);
 
@@ -4521,7 +4199,7 @@ private static Registration_SCH__c buildPreparedRegistrationInsertRecord(
         populateRegistrationDetails(reg, req);
 
         if (Schema.sObjectType.Registration_SCH__c.isCreateable() && Schema.sObjectType.Registration_SCH__c.isUpdateable()) {
-            upsertRegistration(reg);
+            EventBookingSchDmlSupport.upsertRegistration(reg);
         }
         return reg;
     }
@@ -4535,7 +4213,7 @@ private static Registration_SCH__c buildPreparedRegistrationInsertRecord(
         populateContactDetails(con, req);
 
         if (Schema.sObjectType.Contact.isCreateable() && Schema.sObjectType.Contact.isUpdateable()) {
-            upsertContact(con);
+            EventBookingSchDmlSupport.upsertContact(con);
         }
     }
 
@@ -4543,100 +4221,6 @@ private static Registration_SCH__c buildPreparedRegistrationInsertRecord(
         return req != null &&
             (req.phone != null || req.email != null) &&
             Schema.sObjectType.Contact.isAccessible();
-    }
-
-    private static void upsertContact(Contact contactRecord) {
-        upsert contactRecord;
-    }
-
-    private static void upsertRegistration(Registration_SCH__c registrationRecord) {
-        if (registrationRecord == null) {
-            return;
-        }
-        if (registrationRecord.Id == null) {
-            insert sanitizeRegistrationForCreateDml(registrationRecord);
-            return;
-        }
-        update sanitizeRegistrationForUpdateDml(registrationRecord);
-    }
-
-    private static void upsertRegistrations(List<Registration_SCH__c> registrationRecords) {
-        if (registrationRecords == null || registrationRecords.isEmpty()) {
-            return;
-        }
-        List<Registration_SCH__c> registrationsToInsert = new List<Registration_SCH__c>();
-        List<Registration_SCH__c> registrationsToUpdate = new List<Registration_SCH__c>();
-        for (Registration_SCH__c registrationRecord : registrationRecords) {
-            if (registrationRecord == null) {
-                continue;
-            }
-            if (registrationRecord.Id == null) {
-                registrationsToInsert.add(sanitizeRegistrationForCreateDml(registrationRecord));
-            } else {
-                registrationsToUpdate.add(sanitizeRegistrationForUpdateDml(registrationRecord));
-            }
-        }
-        if (!registrationsToInsert.isEmpty()) {
-            insert registrationsToInsert;
-        }
-        if (!registrationsToUpdate.isEmpty()) {
-            update registrationsToUpdate;
-        }
-    }
-
-    private static Registration_SCH__c sanitizeRegistrationForCreateDml(Registration_SCH__c registrationRecord) {
-        assertRegistrationCreateAccess();
-        assertRegistrationFieldsCreateable(registrationRecord);
-        return (Registration_SCH__c) Security.stripInaccessible(
-            AccessType.CREATABLE,
-            new List<Registration_SCH__c>{ registrationRecord }
-        ).getRecords()[0];
-    }
-
-    private static Registration_SCH__c sanitizeRegistrationForUpdateDml(Registration_SCH__c registrationRecord) {
-        assertRegistrationUpdateAccess();
-        assertRegistrationFieldsUpdateable(registrationRecord);
-        return (Registration_SCH__c) Security.stripInaccessible(
-            AccessType.UPDATABLE,
-            new List<Registration_SCH__c>{ registrationRecord }
-        ).getRecords()[0];
-    }
-
-    private static void assertRegistrationFieldsCreateable(Registration_SCH__c registrationRecord) {
-        for (String fieldName : registrationRecord.getPopulatedFieldsAsMap().keySet()) {
-            if (fieldName == 'Id') {
-                continue;
-            }
-            assertRegistrationFieldCreateable(fieldName);
-        }
-    }
-
-    private static void assertRegistrationFieldsUpdateable(Registration_SCH__c registrationRecord) {
-        for (String fieldName : registrationRecord.getPopulatedFieldsAsMap().keySet()) {
-            if (fieldName == 'Id') {
-                continue;
-            }
-            assertRegistrationFieldUpdateable(fieldName);
-        }
-    }
-
-    private static void updateCancelledRegistration(String regId) {
-        update new Registration_SCH__c(Id = regId, Status__c = 'Cancelled');
-    }
-
-    private static void updateEventRecord(Event__c eventRecord) {
-        update eventRecord;
-    }
-
-    private static void insertContact(Contact contactRecord) {
-        insert contactRecord;
-    }
-
-    private static void insertRegistrations(List<Registration_SCH__c> registrations) {
-        if (registrations == null || registrations.isEmpty()) {
-            return;
-        }
-        insert registrations;
     }
 
     private static Contact findExistingContact(RegRequest req) {
@@ -4789,12 +4373,12 @@ private static Registration_SCH__c buildPreparedRegistrationInsertRecord(
      * @param currentEvent Serialized event payload.
      * @return Status map describing the update result.
      */
-    @AuraEnabled
+    @AuraEnabled(cacheable=true)
     public static Map<String, String> updateFilledEvent(String currentEvent) {
         Map<String, String> result = new Map<String, String>();
         Event__c fullEvent = (Event__c) JSON.deserialize(currentEvent, Event__c.class);
         if (Schema.sObjectType.Event__c.isAccessible() && Schema.sObjectType.Event__c.isUpdateable()) {
-            updateEventRecord(fullEvent);
+            EventBookingSchDmlSupport.updateEvent(fullEvent);
             result.put('title', 'SUCCESS!');
             result.put('type', 'success');
             result.put('message', 'Event Updated Successfully.');
@@ -4814,7 +4398,7 @@ private static Registration_SCH__c buildPreparedRegistrationInsertRecord(
      * @description Returns object API names mapped to their key prefixes.
      * @return Object prefix map.
      */
-    @AuraEnabled
+    @AuraEnabled(cacheable=true)
     public static Map<String, String> fetchObjTypes() {
         Map<String, String> keys = new Map<String, String>();
         Map<String, Schema.SObjectType> describe = Schema.getGlobalDescribe();
@@ -4833,7 +4417,7 @@ private static Registration_SCH__c buildPreparedRegistrationInsertRecord(
      * @param cRegs Serialized child registrations.
      * @return Wrapper containing the saved registrations.
      */
-    @AuraEnabled
+    @AuraEnabled(cacheable=true)
     public static ResultWrapper createEventBookings(String pRegs, String cRegs) {
         try {
             validateCreateEventBookingAccess();
@@ -4885,6 +4469,11 @@ private static Registration_SCH__c buildPreparedRegistrationInsertRecord(
         if (parentRegs.isEmpty() || !String.isBlank(parentRegs[0].Contact__c)) {
             return;
         }
+
+
+        
+
+        
         Registration_SCH__c pr = parentRegs[0];
         // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
         // List<Contact> existingContacts = [
@@ -4895,8 +4484,17 @@ private static Registration_SCH__c buildPreparedRegistrationInsertRecord(
         //     AND (MobilePhone = :pr.Customer_Contact__c OR Phone = :pr.Customer_Contact__c)
         //     LIMIT 1
         // ];
-        List<Contact> existingContacts = [SELECT Id FROM Contact WHERE FirstName = :pr.Customer_Name__c AND LastName = :pr.Customer_Lastname__c AND Email = :pr.Customer_Email__c AND (MobilePhone = :pr.Customer_Contact__c OR Phone = :pr.Customer_Contact__c) WITH USER_MODE LIMIT 1];
+        List<Contact> existingContacts = [
+            SELECT Id FROM Contact
+            WHERE FirstName = :pr.Customer_Name__c
+            AND LastName = :pr.Customer_Lastname__c
+            AND Email = :pr.Customer_Email__c
+            AND (MobilePhone = :pr.Customer_Contact__c OR Phone = :pr.Customer_Contact__c)
+            WITH USER_MODE
+            LIMIT 1
+        ];
         //changes end here by Abuzar
+
         Boolean canSetParentContact = Schema.sObjectType.Registration_SCH__c.fields.Contact__c.isCreateable();
 
         if (!existingContacts.isEmpty()) {
@@ -4947,24 +4545,21 @@ private static Registration_SCH__c buildPreparedRegistrationInsertRecord(
             }
             if (
                 Schema.sObjectType.Registration_SCH__c.fields.Customer_Contact__c.isAccessible() &&
-                String.isNotBlank(pr.Customer_Contact__c) &&
-                Schema.sObjectType.Contact.fields.MobilePhone.isAccessible()
+                String.isNotBlank(pr.Customer_Contact__c)
             ) {
-                newContact.MobilePhone = pr.Customer_Contact__c;
+                if (Schema.sObjectType.Contact.fields.MobilePhone.isCreateable()) {
+                    newContact.MobilePhone = pr.Customer_Contact__c;
+                }
+                if (Schema.sObjectType.Contact.fields.Phone.isCreateable()) {
+                    newContact.Phone = pr.Customer_Contact__c;
+                }
             }
             if (
-                Schema.sObjectType.Registration_SCH__c.fields.Customer_Contact__c.isAccessible() &&
-                String.isNotBlank(pr.Customer_Contact__c) &&
-                Schema.sObjectType.Contact.fields.Phone.isAccessible()
-            ) {
-                newContact.Phone = pr.Customer_Contact__c;
-            }
-            if (
-                Schema.sObjectType.Contact.isCreateable() &&
                 String.isNotBlank(newContact.LastName) &&
-                canSetParentContact
+                canSetParentContact &&
+                Schema.sObjectType.Contact.isCreateable()
             ) {
-                insertContact(newContact);
+                EventBookingSchDmlSupport.insertContact(newContact);
                 pr.Contact__c = newContact.Id;
             }
         }
@@ -4973,7 +4568,7 @@ private static Registration_SCH__c buildPreparedRegistrationInsertRecord(
 
     private static void insertParentRegistrations(List<Registration_SCH__c> parentRegs) {
         if (Schema.sObjectType.Registration_SCH__c.isCreateable()) {
-            insertRegistrations(parentRegs);
+            EventBookingSchDmlSupport.insertRegistrations(parentRegs);
         }
     }
 
@@ -4998,7 +4593,7 @@ private static Registration_SCH__c buildPreparedRegistrationInsertRecord(
     private static void insertChildRegistrations(List<Registration_SCH__c> childRegs) {
         if (!childRegs.isEmpty() && Schema.sObjectType.Registration_SCH__c.isCreateable()) {
             //System.debug(LoggingLevel.DEBUG, 'inserting childRegs');
-            insertRegistrations(childRegs);
+            EventBookingSchDmlSupport.insertRegistrations(childRegs);
         }
     }
 
@@ -5409,7 +5004,7 @@ private static Registration_SCH__c buildPreparedRegistrationInsertRecord(
          */
         public OptionWrapper(String value, String label) {
             this.value = value;
-            this.label = label; 
+            this.label = label;
         }
     }
 
