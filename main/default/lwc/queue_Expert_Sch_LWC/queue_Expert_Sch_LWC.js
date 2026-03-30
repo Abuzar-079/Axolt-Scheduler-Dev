@@ -1013,7 +1013,10 @@ export default class QueueExpertSch extends LightningElement {
                     }
                 }
 
-                if (setMap.length === 0 || !result.existLocation) {
+                // commented by abuzar on 2026-03-30 for the scanning issue and added below line "The variable 'setMap' is not defined, which triggers the no-undef eslint violation; the in-scope queueRows array carries the same queue data for this check."
+                // if (setMap.length === 0 || !result.existLocation) {
+                if (queueRows.length === 0 || !result.existLocation) {
+                //changes end here by abuzar
                     this.message = 'No Records For The Selected Location.';
                     this.maps = [];
                     this.toastMeassage = true;
