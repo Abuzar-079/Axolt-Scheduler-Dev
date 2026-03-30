@@ -2972,8 +2972,49 @@ public with sharing class EventBooking_Sch {
             Schema.sObjectType.Registration_SCH__c.isUpdateable();
 
         if (canAccess) {
-            getCreateContact(JSON.serialize(regList), reg.Contact__c);
+            getCreateContact(serializeRegistrationsForContactAssignment(regList), reg.Contact__c);
         }
+    }
+
+    private static String serializeRegistrationsForContactAssignment(
+        List<Registration_SCH__c> registrations
+    ) {
+        if (registrations == null || registrations.isEmpty()) {
+            return null;
+        }
+
+        List<Registration_SCH__c> payload = new List<Registration_SCH__c>();
+        for (Registration_SCH__c registration : registrations) {
+            if (registration == null) {
+                continue;
+            }
+
+            Registration_SCH__c payloadRegistration = new Registration_SCH__c();
+            if (registration.Id != null) {
+                payloadRegistration.Id = registration.Id;
+            }
+            if (String.isNotEmpty(registration.Customer_Name__c)) {
+                payloadRegistration.Customer_Name__c = registration.Customer_Name__c;
+            }
+            if (String.isNotEmpty(registration.Customer_Lastname__c)) {
+                payloadRegistration.Customer_Lastname__c = registration.Customer_Lastname__c;
+            }
+            if (String.isNotEmpty(registration.Customer_Email__c)) {
+                payloadRegistration.Customer_Email__c = registration.Customer_Email__c;
+            }
+            if (String.isNotEmpty(registration.Customer_Contact__c)) {
+                payloadRegistration.Customer_Contact__c = registration.Customer_Contact__c;
+            }
+            if (String.isNotEmpty(registration.Event__c)) {
+                payloadRegistration.Event__c = registration.Event__c;
+            }
+            if (String.isNotEmpty(registration.Contact__c)) {
+                payloadRegistration.Contact__c = registration.Contact__c;
+            }
+            payload.add(payloadRegistration);
+        }
+
+        return payload.isEmpty() ? null : JSON.serialize(payload);
     }
 
     // commented by abuzar on 2026-03-12 for the scanning issue and added below line the reason of issue as mentioned above "The method 'buildRegListFromPersonList(List<Registration_SCH__c>, Registration_SCH__c, Id)' has a NCSS line count of 42, a cyclomatic complexity of 20, and a cognitive complexity of 40"
@@ -3552,7 +3593,40 @@ public with sharing class EventBooking_Sch {
         }
         List<Registration_SCH__c> registrations =
             (List<Registration_SCH__c>) JSON.deserialize(regs, List<Registration_SCH__c>.class);
-        return registrations == null ? new List<Registration_SCH__c>() : registrations;
+        if (registrations == null || registrations.isEmpty()) {
+            return new List<Registration_SCH__c>();
+        }
+
+        List<Registration_SCH__c> preparedRegistrations = new List<Registration_SCH__c>();
+        for (Registration_SCH__c registration : registrations) {
+            Registration_SCH__c preparedRegistration = new Registration_SCH__c();
+            if (registration == null) {
+                continue;
+            }
+            if (registration.Id != null) {
+                preparedRegistration.Id = registration.Id;
+            }
+            if (String.isNotEmpty(registration.Customer_Name__c)) {
+                preparedRegistration.Customer_Name__c = registration.Customer_Name__c;
+            }
+            if (String.isNotEmpty(registration.Customer_Lastname__c)) {
+                preparedRegistration.Customer_Lastname__c = registration.Customer_Lastname__c;
+            }
+            if (String.isNotEmpty(registration.Customer_Email__c)) {
+                preparedRegistration.Customer_Email__c = registration.Customer_Email__c;
+            }
+            if (String.isNotEmpty(registration.Customer_Contact__c)) {
+                preparedRegistration.Customer_Contact__c = registration.Customer_Contact__c;
+            }
+            if (String.isNotEmpty(registration.Event__c)) {
+                preparedRegistration.Event__c = registration.Event__c;
+            }
+            if (String.isNotEmpty(registration.Contact__c)) {
+                preparedRegistration.Contact__c = registration.Contact__c;
+            }
+            preparedRegistrations.add(preparedRegistration);
+        }
+        return preparedRegistrations;
     }
 
     private static RegistrationBuildContext buildRegistrationContext(Registration_SCH__c firstReg, String contactId) {
