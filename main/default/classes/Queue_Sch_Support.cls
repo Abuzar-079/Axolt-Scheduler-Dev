@@ -270,12 +270,7 @@ public with sharing class Queue_Sch_Support {
             //System.debug(LoggingLevel.DEBUG, 'Exception ~> '+ e.getMessage()+'; at line ~> '+e.getStackTraceString());
             throw new AuraHandledException(e.getMessage()+'; at line ~> '+e.getStackTraceString());
         }
-    }
-
-
-
-
-    
+    }    
     @AuraEnabled
     public static Queue_Sch_Wrapper onfocusRecords(String location, String rtype){
         Queue_Sch_Wrapper wrapper = new Queue_Sch_Wrapper();
