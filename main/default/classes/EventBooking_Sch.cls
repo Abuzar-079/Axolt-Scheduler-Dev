@@ -4550,14 +4550,74 @@ private static Registration_SCH__c buildPreparedRegistrationInsertRecord(
     }
 
     private static void upsertRegistration(Registration_SCH__c registrationRecord) {
-        upsert registrationRecord;
+        if (registrationRecord == null) {
+            return;
+        }
+        if (registrationRecord.Id == null) {
+            insert sanitizeRegistrationForCreateDml(registrationRecord);
+            return;
+        }
+        update sanitizeRegistrationForUpdateDml(registrationRecord);
     }
 
     private static void upsertRegistrations(List<Registration_SCH__c> registrationRecords) {
         if (registrationRecords == null || registrationRecords.isEmpty()) {
             return;
         }
-        upsert registrationRecords;
+        List<Registration_SCH__c> registrationsToInsert = new List<Registration_SCH__c>();
+        List<Registration_SCH__c> registrationsToUpdate = new List<Registration_SCH__c>();
+        for (Registration_SCH__c registrationRecord : registrationRecords) {
+            if (registrationRecord == null) {
+                continue;
+            }
+            if (registrationRecord.Id == null) {
+                registrationsToInsert.add(sanitizeRegistrationForCreateDml(registrationRecord));
+            } else {
+                registrationsToUpdate.add(sanitizeRegistrationForUpdateDml(registrationRecord));
+            }
+        }
+        if (!registrationsToInsert.isEmpty()) {
+            insert registrationsToInsert;
+        }
+        if (!registrationsToUpdate.isEmpty()) {
+            update registrationsToUpdate;
+        }
+    }
+
+    private static Registration_SCH__c sanitizeRegistrationForCreateDml(Registration_SCH__c registrationRecord) {
+        assertRegistrationCreateAccess();
+        assertRegistrationFieldsCreateable(registrationRecord);
+        return (Registration_SCH__c) Security.stripInaccessible(
+            AccessType.CREATABLE,
+            new List<Registration_SCH__c>{ registrationRecord }
+        ).getRecords()[0];
+    }
+
+    private static Registration_SCH__c sanitizeRegistrationForUpdateDml(Registration_SCH__c registrationRecord) {
+        assertRegistrationUpdateAccess();
+        assertRegistrationFieldsUpdateable(registrationRecord);
+        return (Registration_SCH__c) Security.stripInaccessible(
+            AccessType.UPDATABLE,
+            new List<Registration_SCH__c>{ registrationRecord }
+        ).getRecords()[0];
+    }
+
+    private static void assertRegistrationFieldsCreateable(Registration_SCH__c registrationRecord) {
+        for (String fieldName : registrationRecord.getPopulatedFieldsAsMap().keySet()) {
+            if (fieldName == 'Id') {
+                continue;
+            }
+            assertRegistrationFieldCreateable(fieldName);
+        }
+    }
+
+    private static void assertRegistrationFieldsUpdateable(Registration_SCH__c registrationRecord) {
+        for (String fieldName : registrationRecord.getPopulatedFieldsAsMap().keySet()) {
+            if (fieldName == 'Id') {
+                continue;
+            }
+            assertRegistrationFieldUpdateable(fieldName);
+        }
     }
 
     private static void updateCancelledRegistration(String regId) {
