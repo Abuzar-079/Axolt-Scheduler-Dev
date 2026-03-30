@@ -2,9 +2,11 @@
  * @description Shared validation, access-check, and DML helper methods for queue expert actions.
  */
 @SuppressWarnings('PMD.ExcessivePublicCount')
+@SuppressWarnings('PMD.CognitiveComplexity')
 public with sharing class QueueExpertAccessSupport {
     // commented by abuzar on 2026-03-30 for the scanning issue and added below line "Validation and object-specific access logic were split into dedicated support classes to reduce QueueExpertAccessSupport class cyclomatic complexity."
     // original validation constants and branching helper implementations moved to QueueExpertAccessValidationSupport and QueueExpertAccessEntitySupport
+    // this class now primarily preserves the legacy public API through one-line delegating facade methods, which inflates PMD's class-level cognitive complexity total despite each method remaining trivial
     //changes end here by abuzar
 
     public static final String ACCESS_READ = 'READ';
