@@ -4408,7 +4408,11 @@ private static List<Registration_SCH__c> prepareRegistrationsForInsert(
     }
     for (Registration_SCH__c rec : source) {
         if (rec.Id == null) { // inserts must not have an Id
-            prepared.add(rec);
+            Registration_SCH__c preparedInsert =
+                buildPreparedRegistrationInsertRecord(rec);
+            if (preparedInsert.getPopulatedFieldsAsMap().size() > 0) {
+                prepared.add(preparedInsert);
+            }
         }
     }
     return prepared;
@@ -4447,6 +4451,70 @@ private static Registration_SCH__c buildRegistrationUpdateRecord(
         updateRecord.Contact__c = sourceRegistration.Contact__c;
     }
     return updateRecord;
+}
+
+private static Registration_SCH__c buildPreparedRegistrationInsertRecord(
+    Registration_SCH__c sourceRegistration
+) {
+    Registration_SCH__c preparedInsert = new Registration_SCH__c();
+
+    if (String.isNotEmpty(sourceRegistration.Customer_Name__c)) {
+        preparedInsert.Customer_Name__c = sourceRegistration.Customer_Name__c;
+    }
+    if (String.isNotEmpty(sourceRegistration.Customer_Lastname__c)) {
+        preparedInsert.Customer_Lastname__c = sourceRegistration.Customer_Lastname__c;
+    }
+    if (String.isNotEmpty(sourceRegistration.Customer_Email__c)) {
+        preparedInsert.Customer_Email__c = sourceRegistration.Customer_Email__c;
+    }
+    if (String.isNotEmpty(sourceRegistration.Customer_Contact__c)) {
+        preparedInsert.Customer_Contact__c = sourceRegistration.Customer_Contact__c;
+    }
+    if (String.isNotEmpty(sourceRegistration.Event__c)) {
+        preparedInsert.Event__c = sourceRegistration.Event__c;
+    }
+    if (String.isNotEmpty(sourceRegistration.Event_Zone__c)) {
+        preparedInsert.Event_Zone__c = sourceRegistration.Event_Zone__c;
+    }
+    if (String.isNotEmpty(sourceRegistration.Expert_Location__c)) {
+        preparedInsert.Expert_Location__c = sourceRegistration.Expert_Location__c;
+    }
+    if (sourceRegistration.End_Time__c != null) {
+        preparedInsert.End_Time__c = sourceRegistration.End_Time__c;
+    }
+    if (sourceRegistration.LastModified__c != null) {
+        preparedInsert.LastModified__c = sourceRegistration.LastModified__c;
+    }
+    if (sourceRegistration.Override_duplicate_registration__c != null) {
+        preparedInsert.Override_duplicate_registration__c =
+            sourceRegistration.Override_duplicate_registration__c;
+    }
+    if (String.isNotEmpty(sourceRegistration.Product2__c)) {
+        preparedInsert.Product2__c = sourceRegistration.Product2__c;
+    }
+    if (String.isNotEmpty(sourceRegistration.RecordTypeId)) {
+        preparedInsert.RecordTypeId = sourceRegistration.RecordTypeId;
+    }
+    if (String.isNotEmpty(sourceRegistration.Registration_SCH__c)) {
+        preparedInsert.Registration_SCH__c = sourceRegistration.Registration_SCH__c;
+    }
+    if (sourceRegistration.Registration_Time__c != null) {
+        preparedInsert.Registration_Time__c = sourceRegistration.Registration_Time__c;
+    }
+    if (String.isNotEmpty(sourceRegistration.Registration_Type__c)) {
+        preparedInsert.Registration_Type__c = sourceRegistration.Registration_Type__c;
+    }
+    if (sourceRegistration.Send_Email__c != null) {
+        preparedInsert.Send_Email__c = sourceRegistration.Send_Email__c;
+    }
+    if (String.isNotEmpty(sourceRegistration.Status__c)) {
+        preparedInsert.Status__c = sourceRegistration.Status__c;
+    }
+    if (String.isNotEmpty(sourceRegistration.Contact__c)) {
+        preparedInsert.Contact__c = sourceRegistration.Contact__c;
+    }
+
+    return preparedInsert;
 }
 
 
