@@ -3685,10 +3685,8 @@ public with sharing class EventBooking_Sch {
                 continue;
             }
             hasExistingRegistrations = true;
-            Registration_SCH__c updateRecord = new Registration_SCH__c(Id = regRecord.Id);
-            if (context.canUpdateRegContact) {
-                updateRecord.Contact__c = regRecord.Contact__c;
-            }
+            Registration_SCH__c updateRecord =
+                buildRegistrationUpdateRecord(regRecord, context);
             if (updateRecord.getPopulatedFieldsAsMap().size() > 1) {
                 registrationsToUpdate.add(updateRecord);
             }
@@ -4428,10 +4426,27 @@ private static List<Registration_SCH__c> prepareRegistrationsForUpdate(
     for (Registration_SCH__c rec : source) {
         if (rec.Id != null && !seenIds.contains(rec.Id)) {
             seenIds.add(rec.Id);
-            prepared.add(rec);
+            Registration_SCH__c preparedUpdate = new Registration_SCH__c(Id = rec.Id);
+            if (String.isNotEmpty(rec.Contact__c)) {
+                preparedUpdate.Contact__c = rec.Contact__c;
+            }
+            if (preparedUpdate.getPopulatedFieldsAsMap().size() > 1) {
+                prepared.add(preparedUpdate);
+            }
         }
     }
     return prepared;
+}
+
+private static Registration_SCH__c buildRegistrationUpdateRecord(
+    Registration_SCH__c sourceRegistration,
+    RegistrationBuildContext context
+) {
+    Registration_SCH__c updateRecord = new Registration_SCH__c(Id = sourceRegistration.Id);
+    if (context.canUpdateRegContact && String.isNotEmpty(sourceRegistration.Contact__c)) {
+        updateRecord.Contact__c = sourceRegistration.Contact__c;
+    }
+    return updateRecord;
 }
 
 
