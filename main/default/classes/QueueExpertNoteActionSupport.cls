@@ -32,10 +32,9 @@ public with sharing class QueueExpertNoteActionSupport {
      */
     public static List<Note> saveNotes(String nn, String regID) {
         QueueExpertAccessSupport.assertAuthenticatedRequest();
-        Id parentId = QueueExpertAccessSupport.validateParentRecordId(regID);
-        if (!Schema.sObjectType.Registration_SCH__c.isAccessible()) {
-            throw new AuraHandledException('Insufficient access to the parent registration.');
-        }
+        Id parentId = QueueExpertAccessSupport.validateRecordId(regID, 'Invalid parent record id.');
+        QueueExpertAccessSupport.assertSObjectType(parentId, Registration_SCH__c.SObjectType, 'Parent record must be a registration.');
+        QueueExpertAccessSupport.assertRegistrationParentAccess(parentId);
         Note requestedNote = parseNotePayload(nn);
         if (requestedNote.ParentId != null && requestedNote.ParentId != parentId) {
             throw new AuraHandledException('Mismatched note parent record.');
@@ -82,9 +81,25 @@ public with sharing class QueueExpertNoteActionSupport {
             throw new AuraHandledException('Unsupported related record type.');
         }
         Id relatedRecordId = QueueExpertAccessSupport.validateRecordId(raId, 'Invalid related record id.');
-        SObject relatedRecord = getAccessibleRelatedRecordForDelete(relatedRecordId, objName);
+        if (objName == 'Attachment') {
+            QueueExpertAccessSupport.assertSObjectType(relatedRecordId, Attachment.SObjectType, 'Related record must be an attachment.');
+            Attachment attachmentRecord = QueueExpertAttachmentActionSupport.getAccessibleAttachmentForDelete(relatedRecordId);
+            QueueExpertAccessSupport.assertRegistrationParentAccess(attachmentRecord.ParentId);
+            QueueExpertAccessSupport.assertAttachmentDeleteAccess(attachmentRecord.ParentId);
+            QueueExpertAccessSupport.saveDeleteResult(
+                Database.delete(attachmentRecord, false, AccessLevel.USER_MODE),
+                'Unable to delete the related record.'
+            );
+            return wrapper;
+        }
+
+        QueueExpertAccessSupport.assertSObjectType(relatedRecordId, Note.SObjectType, 'Related record must be a note.');
+        Note noteRecord = getAccessibleNoteById(relatedRecordId);
+        QueueExpertAccessSupport.assertSObjectType(noteRecord.ParentId, Registration_SCH__c.SObjectType, 'Parent record must be a registration.');
+        QueueExpertAccessSupport.assertRegistrationParentAccess(noteRecord.ParentId);
+        QueueExpertAccessSupport.assertNoteDeleteAccess(noteRecord.ParentId);
         QueueExpertAccessSupport.saveDeleteResult(
-            Database.delete(relatedRecord, false, AccessLevel.USER_MODE),
+            Database.delete(noteRecord, false, AccessLevel.USER_MODE),
             'Unable to delete the related record.'
         );
         return wrapper;
@@ -140,16 +155,4 @@ public with sharing class QueueExpertNoteActionSupport {
         return noteToUpdate;
     }
 
-    private static SObject getAccessibleRelatedRecordForDelete(Id relatedRecordId, String objName) {
-        if (objName == 'Attachment') {
-            return QueueExpertAttachmentActionSupport.getAccessibleAttachmentForDelete(relatedRecordId);
-        }
-        if (objName == 'Note') {
-            Note noteRecord = getAccessibleNoteById(relatedRecordId);
-            QueueExpertAccessSupport.assertSObjectType(noteRecord.ParentId, Registration_SCH__c.SObjectType, 'Parent record must be a registration.');
-            QueueExpertAccessSupport.assertNoteDeleteAccess(noteRecord.ParentId);
-            return noteRecord;
-        }
-        throw new AuraHandledException('Unsupported related record type.');
-    }
 }

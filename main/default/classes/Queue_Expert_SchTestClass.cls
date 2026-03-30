@@ -143,6 +143,28 @@ public class Queue_Expert_SchTestClass {
     }
 
     @IsTest
+    static void testSaveNotesUpdateExistingNote() {
+        System.runAs(getRunAsUser()) {
+            Registration_SCH__c reg = [SELECT Id FROM Registration_SCH__c WHERE Customer_Email__c = 'jane.smith@test.com' LIMIT 1];
+            Note existingNote = new Note(Title = 'Original Title', Body = 'Original body', ParentId = reg.Id);
+            insert existingNote;
+
+            Note updatedNote = new Note(Id = existingNote.Id, Title = 'Updated Title', Body = 'Updated body', ParentId = reg.Id);
+            String noteJson = JSON.serialize(updatedNote);
+
+            Test.startTest();
+            List<Note> result = Queue_Expert_Sch.saveNotes(noteJson, reg.Id);
+            Test.stopTest();
+
+            Note storedNote = [SELECT Id, Title, Body, ParentId FROM Note WHERE Id = :existingNote.Id LIMIT 1];
+            System.assertNotEquals(null, result, 'Result should not be null');
+            System.assertEquals('Updated Title', storedNote.Title, 'Existing note title should be updated');
+            System.assertEquals('Updated body', storedNote.Body, 'Existing note body should be updated');
+            System.assertEquals(reg.Id, storedNote.ParentId, 'Existing note parent should remain the registration');
+        }
+    }
+
+    @IsTest
     static void testDeleteATAttachment() {
         System.runAs(getRunAsUser()) {
             Registration_SCH__c reg = [SELECT Id FROM Registration_SCH__c WHERE Customer_Email__c = 'jane.smith@test.com' LIMIT 1];

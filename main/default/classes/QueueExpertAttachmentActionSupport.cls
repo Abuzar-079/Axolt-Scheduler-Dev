@@ -53,11 +53,10 @@ public with sharing class QueueExpertAttachmentActionSupport {
      */
     public static List<Attachment> uploadFile(QueueExpertUploadFileRequest request) {
         QueueExpertAccessSupport.assertAuthenticatedRequest();
-        Id parentId = QueueExpertAccessSupport.validateParentRecordId(request.parent);
+        Id parentId = QueueExpertAccessSupport.validateRecordId(request.parent, 'Invalid parent record id.');
+        QueueExpertAccessSupport.assertSObjectType(parentId, Registration_SCH__c.SObjectType, 'Parent record must be a registration.');
+        QueueExpertAccessSupport.assertRegistrationParentAccess(parentId);
         validateUploadInput(request.fileName, request.base64Data, request.contentType);
-        if (!Schema.sObjectType.Registration_SCH__c.isAccessible()) {
-            throw new AuraHandledException('Insufficient access to the parent registration.');
-        }
         QueueExpertAccessSupport.assertAttachmentCreateAccess(parentId);
         Blob attachmentBody = decodeAttachmentBody(request.base64Data);
         Attachment attachmentRecord = new Attachment();

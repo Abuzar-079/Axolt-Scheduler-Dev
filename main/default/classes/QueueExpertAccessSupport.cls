@@ -125,6 +125,15 @@ public with sharing class QueueExpertAccessSupport {
     }
 
     /**
+     * @description Validates a parent record identifier and confirms the registration is accessible.
+     * @param parent Raw parent record Id value from the client.
+     * @return Parsed and accessible parent record Id.
+     */
+    public static Id validateAccessibleParentRecordId(String parent) {
+        return QueueExpertAccessValidationSupport.validateAccessibleParentRecordId(parent);
+    }
+
+    /**
      * @description Verifies object-level CRUD access for the supplied sObject type.
      * @param sObjectType Target sObject type to validate.
      * @param accessType Access type to enforce.
