@@ -2,17 +2,75 @@
  * @description Provides queue expert scheduling operations for appointment management.
  */
 public with sharing class Queue_Expert_Sch {
-    // commented by abuzar on 2026-03-30 for the scanning issue and added below line "Shared constants and helper request models were extracted into dedicated support classes to reduce Queue_Expert_Sch class cyclomatic complexity, cognitive complexity, and NCSS."
-    // private static final Set<String> SUPPORTED_RELATED_RECORD_OBJECTS = new Set<String>{ ... };
-    // private static final Integer MAX_ATTACHMENT_SIZE_BYTES = 4500000;
-    // private static final Set<String> ALLOWED_ATTACHMENT_EXTENSIONS = new Set<String>{ ... };
-    // private static final Set<String> ALLOWED_ATTACHMENT_CONTENT_TYPES = new Set<String>{ ... };
-    // private static final Map<Integer, String> UPDATE_RECORD_FIELDS_BY_INDEX = new Map<Integer, String>{ ... };
-    // private static final Set<String> UPDATE_RECORD_MUTABLE_FIELDS = new Set<String>{ ... };
-    // private enum FieldAccessType { READ, CREATE, EDIT }
-    // private class FieldAccessRequest { ... }
-    // private static FieldAccessRequest buildFieldAccessRequest(...) { ... }
-    //changes end here by abuzar
+    private static final Set<String> SUPPORTED_RELATED_RECORD_OBJECTS = new Set<String>{
+        'Attachment',
+        'Note'
+    };
+    private static final Integer MAX_ATTACHMENT_SIZE_BYTES = 4500000;
+    private static final Set<String> ALLOWED_ATTACHMENT_EXTENSIONS = new Set<String>{
+        'csv',
+        'doc',
+        'docx',
+        'gif',
+        'jpeg',
+        'jpg',
+        'pdf',
+        'png',
+        'txt',
+        'xls',
+        'xlsx'
+    };
+    private static final Set<String> ALLOWED_ATTACHMENT_CONTENT_TYPES = new Set<String>{
+        'application/msword',
+        'application/pdf',
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'image/gif',
+        'image/jpeg',
+        'image/png',
+        'text/csv',
+        'text/plain'
+    };
+    private static final Map<Integer, String> UPDATE_RECORD_FIELDS_BY_INDEX = new Map<Integer, String>{
+        0 => 'Customer_Status__c',
+        1 => 'Customer_Type__c',
+        2 => 'Registration_Type__c',
+        3 => 'Meeting_Status__c',
+        4 => 'Meeting_outcome__c',
+        5 => 'Purpose__c',
+        6 => 'Customer_Name__c',
+        7 => 'Customer_Lastname__c',
+        8 => 'Customer_Email__c',
+        9 => 'Customer_Contact__c',
+        15 => 'Contact__c'
+    };
+    private static final Set<String> UPDATE_RECORD_MUTABLE_FIELDS = new Set<String>{
+        'Booked_Current_Status__c',
+        'Cancellation_Reason__c',
+        'Contact__c',
+        'Customer_Contact__c',
+        'Customer_Email__c',
+        'Customer_Lastname__c',
+        'Customer_Name__c',
+        'Customer_Status__c',
+        'Customer_Type__c',
+        'End_Time__c',
+        'Meeting_Status__c',
+        'Meeting_outcome__c',
+        'Purpose__c',
+        'Registration_Time__c',
+        'Registration_Type__c',
+        'Serve_Finished_Time__c',
+        'Serve_Start_Time__c',
+        'Status__c',
+        'waiting_Time__c'
+    };
+    private enum FieldAccessType {
+        READ,
+        CREATE,
+        EDIT
+    }
     private static final String TODAYS_APPOINTMENTS = 'Todays Appointments';
     private static final String CHECK_IN_APPOINTMENTS = 'Check In Appointments';
     private static final String FUTURE_APPOINTMENTS = 'Future Appointments';
@@ -66,10 +124,26 @@ public with sharing class Queue_Expert_Sch {
     @AuraEnabled(cacheable=false)
     @SuppressWarnings('PMD.ExcessiveParameterList')
     public static Wrapper updateRecordValues(String regId, String recValues, String userID, String recordType, String queueId, String accountId, String event, String location, DateTime sDate, DateTime eDate) {
-        // commented by abuzar on 2026-03-30 for the scanning issue and added below line "Moved record-update action logic into a dedicated support class to reduce Queue_Expert_Sch class-level complexity and NCSS."
-        // existing method body moved to QueueExpertRecordActionSupport.updateRecordValues(...)
-        return QueueExpertRecordActionSupport.updateRecordValues(regId, recValues, userID, recordType, queueId, accountId, event, location, sDate, eDate);
-        //changes end here by abuzar
+        Wrapper wrapper = new Wrapper();
+        assertAuthenticatedRequest();
+        Id registrationId = validateRegistrationId(regId);
+        List<String> recordValues = deserializeSubmittedValues(recValues, 'Invalid record update payload.');
+
+        assertRegistrationAccess(registrationId, true);
+        checkFieldAccess(
+            Registration_SCH__c.SObjectType,
+            UPDATE_RECORD_MUTABLE_FIELDS,
+            FieldAccessType.EDIT,
+            'Insufficient field access to update the registration.'
+        );
+
+        Registration_SCH__c registrationToUpdate = new Registration_SCH__c(Id = registrationId);
+        applyApprovedUpdateRecordValues(registrationToUpdate, recordValues);
+        saveUpdateResult(
+            Database.update(registrationToUpdate, false, AccessLevel.USER_MODE),
+            'Unable to update the registration.'
+        );
+        return wrapper;
     }
 
     /**
@@ -164,10 +238,55 @@ public with sharing class Queue_Expert_Sch {
      */
     @AuraEnabled(cacheable=false)
     public static Wrapper popUpRecordsOfId(string id, String location,String waitingTime){
-        // commented by abuzar on 2026-03-30 for the scanning issue and added below line "Moved popup record action logic into a dedicated support class to reduce Queue_Expert_Sch class-level complexity and NCSS."
-        // existing method body moved to QueueExpertRecordActionSupport.popUpRecordsOfId(...)
-        return QueueExpertRecordActionSupport.popUpRecordsOfId(id, location, waitingTime);
+        Wrapper wrapper=new Wrapper();
+        assertAuthenticatedRequest();
+        Id registrationId = validateRegistrationId(id);
+        assertRegistrationAccess(registrationId, true);
+        checkFieldAccess(
+            Registration_SCH__c.SObjectType,
+            new Set<String>{ 'Booked_Current_Status__c', 'waiting_Time__c', 'Serve_Start_Time__c' },
+            FieldAccessType.EDIT,
+            'Insufficient field access to update the registration.'
+        );
+
+        Registration_SCH__c registrationToUpdate = new Registration_SCH__c(Id = registrationId);
+        registrationToUpdate.Booked_Current_Status__c = 'InProgress';
+        registrationToUpdate.waiting_Time__c = normalizeForField(waitingTime);
+        registrationToUpdate.Serve_Start_Time__c = System.now();
+        saveUpdateResult(
+            Database.update(registrationToUpdate, false, AccessLevel.USER_MODE),
+            'Unable to mark the registration as in progress.'
+        );
+
+        checkFieldAccess(
+            Registration_SCH__c.SObjectType,
+            new Set<String>{ 'Booked_Current_Status__c' },
+            FieldAccessType.READ,
+            'Insufficient field access to view the registration.'
+        );
+        Registration_SCH__c refreshedRecord = [
+            SELECT Booked_Current_Status__c
+            FROM Registration_SCH__c
+            WHERE Id = :registrationId
+            WITH USER_MODE
+            LIMIT 1
+        ];
+        if(refreshedRecord.Booked_Current_Status__c == 'InProgress'){wrapper.updateStatusForCancel=True;}
+        // commented by abuzar on 2026-03-14 for the scanning issue and added below line "duplicate registration detail loading caused DetectCopyPasteForApex and is now centralized in a shared helper method"
+        // wrapper.objectValues=[SELECT id, User__c, Name, OwnerId, RecordTypeId, Account__c,Account__r.Flagged__c,Account__r.Name, Expert_Location__c,
+        //                       Company__c, Customer_Status__c, Is_Amount_Refunded__c,Twilio_Message__c, Queue__c,Queue__r.Name,
+        //                       Customer_Type__c, Status__c, Registration_Type__c, Registration_Time__c,Registration_End_Time__c,Wait_Time_Exceeded__c,Product2__r.SCH_Wait_Threshold__c,
+        //                       End_Time__c,  Meeting_Status__c, Meeting_outcome__c,  Purpose__c,Customer_Name__c, Customer_Lastname__c, Customer_Email__c,
+        //                       Customer_Contact__c,Contact__c, waiting_Time__c, Registration_Price__c, Total_Tax_Amount__c, Discount__c,Booked_Current_Status__c,LastModifiedDate
+        //                       FROM Registration_SCH__c WHERE id=:id  LIMIT 1000];
+        QueueExpertSchSupport.loadWrapperDetailsForRegistration(wrapper, id);
+        // commented by abuzar on 2026-03-14 for the scanning issue and added below line "Duplicate code detected for language 'apex'. Found 2 code locations containing the same block of code consisting of 120 tokens across 4 lines."
+        // wrapper.notes = [Select Id, Title, ParentId From Note Where ParentId=:wrapper.objectValues[0].Id Order By CreatedDate Asc LIMIT 1000];
+        // wrapper.attachments = [Select Id, Name, ParentId, ContentType From Attachment Where ParentId  =:wrapper.objectValues[0].Id Order By CreatedDate Asc LIMIT 1000];
+        // wrapper.userName=[SELECT Name FROM User WHERE Id=:wrapper.objectValues[0].OwnerId LIMIT 1000];
+        // wrapper.recordTypeName = [Select Id, Name From RecordType where id=:wrapper.objectValues[0].RecordTypeId LIMIT 1000];
         //changes end here by abuzar
+        return wrapper;
     }
 
     /**
@@ -177,10 +296,34 @@ public with sharing class Queue_Expert_Sch {
      */
     @AuraEnabled
     public static Wrapper getRegDetails(string id){
-        // commented by abuzar on 2026-03-30 for the scanning issue and added below line "Moved registration-detail loading logic into a dedicated support class to reduce Queue_Expert_Sch class-level complexity and NCSS."
-        // existing method body moved to QueueExpertRecordActionSupport.getRegDetails(...)
-        return QueueExpertRecordActionSupport.getRegDetails(id);
+        Wrapper wrapper=new Wrapper();
+        Id registrationId = validateRegistrationId(id);
+        assertRegistrationAccess(registrationId, false);
+        // commented by abuzar on 2026-03-14 for the scanning issue and added below line "duplicate registration detail loading caused DetectCopyPasteForApex and is now centralized in a shared helper method"
+        // wrapper.objectValues=[SELECT id, User__c, Name, OwnerId, RecordTypeId,Wait_Time_Exceeded__c,Contact__c, Account__c,Account__r.Flagged__c,Account__r.Name, Expert_Location__c,
+        //                       Company__c, Customer_Status__c,    Is_Amount_Refunded__c,
+        //                       Twilio_Message__c, Queue__c,Queue__r.Name,
+        //                       Customer_Type__c, Status__c, Registration_Type__c,    Registration_Time__c,
+        //                       Registration_End_Time__c,Product2__r.SCH_Wait_Threshold__c,
+        //                       End_Time__c,  Meeting_Status__c, Meeting_outcome__c,  Purpose__c,
+        //                       Customer_Name__c, Customer_Lastname__c, Customer_Email__c,
+        //                       Customer_Contact__c,waiting_Time__c, Registration_Price__c,
+        //                       Total_Tax_Amount__c, Discount__c,Booked_Current_Status__c,
+        //                       LastModifiedDate
+        //                       FROM Registration_SCH__c WHERE id=:id  LIMIT 1000];
+        QueueExpertSchSupport.loadWrapperDetailsForRegistration(wrapper, id);
+        //System.debug(LoggingLevel.DEBUG, 'objectValues query result: ' + JSON.serialize(wrapper.objectValues));
+        // commented by abuzar on 2026-03-14 for the scanning issue and added below line "duplicate related record loading caused DetectCopyPasteForApex and is now centralized in a shared helper method"
+        // wrapper.notes = [Select Id, Title, ParentId From Note Where ParentId=:wrapper.objectValues[0].Id Order By CreatedDate Asc LIMIT 1000];
+        //System.debug(LoggingLevel.DEBUG, 'notes query result: ' + JSON.serialize(wrapper.notes));
+        // wrapper.attachments = [Select Id, Name, ParentId, ContentType From Attachment Where ParentId  =:wrapper.objectValues[0].Id Order By CreatedDate Asc LIMIT 1000];
+        //System.debug(LoggingLevel.DEBUG, 'attachments query result: ' + JSON.serialize(wrapper.attachments));
+        // wrapper.userName=[SELECT Name FROM User WHERE Id=:wrapper.objectValues[0].OwnerId LIMIT 1000];
+        //System.debug(LoggingLevel.DEBUG, 'userName query result: ' + JSON.serialize(wrapper.userName));
+        // wrapper.recordTypeName = [Select Id, Name From RecordType where id=:wrapper.objectValues[0].RecordTypeId LIMIT 1000];
         //changes end here by abuzar
+        //System.debug(LoggingLevel.DEBUG, 'recordTypeName query result: ' + JSON.serialize(wrapper.recordTypeName));
+        return wrapper;
     }
 
     /**
@@ -194,10 +337,53 @@ public with sharing class Queue_Expert_Sch {
     @AuraEnabled(cacheable=false)
     @SuppressWarnings('PMD.ExcessiveParameterList')
     public static Wrapper setStatus(String passedId, String location,String status,String purpose){
-        // commented by abuzar on 2026-03-30 for the scanning issue and added below line "Moved status-update action logic into a dedicated support class to reduce Queue_Expert_Sch class-level complexity and NCSS."
-        // existing method body moved to QueueExpertRecordActionSupport.setStatus(...)
-        return QueueExpertRecordActionSupport.setStatus(passedId, location, status, purpose);
+        Wrapper wrapper = new Wrapper();
+        assertAuthenticatedRequest();
+        Id registrationId = validateRegistrationId(passedId);
+        validateNotBlank(status, 'Status is required.');
+        assertRegistrationAccess(registrationId, true);
+        checkFieldAccess(
+            Registration_SCH__c.SObjectType,
+            new Set<String>{ 'Status__c', 'Booked_Current_Status__c', 'Cancellation_Reason__c', 'Serve_Finished_Time__c' },
+            FieldAccessType.EDIT,
+            'Insufficient field access to update the registration.'
+        );
+
+        Registration_SCH__c registrationToUpdate = new Registration_SCH__c(Id = registrationId);
+        registrationToUpdate.Status__c = status.trim();
+        registrationToUpdate.Booked_Current_Status__c='Completed';
+        registrationToUpdate.Cancellation_Reason__c= normalizeForField(purpose);
+        registrationToUpdate.Serve_Finished_Time__c=System.now();
+        saveUpdateResult(
+            Database.update(registrationToUpdate, false, AccessLevel.USER_MODE),
+            'Unable to update the registration status.'
+        );
+        checkFieldAccess(
+            Registration_SCH__c.SObjectType,
+            new Set<String>{ 'Status__c' },
+            FieldAccessType.READ,
+            'Insufficient field access to view the registration.'
+        );
+        Registration_SCH__c refreshedRecord = [
+            SELECT Status__c
+            FROM Registration_SCH__c
+            WHERE Id = :registrationId
+            WITH USER_MODE
+            LIMIT 1
+        ];
+        if( refreshedRecord.Status__c == status.trim()){wrapper.updateStatusForCancel=True;}
+        // REMOVED: getRecordsOfLocations call - method no longer available
+        List<Registration_SCH__c> records=new List<Registration_SCH__c>();
+
+        integer rsize=records.Size();
+        for(integer i=0;i<=rsize-1;i++) {if(records[i].Booked_Current_Status__c=='InProgress'){ wrapper.objectValues.add(records[i]); wrapper.inProgress=true;}}
+        // commented by abuzar on 2026-03-14 for the scanning issue and added below line "Duplicate code detected for language 'apex'. Found 2 code locations containing the same block of code consisting of 120 tokens across 4 lines."
+        // if(wrapper.objectValues.size()>0){  wrapper.notes = [Select Id, Title, ParentId From Note Where ParentId=:wrapper.objectValues[0].Id Order By CreatedDate Asc LIMIT 1000];  wrapper.attachments = [Select Id, Name, ParentId, ContentType From Attachment Where ParentId  =:wrapper.objectValues[0].Id Order By CreatedDate Asc LIMIT 1000];  wrapper.userName=[SELECT Name FROM User WHERE Id=:wrapper.objectValues[0].OwnerId LIMIT 1000];  wrapper.recordTypeName = [Select Id, Name From RecordType where id=:wrapper.objectValues[0].RecordTypeId LIMIT 1000];
+        //                                  }
+        QueueExpertSchSupport.loadPrimaryRecordRelatedData(wrapper);
         //changes end here by abuzar
+        for(integer index=0;index<rsize;index++) { wrapper.mapOfRecords.put(String.valueof(index), records[index]); }
+        return wrapper;
     }
 
     // REMOVED: getRescheduleDetail method - queries Resource__c, Work_Planner__c, Resource_Requirement__c, Time_Off__c and calls removed methods generateSlots/getResource/getFilterValues
@@ -218,48 +404,670 @@ public with sharing class Queue_Expert_Sch {
     @AuraEnabled(cacheable=false)
     @SuppressWarnings('PMD.ExcessiveParameterList')
     public static Wrapper getRegRecordUpdate(String regId, String recValues,String userID, String recordType,String queueId, String accountId, String event, String location,DateTime sDate, DateTime eDate) {
-        // commented by abuzar on 2026-03-30 for the scanning issue and added below line "Moved registration-refresh update logic into a dedicated support class to reduce Queue_Expert_Sch class-level complexity and NCSS."
-        // existing method body moved to QueueExpertRecordActionSupport.getRegRecordUpdate(...)
-        return QueueExpertRecordActionSupport.getRegRecordUpdate(regId, recValues, userID, recordType, queueId, accountId, event, location, sDate, eDate);
-        //changes end here by abuzar
+        Wrapper wrapper=new Wrapper();
+        assertAuthenticatedRequest();
+        Id registrationId = validateRegistrationId(regId);
+        List<String> recordValues = deserializeSubmittedValues(recValues, 'Invalid record update payload.');
+        assertRegistrationAccess(registrationId, true);
+        checkFieldAccess(
+            Registration_SCH__c.SObjectType,
+            UPDATE_RECORD_MUTABLE_FIELDS,
+            FieldAccessType.EDIT,
+            'Insufficient field access to update the registration.'
+        );
+
+        Registration_SCH__c registrationToUpdate = new Registration_SCH__c(Id = registrationId);
+        registrationToUpdate.Status__c = 'Completed';
+        registrationToUpdate.Customer_Status__c = 'Attended';
+        registrationToUpdate.Registration_Time__c = sDate;
+        registrationToUpdate.End_Time__c = eDate;
+        applyApprovedUpdateRecordValues(registrationToUpdate, recordValues);
+        registrationToUpdate.Booked_Current_Status__c = 'Completed';
+        registrationToUpdate.Serve_Finished_Time__c = System.now();
+        saveUpdateResult(
+            Database.update(registrationToUpdate, false, AccessLevel.USER_MODE),
+            'Unable to update the registration.'
+        );
+
+        checkFieldAccess(
+            Registration_SCH__c.SObjectType,
+            new Set<String>{ 'Status__c' },
+            FieldAccessType.READ,
+            'Insufficient field access to view the registration.'
+        );
+        Registration_SCH__c refreshedRecord = [
+            SELECT Status__c
+            FROM Registration_SCH__c
+            WHERE Id = :registrationId
+            WITH USER_MODE
+            LIMIT 1
+        ];
+        if( refreshedRecord.Status__c == 'Completed') { wrapper.updateStatus=True; }
+        QueueExpertSchSupport.loadWrapperDetailsForRegistration(wrapper, regId);
+        wrapper.errmsg=null;
+        return wrapper;
 
     }
 
  // REMOVED: generateSlots method - uses Time_Off__c for slot generation // REMOVED: getNextSlots method - queries Resource__c, Time_Off__c and calls generateSlots // REMOVED: fetchPreSlot method - queries Resource__c, Time_Off__c and calls generateSlots // REMOVED: confirmSlot method - queries and updates Resource__c related fields // REMOVED: slotOnDateChange method - queries Resource__c, Time_Off__c and calls generateSlots // REMOVED: getSlot method - queries Work_Planner__c, Resource__c, Resource_Requirement__c, Time_Off__c and calls generateSlots
 
-    // commented by abuzar on 2026-03-30 for the scanning issue and added below line "Shared validation, access, upload, note, and delete helpers were extracted into dedicated support classes to reduce Queue_Expert_Sch class cyclomatic complexity, cognitive complexity, and NCSS."
-    // original helper method implementations moved to QueueExpertAccessSupport and QueueExpertRelatedRecordActionSupport
+    private static void assertAuthenticatedRequest() {
+        if (String.isBlank(UserInfo.getUserId())) {
+            throw new AuraHandledException('Authentication is required for this action.');
+        }
+    }
+
+    private static void validateNotBlank(String value, String errorMessage) {
+        if (String.isBlank(value)) {
+            throw new AuraHandledException(errorMessage);
+        }
+    }
+
+    private static Id validateRecordId(String recordIdValue, String errorMessage) {
+        validateNotBlank(recordIdValue, errorMessage);
+        try {
+            return (Id)recordIdValue.trim();
+        } catch (TypeException ex) {
+            throw new AuraHandledException(errorMessage);
+        }
+    }
+
+    private static void assertSObjectType(Id recordId, Schema.SObjectType expectedType, String errorMessage) {
+        if (recordId.getSObjectType() != expectedType) {
+            throw new AuraHandledException(errorMessage);
+        }
+    }
+
+    private static Id validateRegistrationId(String registrationIdValue) {
+        Id registrationId = validateRecordId(registrationIdValue, 'Invalid registration record id.');
+        assertSObjectType(registrationId, Registration_SCH__c.SObjectType, 'The target record must be a registration.');
+        return registrationId;
+    }
+
+    private static Id validateParentRecordId(String parent) {
+        Id parentId = validateRecordId(parent, 'Invalid parent record id.');
+        assertSObjectType(parentId, Registration_SCH__c.SObjectType, 'Parent record must be a registration.');
+        return parentId;
+    }
+
+    private static void checkObjectAccess(Schema.SObjectType sObjectType, FieldAccessType accessType, String errorMessage) {
+        // commented by abuzar on 2026-03-30 for the scanning issue and added below line "DescribeSObjectResult could be loaded eagerly with all child relationships, which triggers the EagerlyLoadedDescribeSObjectResult PMD violation."
+        // Schema.DescribeSObjectResult describeResult = sObjectType.getDescribe();
+        Schema.DescribeSObjectResult describeResult = sObjectType.getDescribe(SObjectDescribeOptions.DEFERRED);
+        //changes end here by abuzar
+        Boolean hasAccess = accessType == FieldAccessType.READ
+            ? describeResult.isAccessible()
+            : accessType == FieldAccessType.CREATE
+                ? describeResult.isCreateable()
+                : describeResult.isUpdateable();
+        if (!hasAccess) {
+            throw new AuraHandledException(errorMessage);
+        }
+    }
+
+    private static void checkDeleteAccess(Schema.SObjectType sObjectType, String errorMessage) {
+        // commented by abuzar on 2026-03-30 for the scanning issue and added below line "DescribeSObjectResult could be loaded eagerly with all child relationships, which triggers the EagerlyLoadedDescribeSObjectResult PMD violation."
+        // if (!sObjectType.getDescribe().isDeletable()) {
+        if (!sObjectType.getDescribe(SObjectDescribeOptions.DEFERRED).isDeletable()) {
+            throw new AuraHandledException(errorMessage);
+        }
+        //changes end here by abuzar
+    }
+
+    private static void checkFieldAccess(
+        Schema.SObjectType sObjectType,
+        Set<String> fieldApiNames,
+        FieldAccessType accessType,
+        String errorMessage
+    ) {
+        // commented by abuzar on 2026-03-30 for the scanning issue and added below line "DescribeSObjectResult could be loaded eagerly with all child relationships, which triggers the EagerlyLoadedDescribeSObjectResult PMD violation."
+        // Map<String, Schema.SObjectField> fieldMap = sObjectType.getDescribe().fields.getMap();
+        Map<String, Schema.SObjectField> fieldMap = sObjectType.getDescribe(SObjectDescribeOptions.DEFERRED).fields.getMap();
+        //changes end here by abuzar
+        for (String fieldApiName : fieldApiNames) {
+            if (!fieldMap.containsKey(fieldApiName)) {
+                throw new AuraHandledException('Unsupported field requested: ' + fieldApiName);
+            }
+            Schema.DescribeFieldResult fieldDescribe = fieldMap.get(fieldApiName).getDescribe();
+            Boolean hasAccess = accessType == FieldAccessType.READ
+                ? fieldDescribe.isAccessible()
+                : accessType == FieldAccessType.CREATE
+                    ? fieldDescribe.isCreateable()
+                    : fieldDescribe.isUpdateable();
+            if (!hasAccess) {
+                throw new AuraHandledException(errorMessage);
+            }
+        }
+    }
+
+    private static List<String> deserializeSubmittedValues(String payload, String errorMessage) {
+        validateNotBlank(payload, errorMessage);
+        try {
+            List<String> submittedValues = (List<String>)JSON.deserialize(payload, List<String>.class);
+            return submittedValues == null ? new List<String>() : submittedValues;
+        } catch (JSONException ex) {
+            throw new AuraHandledException(errorMessage);
+        }
+    }
+
+    private static String normalizeForField(String value) {
+        return String.isBlank(value) ? null : value.trim();
+    }
+
+    private static void applyApprovedUpdateRecordValues(Registration_SCH__c registrationToUpdate, List<String> recordValues) {
+        for (Integer indexValue : UPDATE_RECORD_FIELDS_BY_INDEX.keySet()) {
+            if (recordValues.size() <= indexValue) {
+                continue;
+            }
+            registrationToUpdate.put(
+                UPDATE_RECORD_FIELDS_BY_INDEX.get(indexValue),
+                normalizeForField(recordValues[indexValue])
+            );
+        }
+        if (recordValues.size() >= 15) {
+            registrationToUpdate.Status__c = 'Completed';
+        }
+    }
+
+    private static void saveInsertResult(Database.SaveResult saveResult, String errorMessage) {
+        if (saveResult == null || !saveResult.isSuccess()) {
+            throw buildDmlException(errorMessage, saveResult == null ? null : saveResult.getErrors());
+        }
+    }
+
+    private static void saveUpdateResult(Database.SaveResult saveResult, String errorMessage) {
+        if (saveResult == null || !saveResult.isSuccess()) {
+            throw buildDmlException(errorMessage, saveResult == null ? null : saveResult.getErrors());
+        }
+    }
+
+    private static void saveDeleteResult(Database.DeleteResult deleteResult, String errorMessage) {
+        if (deleteResult == null || !deleteResult.isSuccess()) {
+            throw buildDmlException(errorMessage, deleteResult == null ? null : deleteResult.getErrors());
+        }
+    }
+
+    private static AuraHandledException buildDmlException(String errorMessage, Database.Error[] errors) {
+        String finalMessage = errorMessage;
+        if (errors != null && !errors.isEmpty() && !String.isBlank(errors[0].getMessage())) {
+            finalMessage += ' ' + errors[0].getMessage();
+        }
+        return new AuraHandledException(finalMessage);
+    }
+
+    private static String getParentObjectApiName(Id parentId) {
+        // commented by abuzar on 2026-03-30 for the scanning issue and added below line "DescribeSObjectResult could be loaded eagerly with all child relationships, which triggers the EagerlyLoadedDescribeSObjectResult PMD violation."
+        // return parentId.getSObjectType().getDescribe().getName();
+        return parentId.getSObjectType().getDescribe(SObjectDescribeOptions.DEFERRED).getName();
+        //changes end here by abuzar
+    }
+/**
+ * @description Verifies that the current user has read access to the specified parent record.
+ *              Performs both object-level permission checks and a USER_MODE query to confirm
+ *              the record exists and is accessible to the running user.
+ *
+ * @param parentId The Salesforce record Id of the parent object to validate access for.
+ *
+ * @throws AuraHandledException If the parent record is not found or is inaccessible to the current user.
+ *
+ * @example
+ * Id accountId = '001XXXXXXXXXXXXXXX';
+ * assertParentRecordAccessible(accountId);
+ */
     public static void assertParentRecordAccessible(Id parentId) {
-        QueueExpertRelatedRecordActionSupport.assertParentRecordAccessible(parentId);
+        checkObjectAccess(parentId.getSObjectType(), FieldAccessType.READ, 'Insufficient access to the parent record.');
+        Map<String, Object> bindVars = new Map<String, Object>{
+            'parentId' => parentId
+        };
+        List<SObject> parentRecords = Database.queryWithBinds(
+            'SELECT Id FROM ' + getParentObjectApiName(parentId) + ' WHERE Id = :parentId LIMIT 1',
+            bindVars,
+            AccessLevel.USER_MODE
+        );
+        if (parentRecords.isEmpty()) {
+            throw new AuraHandledException('Parent record is not accessible.');
+        }
     }
 
+    private static void assertRegistrationParentAccess(Id parentId) {
+        assertSObjectType(parentId, Registration_SCH__c.SObjectType, 'Parent record must be a registration.');
+        if (!Schema.sObjectType.Registration_SCH__c.isAccessible()) {
+            throw new AuraHandledException('Insufficient access to the parent registration.');
+        }
+        List<Registration_SCH__c> parentRegistrations = [
+            SELECT Id
+            FROM Registration_SCH__c
+            WHERE Id = :parentId
+            WITH USER_MODE
+            LIMIT 1
+        ];
+        if (parentRegistrations.isEmpty()) {
+            throw new AuraHandledException('Parent registration is not accessible.');
+        }
+    }
+
+    private static void assertRegistrationAccess(Id registrationId, Boolean requireUpdateAccess) {
+        checkObjectAccess(
+            Registration_SCH__c.SObjectType,
+            requireUpdateAccess ? FieldAccessType.EDIT : FieldAccessType.READ,
+            requireUpdateAccess ? 'Insufficient access to update registrations.' : 'Insufficient access to view registrations.'
+        );
+        List<Registration_SCH__c> registrations = [
+            SELECT Id
+            FROM Registration_SCH__c
+            WHERE Id = :registrationId
+            WITH USER_MODE
+            LIMIT 1
+        ];
+        if (registrations.isEmpty()) {
+            throw new AuraHandledException('Registration record is not accessible.');
+        }
+    }
+
+    private static void assertAttachmentCreateAccess(Id parentId) {
+        assertRegistrationParentAccess(parentId);
+        if (!Schema.sObjectType.Attachment.isCreateable()) {
+            throw new AuraHandledException('Insufficient access to upload attachments.');
+        }
+        if (!Schema.sObjectType.Attachment.fields.ParentId.isCreateable() ||
+            !Schema.sObjectType.Attachment.fields.Body.isCreateable() ||
+            !Schema.sObjectType.Attachment.fields.Name.isCreateable() ||
+            !Schema.sObjectType.Attachment.fields.ContentType.isCreateable()) {
+            throw new AuraHandledException('Insufficient field access to upload attachments.');
+        }
+    }
+
+    private static void assertAttachmentDeleteAccess(Id parentId) {
+        assertRegistrationParentAccess(parentId);
+        checkDeleteAccess(Attachment.SObjectType, 'Insufficient access to delete attachments.');
+        checkFieldAccess(
+            Attachment.SObjectType,
+            new Set<String>{ 'ParentId' },
+            FieldAccessType.READ,
+            'Insufficient access to delete attachments.'
+        );
+    }
+
+    private static void assertAttachmentReadAccess(Id parentId) {
+        assertRegistrationParentAccess(parentId);
+        checkObjectAccess(Attachment.SObjectType, FieldAccessType.READ, 'Insufficient access to view attachments.');
+        checkFieldAccess(
+            Attachment.SObjectType,
+            new Set<String>{ 'Id', 'Name', 'ParentId', 'ContentType' },
+            FieldAccessType.READ,
+            'Insufficient access to view attachments.'
+        );
+    }
+
+    private static void assertNoteCreateAccess(Id parentId) {
+        assertRegistrationParentAccess(parentId);
+        checkObjectAccess(Note.SObjectType, FieldAccessType.CREATE, 'Insufficient access to create notes.');
+        checkFieldAccess(
+            Note.SObjectType,
+            new Set<String>{ 'ParentId', 'Title', 'Body' },
+            FieldAccessType.CREATE,
+            'Insufficient field access to create notes.'
+        );
+    }
+
+    private static void assertNoteUpdateAccess(Id parentId) {
+        assertRegistrationParentAccess(parentId);
+        checkObjectAccess(Note.SObjectType, FieldAccessType.EDIT, 'Insufficient access to update notes.');
+        checkFieldAccess(
+            Note.SObjectType,
+            new Set<String>{ 'ParentId', 'Title', 'Body' },
+            FieldAccessType.EDIT,
+            'Insufficient field access to update notes.'
+        );
+    }
+
+    private static void assertNoteReadAccess(Id parentId) {
+        assertRegistrationParentAccess(parentId);
+        checkObjectAccess(Note.SObjectType, FieldAccessType.READ, 'Insufficient access to view notes.');
+        checkFieldAccess(
+            Note.SObjectType,
+            new Set<String>{ 'Id', 'ParentId', 'Title' },
+            FieldAccessType.READ,
+            'Insufficient access to view notes.'
+        );
+    }
+
+    private static void assertNoteDeleteAccess(Id parentId) {
+        assertRegistrationParentAccess(parentId);
+        checkDeleteAccess(Note.SObjectType, 'Insufficient access to delete notes.');
+        checkFieldAccess(
+            Note.SObjectType,
+            new Set<String>{ 'ParentId' },
+            FieldAccessType.READ,
+            'Insufficient access to delete notes.'
+        );
+    }
+/**
+ * @description Verifies that the current user has read access to the specified parent record.
+ *              Performs both object-level permission checks and a USER_MODE query to confirm
+ *              the record exists and is accessible to the running user.
+ *
+ * @param parentId The Salesforce record Id of the parent object to validate access for.
+ *
+ * @throws AuraHandledException If the parent record is not found or is inaccessible to the current user.
+ * @return Attachments related to the provided parent record.
+ * @example
+ * Id accountId = '001XXXXXXXXXXXXXXX';
+ * assertParentRecordAccessible(accountId);
+ */
     public static List<Attachment> getAttachmentsByParent(Id parentId) {
-        return QueueExpertRelatedRecordActionSupport.getAttachmentsByParent(parentId);
+        assertAttachmentReadAccess(parentId);
+        return [
+            SELECT Id, Name, ParentId, ContentType
+            FROM Attachment
+            WHERE ParentId = :parentId
+            WITH USER_MODE
+            ORDER BY CreatedDate ASC
+            LIMIT 1000
+        ];
     }
-
+/**
+ * @description Retrieves all notes associated with the specified parent record.
+ *              Validates object and field-level access before querying.
+ * @param parentId The Id of the parent record whose notes are to be retrieved.
+ * @return List of Notes linked to the given parent, ordered by creation date ascending.
+ * @throws AuraHandledException If the user lacks access to the parent registration or Note object/fields.
+ */
     public static List<Note> getNotesByParent(Id parentId) {
-        return QueueExpertRelatedRecordActionSupport.getNotesByParent(parentId);
+        if (!Schema.sObjectType.Registration_SCH__c.isAccessible()) {
+            throw new AuraHandledException('Insufficient access to the parent registration.');
+        }
+        if (!Schema.sObjectType.Note.isAccessible() ||
+            !Schema.sObjectType.Note.fields.Id.isAccessible() ||
+            !Schema.sObjectType.Note.fields.ParentId.isAccessible() ||
+            !Schema.sObjectType.Note.fields.Title.isAccessible()) {
+            throw new AuraHandledException('Insufficient access to view notes.');
+        }
+        assertNoteReadAccess(parentId);
+        return [
+            SELECT Id, Title, ParentId
+            FROM Note
+            WHERE ParentId = :parentId
+            WITH USER_MODE
+            ORDER BY CreatedDate ASC
+            LIMIT 1000
+        ];
     }
 
+    private static Note parseNotePayload(String noteJson) {
+        validateNotBlank(noteJson, 'Invalid note payload.');
+        try {
+            return (Note) JSON.deserialize(noteJson, Note.class);
+        } catch (JSONException ex) {
+            throw new AuraHandledException('Invalid note payload.');
+        }
+    }
+
+    private static Note buildSafeNoteForUpdate(Id noteId, Id parentId, Note requestedNote) {
+        Note noteToUpdate = new Note(Id = noteId);
+        if (Schema.sObjectType.Note.fields.ParentId.isUpdateable()) {
+            noteToUpdate.ParentId = parentId;
+        }
+        if (Schema.sObjectType.Note.fields.Title.isUpdateable()) {
+            noteToUpdate.Title = requestedNote.Title.trim();
+        }
+        if (Schema.sObjectType.Note.fields.Body.isUpdateable()) {
+            noteToUpdate.Body = requestedNote.Body;
+        }
+        return noteToUpdate;
+    }
+
+    private static Note getAccessibleNoteById(Id noteId) {
+        checkObjectAccess(Note.SObjectType, FieldAccessType.READ, 'Insufficient access to view notes.');
+        checkFieldAccess(
+            Note.SObjectType,
+            new Set<String>{ 'Id', 'ParentId' },
+            FieldAccessType.READ,
+            'Insufficient access to view notes.'
+        );
+        List<Note> notes = [
+            SELECT Id, ParentId
+            FROM Note
+            WHERE Id = :noteId
+            WITH USER_MODE
+            LIMIT 1
+        ];
+        if (notes.isEmpty()) {
+            throw new AuraHandledException('Note record is not accessible.');
+        }
+        return notes[0];
+    }
+
+    private static SObject getAccessibleRelatedRecordForDelete(Id relatedRecordId, String objName) {
+        if (objName == 'Attachment') {
+            checkObjectAccess(Attachment.SObjectType, FieldAccessType.READ, 'Insufficient access to delete attachments.');
+            checkFieldAccess(
+                Attachment.SObjectType,
+                new Set<String>{ 'Id', 'ParentId' },
+                FieldAccessType.READ,
+                'Insufficient access to delete attachments.'
+            );
+            List<Attachment> attachments = [
+                SELECT Id, ParentId
+                FROM Attachment
+                WHERE Id = :relatedRecordId
+                WITH USER_MODE
+                LIMIT 1
+            ];
+            if (attachments.isEmpty()) {
+                throw new AuraHandledException('Attachment record is not accessible.');
+            }
+            assertSObjectType(attachments[0].ParentId, Registration_SCH__c.SObjectType, 'Parent record must be a registration.');
+            assertAttachmentDeleteAccess(attachments[0].ParentId);
+            return attachments[0];
+        }
+        if (objName == 'Note') {
+            Note noteRecord = getAccessibleNoteById(relatedRecordId);
+            assertSObjectType(noteRecord.ParentId, Registration_SCH__c.SObjectType, 'Parent record must be a registration.');
+            assertNoteDeleteAccess(noteRecord.ParentId);
+            return noteRecord;
+        }
+        throw new AuraHandledException('Unsupported related record type.');
+    }
+
+    private static void validateUploadInput(String fileName, String encodedPayload, String contentType) {
+        validateNotBlank(fileName, 'File name is required.');
+        validateNotBlank(encodedPayload, 'File content is required.');
+        validateNotBlank(contentType, 'File content type is required.');
+        String normalizedFileName = fileName.trim();
+        Integer extensionIndex = normalizedFileName.lastIndexOf('.');
+        if (extensionIndex <= 0 || extensionIndex == normalizedFileName.length() - 1) {
+            throw new AuraHandledException('File type is not allowed.');
+        }
+        String extension = normalizedFileName.substring(extensionIndex + 1).toLowerCase();
+        if (!ALLOWED_ATTACHMENT_EXTENSIONS.contains(extension)) {
+            throw new AuraHandledException('File type is not allowed.');
+        }
+        if (!ALLOWED_ATTACHMENT_CONTENT_TYPES.contains(contentType.trim().toLowerCase())) {
+            throw new AuraHandledException('File content type is not allowed.');
+        }
+    }
+
+    private static Blob decodeAttachmentBody(String encodedPayload) {
+        try {
+            String decodedPayload = EncodingUtil.urlDecode(encodedPayload, 'UTF-8');
+            Blob fileBody = EncodingUtil.base64Decode(decodedPayload);
+            if (fileBody == null || fileBody.size() == 0) {
+                throw new AuraHandledException('File content is required.');
+            }
+            if (fileBody.size() > MAX_ATTACHMENT_SIZE_BYTES) {
+                throw new AuraHandledException('File exceeds the maximum supported size.');
+            }
+            return fileBody;
+        } catch (StringException ex) {
+            throw new AuraHandledException('File content could not be decoded.');
+        }
+    }
+
+   /**
+ * @description Uploads an attachment to the specified parent record.
+ * @param request Upload request containing the parent identifier and file metadata.
+ * @return Attachments currently associated with the parent record.
+ */
     @AuraEnabled
-    // commented by abuzar on 2026-03-30 for the scanning issue and added below line "The upload action now accepts a single wrapper request so it no longer uses a Boolean method parameter or a long parameter list in Queue_Expert_Sch."
+    // commented by abuzar on 2026-03-30 for the scanning issue and added below line "The method used a Boolean method parameter, which triggers the AvoidBooleanMethodParameters PMD violation."
     // public static List<Attachment> uploadFile(String parent, String fileName, String base64Data, String contentType, Boolean userInitiated) {
     public static List<Attachment> uploadFile(UploadFileRequest request) {
-        return QueueExpertRelatedRecordActionSupport.uploadFile(request);
-    }
     //changes end here by abuzar
+        assertAuthenticatedRequest();
+        Id parentId = validateParentRecordId(request.parent);
+        validateUploadInput(request.fileName, request.base64Data, request.contentType);
+        if (!Schema.sObjectType.Registration_SCH__c.isAccessible()) {
+            throw new AuraHandledException('Insufficient access to the parent registration.');
+        }
+        if (!Schema.sObjectType.Attachment.isCreateable() ||
+            !Schema.sObjectType.Attachment.fields.ParentId.isCreateable() ||
+            !Schema.sObjectType.Attachment.fields.Body.isCreateable() ||
+            !Schema.sObjectType.Attachment.fields.Name.isCreateable() ||
+            !Schema.sObjectType.Attachment.fields.ContentType.isCreateable()) {
+            throw new AuraHandledException('Insufficient access to upload attachments.');
+        }
+        assertAttachmentCreateAccess(parentId);
+        Blob attachmentBody = decodeAttachmentBody(request.base64Data);
+        Attachment a = new Attachment();
+        a.ParentId = parentId;
+        a.Body = attachmentBody;
+        a.Name = request.fileName.trim();
+        a.ContentType = request.contentType.trim().toLowerCase();
+        saveInsertResult(
+            Database.insert(a, false, AccessLevel.USER_MODE),
+            'Unable to upload the attachment.'
+        );
 
-    // commented by abuzar on 2026-03-30 for the scanning issue and added below line "The four-parameter upload overload is no longer needed after moving to the wrapper-based request contract."
+        return getAttachmentsByParent(parentId);
+    }
+    // commented by abuzar on 2026-03-30 for the scanning issue and added below line "The overload uploadFile(String, String, String, String) exceeds the configured ExcessiveParameterList threshold and is unused because the wrapper-based AuraEnabled upload method is the active implementation."
+    // /**
+    //  * @description Uploads an attachment for the specified parent record and returns the refreshed attachment list.
+    //  *
+    //  * @param parent Parent record identifier.
+    //  * @param fileName Name of the file being uploaded.
+    //  * @param base64Data Base64-encoded file body.
+    //  * @param contentType MIME type of the uploaded file.
+    //  * @return Attachments related to the provided parent record.
+    //  *
+    //  * @throws AuraHandledException If the attachment cannot be uploaded.
+    //  */
     // public static List<Attachment> uploadFile(String parent, String fileName, String base64Data, String contentType) {
-    //     return QueueExpertRelatedRecordActionSupport.uploadFile(new UploadFileRequest(parent, fileName, base64Data, contentType));
+    //     return uploadFile(new UploadFileRequest(parent, fileName, base64Data, contentType));
     // }
     //changes end here by abuzar
 
+    /**
+     * @description Saves a note for the specified registration and returns related notes.
+     * @param nn Serialized note payload.
+     * @param regID Parent registration identifier.
+     * @return Notes related to the provided registration.
+     */
     @AuraEnabled
     public static List<Note> saveNotes(String nn, String regID) {
-        return QueueExpertRelatedRecordActionSupport.saveNotes(nn, regID);
+        assertAuthenticatedRequest();
+        Id parentId = validateParentRecordId(regID);
+        if (!Schema.sObjectType.Registration_SCH__c.isAccessible()) {
+            throw new AuraHandledException('Insufficient access to the parent registration.');
+        }
+        Note requestedNote = parseNotePayload(nn);
+        if (requestedNote.ParentId != null && requestedNote.ParentId != parentId) {
+            throw new AuraHandledException('Mismatched note parent record.');
+        }
+        validateNotBlank(requestedNote.Title, 'Note title is required.');
+        // commented by abuzar on 2026-03-30 for the scanning issue and added below line "The method 'saveNotes(String, String)' has a cyclomatic complexity of 19."
+        // if (requestedNote.Id == null) {
+        //     if (!Schema.sObjectType.Note.isCreateable() ||
+        //         !Schema.sObjectType.Note.fields.ParentId.isCreateable() ||
+        //         !Schema.sObjectType.Note.fields.Title.isCreateable() ||
+        //         !Schema.sObjectType.Note.fields.Body.isCreateable()) {
+        //         throw new AuraHandledException('Insufficient access to create notes.');
+        //     }
+        //     assertNoteCreateAccess(parentId);
+        //     Note noteToInsert = new Note();
+        //     noteToInsert.ParentId = parentId;
+        //     noteToInsert.Title = requestedNote.Title.trim();
+        //     noteToInsert.Body = requestedNote.Body;
+        //     saveInsertResult(
+        //         Database.insert(noteToInsert, false, AccessLevel.USER_MODE),
+        //         'Unable to save the note.'
+        //     );
+        // } else {
+        //     Note existingNote = getAccessibleNoteById(validateRecordId(String.valueOf(requestedNote.Id), 'Invalid note record id.'));
+        //     if (existingNote.ParentId != parentId) {
+        //         throw new AuraHandledException('Mismatched note parent record.');
+        //     }
+        //     if (!Schema.sObjectType.Note.isUpdateable() ||
+        //         !Schema.sObjectType.Note.fields.ParentId.isUpdateable() ||
+        //         !Schema.sObjectType.Note.fields.Title.isUpdateable() ||
+        //         !Schema.sObjectType.Note.fields.Body.isUpdateable()) {
+        //         throw new AuraHandledException('Insufficient access to update notes.');
+        //     }
+        //     assertNoteUpdateAccess(parentId);
+        //     Note noteToUpdate = buildSafeNoteForUpdate(existingNote.Id, parentId, requestedNote);
+        //     saveUpdateResult(
+        //         Database.update(noteToUpdate, false, AccessLevel.USER_MODE),
+        //         'Unable to save the note.'
+        //     );
+        // }
+        persistRequestedNote(parentId, requestedNote);
+        //changes end here by abuzar
+        return getNotesByParent(parentId);
     }
-    //changes end here by abuzar
+
+    private static void persistRequestedNote(Id parentId, Note requestedNote) {
+        if (requestedNote.Id == null) {
+            saveNewNote(parentId, requestedNote);
+            return;
+        }
+        saveExistingNote(parentId, requestedNote);
+    }
+
+    private static void saveNewNote(Id parentId, Note requestedNote) {
+        assertNoteCreateableFields();
+        assertNoteCreateAccess(parentId);
+        Note noteToInsert = new Note();
+        noteToInsert.ParentId = parentId;
+        noteToInsert.Title = requestedNote.Title.trim();
+        noteToInsert.Body = requestedNote.Body;
+        saveInsertResult(
+            Database.insert(noteToInsert, false, AccessLevel.USER_MODE),
+            'Unable to save the note.'
+        );
+    }
+
+    private static void saveExistingNote(Id parentId, Note requestedNote) {
+        Note existingNote = getAccessibleNoteById(validateRecordId(String.valueOf(requestedNote.Id), 'Invalid note record id.'));
+        if (existingNote.ParentId != parentId) {
+            throw new AuraHandledException('Mismatched note parent record.');
+        }
+        assertNoteUpdateableFields();
+        assertNoteUpdateAccess(parentId);
+        Note noteToUpdate = buildSafeNoteForUpdate(existingNote.Id, parentId, requestedNote);
+        saveUpdateResult(
+            Database.update(noteToUpdate, false, AccessLevel.USER_MODE),
+            'Unable to save the note.'
+        );
+    }
+
+    private static void assertNoteCreateableFields() {
+        if (!Schema.sObjectType.Note.isCreateable() ||
+            !Schema.sObjectType.Note.fields.ParentId.isCreateable() ||
+            !Schema.sObjectType.Note.fields.Title.isCreateable() ||
+            !Schema.sObjectType.Note.fields.Body.isCreateable()) {
+            throw new AuraHandledException('Insufficient access to create notes.');
+        }
+    }
+
+    private static void assertNoteUpdateableFields() {
+        if (!Schema.sObjectType.Note.isUpdateable() ||
+            !Schema.sObjectType.Note.fields.ParentId.isUpdateable() ||
+            !Schema.sObjectType.Note.fields.Title.isUpdateable() ||
+            !Schema.sObjectType.Note.fields.Body.isUpdateable()) {
+            throw new AuraHandledException('Insufficient access to update notes.');
+        }
+    }
 
     /**
      * @description Deletes a related attachment or note record by Id.
@@ -269,10 +1077,18 @@ public with sharing class Queue_Expert_Sch {
      */
     @AuraEnabled(cacheable=false)
     public static wrapper  deleteAT(String raId, String objName){
-        // commented by abuzar on 2026-03-30 for the scanning issue and added below line "Moved related-record delete logic into a dedicated support class to reduce Queue_Expert_Sch class-level complexity and NCSS."
-        // existing method body moved to QueueExpertRelatedRecordActionSupport.deleteAT(...)
-        return QueueExpertRelatedRecordActionSupport.deleteAT(raId, objName);
-        //changes end here by abuzar
+        Wrapper wrapper=new Wrapper();
+        assertAuthenticatedRequest();
+        if (!SUPPORTED_RELATED_RECORD_OBJECTS.contains(objName)) {
+            throw new AuraHandledException('Unsupported related record type.');
+        }
+        Id relatedRecordId = validateRecordId(raId, 'Invalid related record id.');
+        SObject relatedRecord = getAccessibleRelatedRecordForDelete(relatedRecordId, objName);
+        saveDeleteResult(
+            Database.delete(relatedRecord, false, AccessLevel.USER_MODE),
+            'Unable to delete the related record.'
+        );
+        return wrapper;
     }
 
     /**
@@ -348,22 +1164,6 @@ public with sharing class Queue_Expert_Sch {
         }
     }
 
-    /**
-     * Request payload used by the queue scheduler upload action.
-     */
-    public class UploadFileRequest {
-        @AuraEnabled public String parent { get; set; }
-        @AuraEnabled public String fileName { get; set; }
-        @AuraEnabled public String base64Data { get; set; }
-        @AuraEnabled public String contentType { get; set; }
-
-        public UploadFileRequest() {
-            // commented by abuzar on 2026-03-30 for the scanning issue and added below line "Avoid empty block statements."
-            // required no-arg constructor for Aura/LWC request deserialization
-            //changes end here by abuzar
-        }
-    }
-
     // commented by abuzar on 2026-03-13 for the scanning issue and added below line "moved the helper request model and branching utility methods into a dedicated support class to reduce Queue_Expert_Sch class cyclomatic complexity and remove the long helper constructor parameter list"
     /*
     private class LocationLoadRequest {
@@ -372,19 +1172,10 @@ public with sharing class Queue_Expert_Sch {
         private String serviceId;
         private String category;
 
-        private LocationLoadRequest() {
-            // commented by abuzar on 2026-03-30 for the scanning issue and added below line "Avoid empty block statements."
-            // intentionally left blank in legacy commented helper block
-            //changes end here by abuzar
-        }
-
-        private void loadValues(String location, String resource, String service) {
+        private LocationLoadRequest(String location, String resource, String service, String catValue) {
             locationId = normalizeInput(location);
             resourceId = normalizeInput(resource);
             serviceId = normalizeInput(service);
-        }
-
-        private void setCategory(String catValue) {
             category = normalizeInput(catValue);
         }
     }
@@ -528,13 +1319,27 @@ public with sharing class Queue_Expert_Sch {
     //changes end here by abuzar
 
     /**
-     * Response wrapper shared across queue scheduler Aura/LWC actions.
+     * Request payload used by the queue scheduler upload action.
      */
-    // commented by abuzar on 2026-03-30 for the scanning issue and added below line "The Wrapper class is a serialized Aura/LWC transport model with many required @AuraEnabled members, which triggers the ExcessivePublicCount PMD violation."
-    // public class Wrapper{
     @SuppressWarnings('PMD.ExcessivePublicCount')
+    public class UploadFileRequest {
+        @AuraEnabled public String parent { get; set; }
+        @AuraEnabled public String fileName { get; set; }
+        @AuraEnabled public String base64Data { get; set; }
+        @AuraEnabled public String contentType { get; set; }
+
+        public UploadFileRequest() {
+        }
+
+        public UploadFileRequest(String parent, String fileName, String base64Data, String contentType) {
+            this.parent = parent;
+            this.fileName = fileName;
+            this.base64Data = base64Data;
+            this.contentType = contentType;
+        }
+    }
+
     public class Wrapper{
-    //changes end here by abuzar
         /**
          * Category options available to the client.
          */
