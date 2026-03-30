@@ -166,11 +166,12 @@ export default class QueueExpertSch extends LightningElement {
         this.init();
     }
 
-                // ✅ Only call initializeComponent from explicit user actions
-            handleChangeLabelGetRecord(event) {
-                // existing logic...
-                this.initializeComponent(); // safe — user clicked a button
-            }
+                // commented by abuzar on 2026-03-30 for the scanning issue and added below line "Duplicate class member name 'handleChangeLabelGetRecord' causes the no-dupe-class-members eslint violation."
+                // handleChangeLabelGetRecord() {
+                //     // existing logic...
+                //     this.initializeComponent(); // safe - user clicked a button
+                // }
+                //changes end here by abuzar
 
     initializeComponent() {
         if (this.recordId) {
@@ -353,9 +354,17 @@ export default class QueueExpertSch extends LightningElement {
     }
 
     handleChangeLabelGetRecord(event) {
+        // commented by abuzar on 2026-03-30 for the scanning issue and added below line "The existing method assumed an event was always passed, so the duplicate no-argument method was added separately and triggered the no-dupe-class-members eslint violation."
+        // this.setClass = 'btn--form-servenext';
+        // const selId = event.target.dataset.id;
         this.setClass = 'btn--form-servenext';
-
+        const hasEventTarget = event && event.target;
+        if (!hasEventTarget) {
+            this.initializeComponent();
+            return;
+        }
         const selId = event.target.dataset.id;
+        //changes end here by abuzar
         console.log('Clicked Id:', selId);
 
         const index = this.maps.findIndex(cus => cus.value.Id === selId);
