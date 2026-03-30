@@ -162,6 +162,22 @@ public with sharing class QueueExpertNoteActionSupport {
         QueueExpertAccessSupport.assertSObjectType(relatedRecordId, Note.SObjectType, 'Related record must be a note.');
         Note noteRecord = getAccessibleNoteById(relatedRecordId);
         QueueExpertAccessSupport.assertSObjectType(noteRecord.ParentId, Registration_SCH__c.SObjectType, 'Parent record must be a registration.');
+        if (!Schema.sObjectType.Registration_SCH__c.isAccessible()) {
+            throw new AuraHandledException('Insufficient access to the parent registration.');
+        }
+        List<Registration_SCH__c> parentRegistrations = [
+            SELECT Id
+            FROM Registration_SCH__c
+            WHERE Id = :noteRecord.ParentId
+            WITH USER_MODE
+            LIMIT 1
+        ];
+        if (parentRegistrations.isEmpty()) {
+            throw new AuraHandledException('Parent registration is not accessible.');
+        }
+        if (!Schema.sObjectType.Note.isDeletable()) {
+            throw new AuraHandledException('Insufficient access to delete notes.');
+        }
         QueueExpertAccessSupport.assertRegistrationParentAccess(noteRecord.ParentId);
         QueueExpertAccessSupport.assertNoteDeleteAccess(noteRecord.ParentId);
         QueueExpertAccessSupport.saveDeleteResult(
@@ -177,6 +193,15 @@ public with sharing class QueueExpertNoteActionSupport {
      * @return Accessible note record.
      */
     public static Note getAccessibleNoteById(Id noteId) {
+        if (!Schema.sObjectType.Note.isAccessible()) {
+            throw new AuraHandledException('Insufficient access to view notes.');
+        }
+        if (!Schema.sObjectType.Note.fields.Id.isAccessible()) {
+            throw new AuraHandledException('Insufficient access to view notes.');
+        }
+        if (!Schema.sObjectType.Note.fields.ParentId.isAccessible()) {
+            throw new AuraHandledException('Insufficient access to view notes.');
+        }
         QueueExpertAccessSupport.checkObjectAccess(Note.SObjectType, QueueExpertAccessSupport.ACCESS_READ, 'Insufficient access to view notes.');
         QueueExpertAccessSupport.checkFieldAccess(
             QueueExpertAccessSupport.buildFieldAccessRequest(

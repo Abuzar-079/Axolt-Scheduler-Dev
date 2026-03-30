@@ -84,8 +84,28 @@ public with sharing class QueueExpertSchSupportHelper {
         Registration_SCH__c primaryRecord = wrapper.objectValues[0];
         wrapper.notes = Queue_Expert_Sch.getNotesByParent(primaryRecord.Id);
         wrapper.attachments = Queue_Expert_Sch.getAttachmentsByParent(primaryRecord.Id);
-        wrapper.userName = [SELECT Name FROM User WHERE Id = :primaryRecord.OwnerId LIMIT 1000];
-        wrapper.recordTypeName = [Select Id, Name From RecordType where id = :primaryRecord.RecordTypeId LIMIT 1000];
+        if (Schema.sObjectType.User.isAccessible() && Schema.sObjectType.User.fields.Name.isAccessible()) {
+            wrapper.userName = [
+                SELECT Name
+                FROM User
+                WHERE Id = :primaryRecord.OwnerId
+                WITH USER_MODE
+                LIMIT 1
+            ];
+        }
+        if (
+            Schema.sObjectType.RecordType.isAccessible() &&
+            Schema.sObjectType.RecordType.fields.Id.isAccessible() &&
+            Schema.sObjectType.RecordType.fields.Name.isAccessible()
+        ) {
+            wrapper.recordTypeName = [
+                SELECT Id, Name
+                FROM RecordType
+                WHERE Id = :primaryRecord.RecordTypeId
+                WITH USER_MODE
+                LIMIT 1
+            ];
+        }
     }
 
     /**
