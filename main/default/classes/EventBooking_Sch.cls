@@ -4557,20 +4557,23 @@ private static Registration_SCH__c buildPreparedRegistrationInsertRecord(
     return preparedInsert;
 }
     private static void handleContactSaveResults(Database.SaveResult[] saveResults) {
-        List<String> errors = new List<String>();
-        for (Database.SaveResult saveResult : saveResults) {
-            if (saveResult.isSuccess()) {
-                continue;
-            }
-            for (Database.Error saveError : saveResult.getErrors()) {
-                if (saveError != null && String.isNotBlank(saveError.getMessage())) {
-                    errors.add(saveError.getMessage());
-                }
-            }
-        }
-        if (!errors.isEmpty()) {
-            throw new AuraHandledException('Unable to create registration contacts. ' + String.join(errors, ' '));
-        }
+        // commented by abuzar on 2026-03-30 for the scanning issue and added below line "The save-result error aggregation block was duplicated across Apex classes, which triggers the DetectCopyPasteForApex CPD violation."
+        // List<String> errors = new List<String>();
+        // for (Database.SaveResult saveResult : saveResults) {
+        //     if (saveResult.isSuccess()) {
+        //         continue;
+        //     }
+        //     for (Database.Error saveError : saveResult.getErrors()) {
+        //         if (saveError != null && String.isNotBlank(saveError.getMessage())) {
+        //             errors.add(saveError.getMessage());
+        //         }
+        //     }
+        // }
+        // if (!errors.isEmpty()) {
+        //     throw new AuraHandledException('Unable to create registration contacts. ' + String.join(errors, ' '));
+        // }
+        Queue_Sch_Support.throwSaveResultErrors(saveResults, 'Unable to create registration contacts.');
+        //changes end here by abuzar
     }
 
     private class ContactFieldAssignment {
@@ -5178,8 +5181,6 @@ private static Registration_SCH__c buildPreparedRegistrationInsertRecord(
                     }
                     //changes end here by Abuzar
                 }
-            
-
             if (Schema.sObjectType.Registration_SCH__c.isCreateable()) {
                 insert parentRegs;
             }
@@ -5287,7 +5288,7 @@ private static Registration_SCH__c buildPreparedRegistrationInsertRecord(
     private static void ensurePrimaryParentContact(List<Registration_SCH__c> parentRegs) {
         if (parentRegs.isEmpty() || !String.isBlank(parentRegs[0].Contact__c)) {
             return;
-        }        
+        }
         Registration_SCH__c pr = parentRegs[0];
         // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
         // List<Contact> existingContacts = [

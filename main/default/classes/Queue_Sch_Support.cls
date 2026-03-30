@@ -421,6 +421,26 @@ public with sharing class Queue_Sch_Support {
     }
 
     private static void handleCancellationUpdateResults(Database.SaveResult[] saveResults) {
+        // commented by abuzar on 2026-03-30 for the scanning issue and added below line "The save-result error aggregation block was duplicated across Apex classes, which triggers the DetectCopyPasteForApex CPD violation."
+        // List<String> errors = new List<String>();
+        // for (Database.SaveResult saveResult : saveResults) {
+        //     if (saveResult.isSuccess()) {
+        //         continue;
+        //     }
+        //     for (Database.Error saveError : saveResult.getErrors()) {
+        //         if (saveError != null && String.isNotBlank(saveError.getMessage())) {
+        //             errors.add(saveError.getMessage());
+        //         }
+        //     }
+        // }
+        // if (!errors.isEmpty()) {
+        //     throw new AuraHandledException('Unable to cancel the registration. ' + String.join(errors, ' '));
+        // }
+        throwSaveResultErrors(saveResults, 'Unable to cancel the registration.');
+        //changes end here by abuzar
+    }
+
+    public static void throwSaveResultErrors(Database.SaveResult[] saveResults, String errorMessagePrefix) {
         List<String> errors = new List<String>();
         for (Database.SaveResult saveResult : saveResults) {
             if (saveResult.isSuccess()) {
@@ -433,7 +453,7 @@ public with sharing class Queue_Sch_Support {
             }
         }
         if (!errors.isEmpty()) {
-            throw new AuraHandledException('Unable to cancel the registration. ' + String.join(errors, ' '));
+            throw new AuraHandledException(errorMessagePrefix + ' ' + String.join(errors, ' '));
         }
     }
 

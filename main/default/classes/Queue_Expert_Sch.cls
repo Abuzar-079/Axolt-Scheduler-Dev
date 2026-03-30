@@ -750,7 +750,7 @@ public with sharing class Queue_Expert_Sch {
  * @param parentId The Salesforce record Id of the parent object to validate access for.
  *
  * @throws AuraHandledException If the parent record is not found or is inaccessible to the current user.
- *
+ * @return Attachments related to the provided parent record.
  * @example
  * Id accountId = '001XXXXXXXXXXXXXXX';
  * assertParentRecordAccessible(accountId);
@@ -943,19 +943,17 @@ public with sharing class Queue_Expert_Sch {
 
         return getAttachmentsByParent(parentId);
     }
-/**
- * @description Verifies that the current user has read access to the specified parent record.
- *              Performs both object-level permission checks and a USER_MODE query to confirm
- *              the record exists and is accessible to the running user.
- *
- * @param parentId The Salesforce record Id of the parent object to validate access for.
- *
- * @throws AuraHandledException If the parent record is not found or is inaccessible to the current user.
- *
- * @example
- * Id accountId = '001XXXXXXXXXXXXXXX';
- * assertParentRecordAccessible(accountId);
- */
+    /**
+     * @description Uploads an attachment for the specified parent record and returns the refreshed attachment list.
+     *
+     * @param parent Parent record identifier.
+     * @param fileName Name of the file being uploaded.
+     * @param base64Data Base64-encoded file body.
+     * @param contentType MIME type of the uploaded file.
+     * @return Attachments related to the provided parent record.
+     *
+     * @throws AuraHandledException If the attachment cannot be uploaded.
+     */
     public static List<Attachment> uploadFile(String parent, String fileName, String base64Data, String contentType) {
         return uploadFile(parent, fileName, base64Data, contentType, true);
     }
