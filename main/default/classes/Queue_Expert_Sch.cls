@@ -729,6 +729,15 @@ public with sharing class Queue_Expert_Sch {
     }
 
     public static List<Note> getNotesByParent(Id parentId) {
+        if (!Schema.sObjectType.Registration_SCH__c.isAccessible()) {
+            throw new AuraHandledException('Insufficient access to the parent registration.');
+        }
+        if (!Schema.sObjectType.Note.isAccessible() ||
+            !Schema.sObjectType.Note.fields.Id.isAccessible() ||
+            !Schema.sObjectType.Note.fields.ParentId.isAccessible() ||
+            !Schema.sObjectType.Note.fields.Title.isAccessible()) {
+            throw new AuraHandledException('Insufficient access to view notes.');
+        }
         assertNoteReadAccess(parentId);
         return [
             SELECT Id, Title, ParentId
