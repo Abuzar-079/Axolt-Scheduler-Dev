@@ -889,6 +889,9 @@ public with sharing class Queue_Expert_Sch {
     public static List<Note> saveNotes(String nn, String regID) {
         assertAuthenticatedRequest();
         Id parentId = validateParentRecordId(regID);
+        if (!Schema.sObjectType.Registration_SCH__c.isAccessible()) {
+            throw new AuraHandledException('Insufficient access to the parent registration.');
+        }
         Note requestedNote = parseNotePayload(nn);
         if (requestedNote.ParentId != null && requestedNote.ParentId != parentId) {
             throw new AuraHandledException('Mismatched note parent record.');
@@ -896,6 +899,12 @@ public with sharing class Queue_Expert_Sch {
         validateNotBlank(requestedNote.Title, 'Note title is required.');
 
         if (requestedNote.Id == null) {
+            if (!Schema.sObjectType.Note.isCreateable() ||
+                !Schema.sObjectType.Note.fields.ParentId.isCreateable() ||
+                !Schema.sObjectType.Note.fields.Title.isCreateable() ||
+                !Schema.sObjectType.Note.fields.Body.isCreateable()) {
+                throw new AuraHandledException('Insufficient access to create notes.');
+            }
             assertNoteCreateAccess(parentId);
             Note noteToInsert = new Note();
             noteToInsert.ParentId = parentId;
@@ -909,6 +918,12 @@ public with sharing class Queue_Expert_Sch {
             Note existingNote = getAccessibleNoteById(validateRecordId(String.valueOf(requestedNote.Id), 'Invalid note record id.'));
             if (existingNote.ParentId != parentId) {
                 throw new AuraHandledException('Mismatched note parent record.');
+            }
+            if (!Schema.sObjectType.Note.isUpdateable() ||
+                !Schema.sObjectType.Note.fields.ParentId.isUpdateable() ||
+                !Schema.sObjectType.Note.fields.Title.isUpdateable() ||
+                !Schema.sObjectType.Note.fields.Body.isUpdateable()) {
+                throw new AuraHandledException('Insufficient access to update notes.');
             }
             assertNoteUpdateAccess(parentId);
             Note noteToUpdate = new Note(
