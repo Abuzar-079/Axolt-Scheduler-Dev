@@ -5362,14 +5362,17 @@ private static Registration_SCH__c buildPreparedRegistrationInsertRecord(
             }
             if (
                 Schema.sObjectType.Registration_SCH__c.fields.Customer_Contact__c.isAccessible() &&
-                String.isNotBlank(pr.Customer_Contact__c)
+                String.isNotBlank(pr.Customer_Contact__c) &&
+                Schema.sObjectType.Contact.fields.MobilePhone.isAccessible()
             ) {
-                if (Schema.sObjectType.Contact.fields.MobilePhone.isCreateable()) {
-                    newContact.MobilePhone = pr.Customer_Contact__c;
-                }
-                if (Schema.sObjectType.Contact.fields.Phone.isCreateable()) {
-                    newContact.Phone = pr.Customer_Contact__c;
-                }
+                newContact.MobilePhone = pr.Customer_Contact__c;
+            }
+            if (
+                Schema.sObjectType.Registration_SCH__c.fields.Customer_Contact__c.isAccessible() &&
+                String.isNotBlank(pr.Customer_Contact__c) &&
+                Schema.sObjectType.Contact.fields.Phone.isAccessible()
+            ) {
+                newContact.Phone = pr.Customer_Contact__c;
             }
             if (
                 Schema.sObjectType.Contact.isCreateable() &&

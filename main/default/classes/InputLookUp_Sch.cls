@@ -244,22 +244,21 @@ public static List<sobject> findRecords(String searchKey, String objectName) {
     }
 
     private static List<String> getValidatedFieldNames(Schema.SObjectType objectType, String fieldList) {
+        // 1. Guard clause for initial input
         if (String.isBlank(fieldList)) {
             throw new AuraHandledException('Invalid search field');
         }
         Map<String, Schema.SObjectField> fieldMap = objectType.getDescribe().fields.getMap();
         List<String> validatedFields = new List<String>();
         for (String rawFieldName : fieldList.split(',')) {
-            String fieldName = rawFieldName == null ? '' : rawFieldName.trim();
+            String fieldName = String.isNotBlank(rawFieldName) ? rawFieldName.trim() : '';
+            // 2. Combined validation check
             if (String.isBlank(fieldName) || !fieldMap.containsKey(fieldName)) {
                 throw new AuraHandledException('Invalid search field');
             }
             validatedFields.add(fieldMap.get(fieldName).getDescribe().getName());
         }
-        if (validatedFields.isEmpty()) {
-            throw new AuraHandledException('Invalid search field');
-        }
+        // 3. Final check (Optional: If the loop finishes, validatedFields is guaranteed to have items)
         return validatedFields;
     }
-
 }
