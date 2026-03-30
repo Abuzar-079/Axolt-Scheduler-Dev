@@ -602,6 +602,23 @@ public with sharing class Queue_Expert_Sch {
         }
     }
 
+    private static void assertRegistrationParentAccess(Id parentId) {
+        assertSObjectType(parentId, Registration_SCH__c.SObjectType, 'Parent record must be a registration.');
+        if (!Schema.sObjectType.Registration_SCH__c.isAccessible()) {
+            throw new AuraHandledException('Insufficient access to the parent registration.');
+        }
+        List<Registration_SCH__c> parentRegistrations = [
+            SELECT Id
+            FROM Registration_SCH__c
+            WHERE Id = :parentId
+            WITH USER_MODE
+            LIMIT 1
+        ];
+        if (parentRegistrations.isEmpty()) {
+            throw new AuraHandledException('Parent registration is not accessible.');
+        }
+    }
+
     private static void assertRegistrationAccess(Id registrationId, Boolean requireUpdateAccess) {
         checkObjectAccess(
             Registration_SCH__c.SObjectType,
@@ -621,18 +638,20 @@ public with sharing class Queue_Expert_Sch {
     }
 
     private static void assertAttachmentCreateAccess(Id parentId) {
-        assertParentRecordAccessible(parentId);
-        checkObjectAccess(Attachment.SObjectType, FieldAccessType.CREATE, 'Insufficient access to upload attachments.');
-        checkFieldAccess(
-            Attachment.SObjectType,
-            new Set<String>{ 'ParentId', 'Body', 'Name', 'ContentType' },
-            FieldAccessType.CREATE,
-            'Insufficient field access to upload attachments.'
-        );
+        assertRegistrationParentAccess(parentId);
+        if (!Schema.sObjectType.Attachment.isCreateable()) {
+            throw new AuraHandledException('Insufficient access to upload attachments.');
+        }
+        if (!Schema.sObjectType.Attachment.fields.ParentId.isCreateable() ||
+            !Schema.sObjectType.Attachment.fields.Body.isCreateable() ||
+            !Schema.sObjectType.Attachment.fields.Name.isCreateable() ||
+            !Schema.sObjectType.Attachment.fields.ContentType.isCreateable()) {
+            throw new AuraHandledException('Insufficient field access to upload attachments.');
+        }
     }
 
     private static void assertAttachmentDeleteAccess(Id parentId) {
-        assertParentRecordAccessible(parentId);
+        assertRegistrationParentAccess(parentId);
         checkDeleteAccess(Attachment.SObjectType, 'Insufficient access to delete attachments.');
         checkFieldAccess(
             Attachment.SObjectType,
@@ -643,7 +662,7 @@ public with sharing class Queue_Expert_Sch {
     }
 
     private static void assertAttachmentReadAccess(Id parentId) {
-        assertParentRecordAccessible(parentId);
+        assertRegistrationParentAccess(parentId);
         checkObjectAccess(Attachment.SObjectType, FieldAccessType.READ, 'Insufficient access to view attachments.');
         checkFieldAccess(
             Attachment.SObjectType,
@@ -654,7 +673,7 @@ public with sharing class Queue_Expert_Sch {
     }
 
     private static void assertNoteCreateAccess(Id parentId) {
-        assertParentRecordAccessible(parentId);
+        assertRegistrationParentAccess(parentId);
         checkObjectAccess(Note.SObjectType, FieldAccessType.CREATE, 'Insufficient access to create notes.');
         checkFieldAccess(
             Note.SObjectType,
@@ -665,7 +684,7 @@ public with sharing class Queue_Expert_Sch {
     }
 
     private static void assertNoteUpdateAccess(Id parentId) {
-        assertParentRecordAccessible(parentId);
+        assertRegistrationParentAccess(parentId);
         checkObjectAccess(Note.SObjectType, FieldAccessType.EDIT, 'Insufficient access to update notes.');
         checkFieldAccess(
             Note.SObjectType,
@@ -676,7 +695,7 @@ public with sharing class Queue_Expert_Sch {
     }
 
     private static void assertNoteReadAccess(Id parentId) {
-        assertParentRecordAccessible(parentId);
+        assertRegistrationParentAccess(parentId);
         checkObjectAccess(Note.SObjectType, FieldAccessType.READ, 'Insufficient access to view notes.');
         checkFieldAccess(
             Note.SObjectType,
@@ -687,7 +706,7 @@ public with sharing class Queue_Expert_Sch {
     }
 
     private static void assertNoteDeleteAccess(Id parentId) {
-        assertParentRecordAccessible(parentId);
+        assertRegistrationParentAccess(parentId);
         checkDeleteAccess(Note.SObjectType, 'Insufficient access to delete notes.');
         checkFieldAccess(
             Note.SObjectType,
@@ -831,6 +850,16 @@ public with sharing class Queue_Expert_Sch {
         assertAuthenticatedRequest();
         Id parentId = validateParentRecordId(parent);
         validateUploadInput(fileName, base64Data, contentType);
+        if (!Schema.sObjectType.Registration_SCH__c.isAccessible()) {
+            throw new AuraHandledException('Insufficient access to the parent registration.');
+        }
+        if (!Schema.sObjectType.Attachment.isCreateable() ||
+            !Schema.sObjectType.Attachment.fields.ParentId.isCreateable() ||
+            !Schema.sObjectType.Attachment.fields.Body.isCreateable() ||
+            !Schema.sObjectType.Attachment.fields.Name.isCreateable() ||
+            !Schema.sObjectType.Attachment.fields.ContentType.isCreateable()) {
+            throw new AuraHandledException('Insufficient access to upload attachments.');
+        }
         assertAttachmentCreateAccess(parentId);
         Blob attachmentBody = decodeAttachmentBody(base64Data);
         Attachment a = new Attachment();
