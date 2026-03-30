@@ -758,6 +758,20 @@ public with sharing class Queue_Expert_Sch {
         }
     }
 
+    private static Note buildSafeNoteForUpdate(Id noteId, Id parentId, Note requestedNote) {
+        Note noteToUpdate = new Note(Id = noteId);
+        if (Schema.sObjectType.Note.fields.ParentId.isUpdateable()) {
+            noteToUpdate.ParentId = parentId;
+        }
+        if (Schema.sObjectType.Note.fields.Title.isUpdateable()) {
+            noteToUpdate.Title = requestedNote.Title.trim();
+        }
+        if (Schema.sObjectType.Note.fields.Body.isUpdateable()) {
+            noteToUpdate.Body = requestedNote.Body;
+        }
+        return noteToUpdate;
+    }
+
     private static Note getAccessibleNoteById(Id noteId) {
         checkObjectAccess(Note.SObjectType, FieldAccessType.READ, 'Insufficient access to view notes.');
         checkFieldAccess(
@@ -935,12 +949,7 @@ public with sharing class Queue_Expert_Sch {
                 throw new AuraHandledException('Insufficient access to update notes.');
             }
             assertNoteUpdateAccess(parentId);
-            Note noteToUpdate = new Note(
-                Id = existingNote.Id,
-                ParentId = parentId,
-                Title = requestedNote.Title.trim(),
-                Body = requestedNote.Body
-            );
+            Note noteToUpdate = buildSafeNoteForUpdate(existingNote.Id, parentId, requestedNote);
             saveUpdateResult(
                 Database.update(noteToUpdate, false, AccessLevel.USER_MODE),
                 'Unable to save the note.'
