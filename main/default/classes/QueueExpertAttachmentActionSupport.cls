@@ -55,6 +55,34 @@ public with sharing class QueueExpertAttachmentActionSupport {
         QueueExpertAccessSupport.assertAuthenticatedRequest();
         Id parentId = QueueExpertAccessSupport.validateRecordId(request.parent, 'Invalid parent record id.');
         QueueExpertAccessSupport.assertSObjectType(parentId, Registration_SCH__c.SObjectType, 'Parent record must be a registration.');
+        if (!Schema.sObjectType.Registration_SCH__c.isAccessible()) {
+            throw new AuraHandledException('Insufficient access to the parent registration.');
+        }
+        List<Registration_SCH__c> parentRegistrations = [
+            SELECT Id
+            FROM Registration_SCH__c
+            WHERE Id = :parentId
+            WITH USER_MODE
+            LIMIT 1
+        ];
+        if (parentRegistrations.isEmpty()) {
+            throw new AuraHandledException('Parent registration is not accessible.');
+        }
+        if (!Schema.sObjectType.Attachment.isCreateable()) {
+            throw new AuraHandledException('Insufficient access to upload attachments.');
+        }
+        if (!Schema.sObjectType.Attachment.fields.ParentId.isCreateable()) {
+            throw new AuraHandledException('Insufficient field access to upload attachments.');
+        }
+        if (!Schema.sObjectType.Attachment.fields.Body.isCreateable()) {
+            throw new AuraHandledException('Insufficient field access to upload attachments.');
+        }
+        if (!Schema.sObjectType.Attachment.fields.Name.isCreateable()) {
+            throw new AuraHandledException('Insufficient field access to upload attachments.');
+        }
+        if (!Schema.sObjectType.Attachment.fields.ContentType.isCreateable()) {
+            throw new AuraHandledException('Insufficient field access to upload attachments.');
+        }
         QueueExpertAccessSupport.assertRegistrationParentAccess(parentId);
         validateUploadInput(request.fileName, request.base64Data, request.contentType);
         QueueExpertAccessSupport.assertAttachmentCreateAccess(parentId);
@@ -133,4 +161,5 @@ public with sharing class QueueExpertAttachmentActionSupport {
             throw new AuraHandledException('File content could not be decoded.');
         }
     }
+
 }
