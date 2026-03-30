@@ -54,7 +54,7 @@ public with sharing class QueueExpertSchSupportHelper {
      * @param wrapper Wrapper being populated.
      * @param recordItem Registration record to inspect.
      */
-    public static void addInProgressRecord(Queue_Expert_Sch.Wrapper wrapper, Registration_SCH__c recordItem) {
+    public static void addInProgressRecord(QueueExpertWrapper wrapper, Registration_SCH__c recordItem) {
         if (recordItem.Booked_Current_Status__c == 'InProgress') {
             wrapper.objectValues.add(recordItem);
             wrapper.inProgress = true;
@@ -66,8 +66,8 @@ public with sharing class QueueExpertSchSupportHelper {
      * @param recordItem Registration record to wrap.
      * @return Queue scheduler record wrapper.
      */
-    public static Queue_Expert_Sch.Records buildRecordWrapper(Registration_SCH__c recordItem) {
-        Queue_Expert_Sch.Records rec = new Queue_Expert_Sch.Records();
+    public static QueueExpertRecords buildRecordWrapper(Registration_SCH__c recordItem) {
+        QueueExpertRecords rec = new QueueExpertRecords();
         rec.regRecords = recordItem;
         rec.waitingTime = '12 hours';
         return rec;
@@ -77,7 +77,7 @@ public with sharing class QueueExpertSchSupportHelper {
      * @description Loads notes, attachments, owner, and record type details for the primary record.
      * @param wrapper Wrapper to enrich with related data.
      */
-    public static void loadPrimaryRecordRelatedData(Queue_Expert_Sch.Wrapper wrapper) {
+    public static void loadPrimaryRecordRelatedData(QueueExpertWrapper wrapper) {
         if (wrapper.objectValues.isEmpty()) {
             return;
         }

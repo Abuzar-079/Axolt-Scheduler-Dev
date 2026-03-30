@@ -21,7 +21,7 @@ public class Queue_Expert_SchTestClass {
             };
             String jsonValues = JSON.serialize(values);
             Test.startTest();
-            Queue_Expert_Sch.Wrapper result = Queue_Expert_Sch.updateRecordValues(
+            QueueExpertWrapper result = Queue_Expert_Sch.updateRecordValues(
                 reg.Id, jsonValues, UserInfo.getUserId(), null, null, null, null, null, null, null
             );
             Test.stopTest();
@@ -45,7 +45,7 @@ public class Queue_Expert_SchTestClass {
     static void testInitSetUp() {
         System.runAs(getRunAsUser()) {
             Test.startTest();
-            Queue_Expert_Sch.Wrapper result = Queue_Expert_Sch.initSetUp();
+            QueueExpertWrapper result = Queue_Expert_Sch.initSetUp();
             Test.stopTest();
             System.assertNotEquals(null, result, 'Result should not be null');
         }
@@ -56,7 +56,7 @@ public class Queue_Expert_SchTestClass {
         System.runAs(getRunAsUser()) {
             Registration_SCH__c reg = [SELECT Id FROM Registration_SCH__c WHERE Customer_Email__c = 'jane.smith@test.com' LIMIT 1];
             Test.startTest();
-            Queue_Expert_Sch.Wrapper result = Queue_Expert_Sch.getRegDetails(reg.Id);
+            QueueExpertWrapper result = Queue_Expert_Sch.getRegDetails(reg.Id);
             Test.stopTest();
             System.assertNotEquals(null, result, 'Result should not be null');
         }
@@ -70,7 +70,7 @@ public class Queue_Expert_SchTestClass {
             Boolean handledExpectedException = false;
             Test.startTest();
             try {
-                Queue_Expert_Sch.Wrapper result = Queue_Expert_Sch.setStatus(reg.Id, loc.Id, 'Completed', 'Meeting completed');
+                QueueExpertWrapper result = Queue_Expert_Sch.setStatus(reg.Id, loc.Id, 'Completed', 'Meeting completed');
                 System.assertNotEquals(null, result, 'Result should not be null');
             } catch (QueryException e) {
                 handledExpectedException = e.getMessage().contains('secure query included inaccessible field');
@@ -102,7 +102,7 @@ public class Queue_Expert_SchTestClass {
             DateTime startTime = System.now().addHours(1);
             DateTime endTime = System.now().addHours(2);
             Test.startTest();
-            Queue_Expert_Sch.Wrapper result = Queue_Expert_Sch.getRegRecordUpdate(
+            QueueExpertWrapper result = Queue_Expert_Sch.getRegRecordUpdate(
                 reg.Id, jsonValues, UserInfo.getUserId(), null, null, null, null, loc.Id, startTime, endTime
             );
             Test.stopTest();
@@ -116,7 +116,12 @@ public class Queue_Expert_SchTestClass {
             Registration_SCH__c reg = [SELECT Id FROM Registration_SCH__c WHERE Customer_Email__c = 'jane.smith@test.com' LIMIT 1];
             String base64Data = EncodingUtil.base64Encode(Blob.valueOf('Test file content'));
             Test.startTest();
-            List<Attachment> result = Queue_Expert_Sch.uploadFile(reg.Id, 'TestFile.txt', base64Data, 'text/plain');
+            QueueExpertUploadFileRequest request = new QueueExpertUploadFileRequest();
+            request.parent = reg.Id;
+            request.fileName = 'TestFile.txt';
+            request.base64Data = base64Data;
+            request.contentType = 'text/plain';
+            List<Attachment> result = Queue_Expert_Sch.uploadFile(request);
             Test.stopTest();
             System.assertNotEquals(null, result, 'Result should not be null');
             System.assert(result.size() > 0, 'At least one attachment should be returned');
@@ -144,7 +149,7 @@ public class Queue_Expert_SchTestClass {
             Attachment att = new Attachment(Name = 'TestAttachment.txt', Body = Blob.valueOf('Test content'), ParentId = reg.Id);
             insert att;
             Test.startTest();
-            Queue_Expert_Sch.Wrapper result = Queue_Expert_Sch.deleteAT(att.Id, 'Attachment');
+            QueueExpertWrapper result = Queue_Expert_Sch.deleteAT(att.Id, 'Attachment');
             Test.stopTest();
             System.assertNotEquals(null, result, 'Result should not be null');
             List<Attachment> attachments = [SELECT Id FROM Attachment WHERE Id = :att.Id];
@@ -159,7 +164,7 @@ public class Queue_Expert_SchTestClass {
             Note note = new Note(Title = 'Test Note', Body = 'Test note body', ParentId = reg.Id);
             insert note;
             Test.startTest();
-            Queue_Expert_Sch.Wrapper result = Queue_Expert_Sch.deleteAT(note.Id, 'Note');
+            QueueExpertWrapper result = Queue_Expert_Sch.deleteAT(note.Id, 'Note');
             Test.stopTest();
             System.assertNotEquals(null, result, 'Result should not be null');
             List<Note> notes = [SELECT Id FROM Note WHERE Id = :note.Id];
@@ -171,7 +176,7 @@ public class Queue_Expert_SchTestClass {
     static void testGetRegRecords() {
         System.runAs(getRunAsUser()) {
             Test.startTest();
-            Queue_Expert_Sch.Records result = Queue_Expert_Sch.getRegRecords();
+            QueueExpertRecords result = Queue_Expert_Sch.getRegRecords();
             Test.stopTest();
             System.assertNotEquals(null, result, 'Result should not be null');
         }
@@ -181,7 +186,7 @@ public class Queue_Expert_SchTestClass {
     static void testQueueExpertRecordsConstructor() {
         System.runAs(getRunAsUser()) {
             Test.startTest();
-            Queue_Expert_Sch.Records rec = new Queue_Expert_Sch.Records();
+            QueueExpertRecords rec = new QueueExpertRecords();
             Test.stopTest();
             System.assertNotEquals(null, rec, 'Records should not be null');
         }
@@ -191,8 +196,8 @@ public class Queue_Expert_SchTestClass {
     static void testQueueExpertSelectOptionsConstructor() {
         System.runAs(getRunAsUser()) {
             Test.startTest();
-            Queue_Expert_Sch.SelectOptions option1 = new Queue_Expert_Sch.SelectOptions('Label1', 'Value1');
-            Queue_Expert_Sch.SelectOptions option2 = new Queue_Expert_Sch.SelectOptions('Label2', 'Value2', true);
+            QueueExpertSelectOptions option1 = new QueueExpertSelectOptions('Label1', 'Value1');
+            QueueExpertSelectOptions option2 = new QueueExpertSelectOptions('Label2', 'Value2', true);
             Test.stopTest();
             System.assertNotEquals(null, option1, 'Option1 should not be null');
             System.assertNotEquals(null, option2, 'Option2 should not be null');
@@ -203,7 +208,7 @@ public class Queue_Expert_SchTestClass {
     static void testQueueExpertWrapperConstructor() {
         System.runAs(getRunAsUser()) {
             Test.startTest();
-            Queue_Expert_Sch.Wrapper wrapper = new Queue_Expert_Sch.Wrapper();
+            QueueExpertWrapper wrapper = new QueueExpertWrapper();
             Test.stopTest();
             System.assertNotEquals(null, wrapper, 'Wrapper should not be null');
         }

@@ -22,12 +22,12 @@ public with sharing class Queue_Expert_Sch {
         CHECK_IN_APPOINTMENTS,
         TODAYS_APPOINTMENTS
     };
-    private static final List<SelectOptions> CATEGORY_OPTIONS = new List<SelectOptions>{
-        new SelectOptions(TODAYS_APPOINTMENTS, TODAYS_APPOINTMENTS),
-        new SelectOptions(CHECK_IN_APPOINTMENTS, CHECK_IN_APPOINTMENTS),
-        new SelectOptions(FUTURE_APPOINTMENTS, FUTURE_APPOINTMENTS),
-        new SelectOptions(PAST_APPOINTMENTS, PAST_APPOINTMENTS),
-        new SelectOptions(COMPLETED_APPOINTMENTS, COMPLETED_APPOINTMENTS)
+    private static final List<QueueExpertSelectOptions> CATEGORY_OPTIONS = new List<QueueExpertSelectOptions>{
+        new QueueExpertSelectOptions(TODAYS_APPOINTMENTS, TODAYS_APPOINTMENTS),
+        new QueueExpertSelectOptions(CHECK_IN_APPOINTMENTS, CHECK_IN_APPOINTMENTS),
+        new QueueExpertSelectOptions(FUTURE_APPOINTMENTS, FUTURE_APPOINTMENTS),
+        new QueueExpertSelectOptions(PAST_APPOINTMENTS, PAST_APPOINTMENTS),
+        new QueueExpertSelectOptions(COMPLETED_APPOINTMENTS, COMPLETED_APPOINTMENTS)
     };
     private static final Set<String> ALLOWED_CAT_VALUES = new Set<String>{
         CHECK_IN_APPOINTMENTS,
@@ -65,7 +65,7 @@ public with sharing class Queue_Expert_Sch {
      */
     @AuraEnabled(cacheable=false)
     @SuppressWarnings('PMD.ExcessiveParameterList')
-    public static Wrapper updateRecordValues(String regId, String recValues, String userID, String recordType, String queueId, String accountId, String event, String location, DateTime sDate, DateTime eDate) {
+    public static QueueExpertWrapper updateRecordValues(String regId, String recValues, String userID, String recordType, String queueId, String accountId, String event, String location, DateTime sDate, DateTime eDate) {
         // commented by abuzar on 2026-03-30 for the scanning issue and added below line "Moved record-update action logic into a dedicated support class to reduce Queue_Expert_Sch class-level complexity and NCSS."
         // existing method body moved to QueueExpertRecordActionSupport.updateRecordValues(...)
         return QueueExpertRecordActionSupport.updateRecordValues(regId, recValues, userID, recordType, queueId, accountId, event, location, sDate, eDate);
@@ -95,8 +95,8 @@ public with sharing class Queue_Expert_Sch {
      * @return Wrapper populated with setup metadata and initial records.
      */
     @AuraEnabled
-    public static Wrapper initSetUp() {
-        Wrapper wrapper = new Wrapper();
+    public static QueueExpertWrapper initSetUp() {
+        QueueExpertWrapper wrapper = new QueueExpertWrapper();
         try {
             String userid = UserInfo.getUserId();
             // commented by abuzar on 2026-03-13 for the scanning issue and added below line "moved setup helper logic into the support class to reduce Queue_Expert_Sch class cyclomatic complexity"
@@ -129,10 +129,10 @@ public with sharing class Queue_Expert_Sch {
      */
     @AuraEnabled
     @SuppressWarnings('PMD.ExcessiveParameterList')
-    public static Wrapper getRecordsOfLocationsonLoad(String location, String resource, String service, String program, String catValue) {
+    public static QueueExpertWrapper getRecordsOfLocationsonLoad(String location, String resource, String service, String program, String catValue) {
         //System.debug(LoggingLevel.DEBUG, 'getRecordsOfLocations is called' + program + ' , ' + catValue);
         //System.debug(LoggingLevel.DEBUG, 'location=>' + location + ', service==>' + service + ' ,program=>' + program);
-        Wrapper wrapper = new Wrapper();
+        QueueExpertWrapper wrapper = new QueueExpertWrapper();
         // commented by abuzar on 2026-03-13 for the scanning issue and added below line "removed the long helper constructor parameter list and moved record-loading logic into the support class"
         // LocationLoadRequest request = new LocationLoadRequest(location, resource, service, catValue);
         // QueueExpertLocationLoadRequest request = QueueExpertSchSupport.buildLocationLoadRequest(location, resource, service, catValue);
@@ -163,7 +163,7 @@ public with sharing class Queue_Expert_Sch {
      * @return Wrapper containing refreshed registration details.
      */
     @AuraEnabled(cacheable=false)
-    public static Wrapper popUpRecordsOfId(string id, String location,String waitingTime){
+    public static QueueExpertWrapper popUpRecordsOfId(string id, String location,String waitingTime){
         // commented by abuzar on 2026-03-30 for the scanning issue and added below line "Moved popup record action logic into a dedicated support class to reduce Queue_Expert_Sch class-level complexity and NCSS."
         // existing method body moved to QueueExpertRecordActionSupport.popUpRecordsOfId(...)
         return QueueExpertRecordActionSupport.popUpRecordsOfId(id, location, waitingTime);
@@ -176,7 +176,7 @@ public with sharing class Queue_Expert_Sch {
      * @return Wrapper containing the selected registration and related records.
      */
     @AuraEnabled
-    public static Wrapper getRegDetails(string id){
+    public static QueueExpertWrapper getRegDetails(string id){
         // commented by abuzar on 2026-03-30 for the scanning issue and added below line "Moved registration-detail loading logic into a dedicated support class to reduce Queue_Expert_Sch class-level complexity and NCSS."
         // existing method body moved to QueueExpertRecordActionSupport.getRegDetails(...)
         return QueueExpertRecordActionSupport.getRegDetails(id);
@@ -193,10 +193,13 @@ public with sharing class Queue_Expert_Sch {
      */
     @AuraEnabled(cacheable=false)
     @SuppressWarnings('PMD.ExcessiveParameterList')
-    public static Wrapper setStatus(String passedId, String location,String status,String purpose){
+    public static QueueExpertWrapper setStatus(String passedId, String location,String status,String purpose){
         // commented by abuzar on 2026-03-30 for the scanning issue and added below line "Moved status-update action logic into a dedicated support class to reduce Queue_Expert_Sch class-level complexity and NCSS."
         // existing method body moved to QueueExpertRecordActionSupport.setStatus(...)
-        return QueueExpertRecordActionSupport.setStatus(passedId, location, status, purpose);
+        // commented by abuzar on 2026-03-30 for the scanning issue and added below line "The support-layer setStatus method no longer accepts the unused location parameter after reducing its parameter count."
+        // return QueueExpertRecordActionSupport.setStatus(passedId, location, status, purpose);
+        return QueueExpertRecordActionSupport.setStatus(passedId, status, purpose);
+        //changes end here by abuzar
         //changes end here by abuzar
     }
 
@@ -217,7 +220,7 @@ public with sharing class Queue_Expert_Sch {
      */
     @AuraEnabled(cacheable=false)
     @SuppressWarnings('PMD.ExcessiveParameterList')
-    public static Wrapper getRegRecordUpdate(String regId, String recValues,String userID, String recordType,String queueId, String accountId, String event, String location,DateTime sDate, DateTime eDate) {
+    public static QueueExpertWrapper getRegRecordUpdate(String regId, String recValues,String userID, String recordType,String queueId, String accountId, String event, String location,DateTime sDate, DateTime eDate) {
         // commented by abuzar on 2026-03-30 for the scanning issue and added below line "Moved registration-refresh update logic into a dedicated support class to reduce Queue_Expert_Sch class-level complexity and NCSS."
         // existing method body moved to QueueExpertRecordActionSupport.getRegRecordUpdate(...)
         return QueueExpertRecordActionSupport.getRegRecordUpdate(regId, recValues, userID, recordType, queueId, accountId, event, location, sDate, eDate);
@@ -229,22 +232,41 @@ public with sharing class Queue_Expert_Sch {
 
     // commented by abuzar on 2026-03-30 for the scanning issue and added below line "Shared validation, access, upload, note, and delete helpers were extracted into dedicated support classes to reduce Queue_Expert_Sch class cyclomatic complexity, cognitive complexity, and NCSS."
     // original helper method implementations moved to QueueExpertAccessSupport and QueueExpertRelatedRecordActionSupport
+    /**
+     * @description Verifies that the supplied parent record is accessible.
+     * @param parentId Parent record identifier to validate.
+     */
     public static void assertParentRecordAccessible(Id parentId) {
         QueueExpertRelatedRecordActionSupport.assertParentRecordAccessible(parentId);
     }
 
+    /**
+     * @description Returns attachments related to the provided parent record.
+     * @param parentId Parent record identifier whose attachments should be returned.
+     * @return Attachments associated with the parent record.
+     */
     public static List<Attachment> getAttachmentsByParent(Id parentId) {
         return QueueExpertRelatedRecordActionSupport.getAttachmentsByParent(parentId);
     }
 
+    /**
+     * @description Returns notes related to the provided parent record.
+     * @param parentId Parent record identifier whose notes should be returned.
+     * @return Notes associated with the parent record.
+     */
     public static List<Note> getNotesByParent(Id parentId) {
         return QueueExpertRelatedRecordActionSupport.getNotesByParent(parentId);
     }
 
+    /**
+     * @description Uploads an attachment for the supplied queue-expert request payload.
+     * @param request Upload request payload containing parent and file details.
+     * @return Refreshed list of attachments for the parent record.
+     */
     @AuraEnabled
     // commented by abuzar on 2026-03-30 for the scanning issue and added below line "The upload action now accepts a single wrapper request so it no longer uses a Boolean method parameter or a long parameter list in Queue_Expert_Sch."
     // public static List<Attachment> uploadFile(String parent, String fileName, String base64Data, String contentType, Boolean userInitiated) {
-    public static List<Attachment> uploadFile(UploadFileRequest request) {
+    public static List<Attachment> uploadFile(QueueExpertUploadFileRequest request) {
         return QueueExpertRelatedRecordActionSupport.uploadFile(request);
     }
     //changes end here by abuzar
@@ -255,6 +277,12 @@ public with sharing class Queue_Expert_Sch {
     // }
     //changes end here by abuzar
 
+    /**
+     * @description Saves a note for the provided registration.
+     * @param nn Serialized note payload from the client.
+     * @param regID Registration identifier that owns the note.
+     * @return Refreshed list of notes for the registration.
+     */
     @AuraEnabled
     public static List<Note> saveNotes(String nn, String regID) {
         return QueueExpertRelatedRecordActionSupport.saveNotes(nn, regID);
@@ -268,7 +296,7 @@ public with sharing class Queue_Expert_Sch {
      * @return Wrapper indicating completion state.
      */
     @AuraEnabled(cacheable=false)
-    public static wrapper  deleteAT(String raId, String objName){
+    public static QueueExpertWrapper  deleteAT(String raId, String objName){
         // commented by abuzar on 2026-03-30 for the scanning issue and added below line "Moved related-record delete logic into a dedicated support class to reduce Queue_Expert_Sch class-level complexity and NCSS."
         // existing method body moved to QueueExpertRelatedRecordActionSupport.deleteAT(...)
         return QueueExpertRelatedRecordActionSupport.deleteAT(raId, objName);
@@ -280,89 +308,14 @@ public with sharing class Queue_Expert_Sch {
      * @return New records wrapper instance.
      */
     @AuraEnabled
-    public static Records getRegRecords(){
-        Records rec=new Records();
+    public static QueueExpertRecords getRegRecords(){
+        QueueExpertRecords rec=new QueueExpertRecords();
         return rec;
     }
 
-    /**
-     * Wrapper for registration details shown in the queue scheduler UI.
-     */
-    public class Records{
-        /**
-         * Registration record returned to the client.
-         */
-        @AuraEnabled public Registration_SCH__c regRecords {get;set;}
-        /**
-         * Calculated wait time label for the registration.
-         */
-        @AuraEnabled public String waitingTime {get;set;}
-        /**
-         * Initializes the records wrapper with an empty registration instance.
-         */
-        public Records(){
-            regRecords = new Registration_SCH__c();
-        }
-    }
-
-    /**
-     * Select-option model used by the scheduler picklists.
-     */
-    public class SelectOptions {
-        /**
-         * Display label shown to the user.
-         */
-        @AuraEnabled public String label     { get; set; }
-        /**
-         * Backing value submitted by the client.
-         */
-        @AuraEnabled public String value     { get; set; }
-        /**
-         * Indicates whether the option is preselected.
-         */
-        @SuppressWarnings('PMD.AvoidBooleanMethodParameters')
-        @AuraEnabled public Boolean selected { get; set; }
-
-        /**
-         * Creates an unselected option entry.
-         *
-         * @param lab Label shown to the user.
-         * @param val Stored option value.
-         */
-        public SelectOptions(String lab, string val) {
-            label = lab;//selected = false;
-            value = val;
-        }
-        /**
-         * Creates an option entry with an explicit selected state.
-         *
-         * @param lab Label shown to the user.
-         * @param val Stored option value.
-         * @param sel Whether the option is selected.
-         */
-        @SuppressWarnings('PMD.AvoidBooleanMethodParameters')
-        public SelectOptions(String lab, string val, Boolean sel) {
-            label = lab;
-            value = val;
-            selected = sel;
-        }
-    }
-
-    /**
-     * Request payload used by the queue scheduler upload action.
-     */
-    public class UploadFileRequest {
-        @AuraEnabled public String parent { get; set; }
-        @AuraEnabled public String fileName { get; set; }
-        @AuraEnabled public String base64Data { get; set; }
-        @AuraEnabled public String contentType { get; set; }
-
-        public UploadFileRequest() {
-            // commented by abuzar on 2026-03-30 for the scanning issue and added below line "Avoid empty block statements."
-            // required no-arg constructor for Aura/LWC request deserialization
-            //changes end here by abuzar
-        }
-    }
+    // commented by abuzar on 2026-03-30 for the scanning issue and added below line "The inner Wrapper, Records, SelectOptions, and UploadFileRequest transport models were moved to dedicated Apex classes so their accessor and constructor complexity no longer counts against Queue_Expert_Sch."
+    // legacy inner DTO implementations were removed from this controller and replaced by QueueExpertWrapper, QueueExpertRecords, QueueExpertSelectOptions, and QueueExpertUploadFileRequest
+    //changes end here by abuzar
 
     // commented by abuzar on 2026-03-13 for the scanning issue and added below line "moved the helper request model and branching utility methods into a dedicated support class to reduce Queue_Expert_Sch class cyclomatic complexity and remove the long helper constructor parameter list"
     /*
@@ -527,302 +480,4 @@ public with sharing class Queue_Expert_Sch {
     */
     //changes end here by abuzar
 
-    /**
-     * Response wrapper shared across queue scheduler Aura/LWC actions.
-     */
-    // commented by abuzar on 2026-03-30 for the scanning issue and added below line "The Wrapper class is a serialized Aura/LWC transport model with many required @AuraEnabled members, which triggers the ExcessivePublicCount PMD violation."
-    // public class Wrapper{
-    @SuppressWarnings('PMD.ExcessivePublicCount')
-    public class Wrapper{
-    //changes end here by abuzar
-        /**
-         * Category options available to the client.
-         */
-        @AuraEnabled public  List<Selectoptions> allCategory            { get;set;}
-        /**
-         * Registration records returned by the current query.
-         */
-        @AuraEnabled public List<Registration_SCH__c> records             {get;set;}
-        /**
-         * Error message surfaced to the client.
-         */
-        @AuraEnabled public String   errorMsg                                   {get;set;}
-        /**
-         * Available location names.
-         */
-        @AuraEnabled public Set<String> allLocations                            {get;set;}
-        /**
-         * Selected location identifier.
-         */
-        @AuraEnabled public String   locationId                                 {get;set;}
-        /**
-         * Generic response payload map for dynamic data.
-         */
-        @AuraEnabled public map<String, Object> mapOfRecords                   {get;set;}
-        /**
-         * Selected service identifier.
-         */
-        @AuraEnabled public String   serviceId                                  {get;set;}
-        /**
-         * Indicates whether at least one location exists.
-         */
-        @SuppressWarnings('PMD.AvoidBooleanMethodParameters')
-        @AuraEnabled public boolean existLocation                               {get;set;}
-        /**
-         * Indicates whether an operation is currently in progress.
-         */
-        @SuppressWarnings('PMD.AvoidBooleanMethodParameters')
-        @AuraEnabled public boolean inProgress                                  {get;set;}
-        /**
-         * Registration records used by object-based views.
-         */
-        @AuraEnabled public List<Registration_SCH__c> objectValues        {get;set;}
-        /**
-         * Indicates whether a status update succeeded.
-         */
-        @SuppressWarnings('PMD.AvoidBooleanMethodParameters')
-        @AuraEnabled public boolean updateStatus                                {get;set;}
-        /**
-         * Indicates whether a cancel status update succeeded.
-         */
-        @SuppressWarnings('PMD.AvoidBooleanMethodParameters')
-        @AuraEnabled public boolean updateStatusForCancel                       {get;set;}
-        /**
-         * User records available for assignment or filtering.
-         */
-        @AuraEnabled public List<User> userName                                 {get;set;}
-        /**
-         * Record types available to the client.
-         */
-        @AuraEnabled public List<RecordType> recordTypeName                     {get;set;}
-        /**
-         * Registrations prepared for rescheduling.
-         */
-        @AuraEnabled public list<Registration_SCH__c> getReschudle        {get;set;}
-        /**
-         * Human-readable booked time label.
-         */
-        @AuraEnabled public String bookedTime                                   {get;set;}
-        /**
-         * Available slot labels.
-         */
-        @AuraEnabled public List<String> slots                                  {get;set;}
-        /**
-         * Available slot date-times.
-         */
-        @AuraEnabled public List<DateTime> dslots                               {get;set;}
-        /**
-         * Selected reschedule date-time.
-         */
-        @AuraEnabled public DateTime resDate                                    {get;set;}
-		/**
-         * Indicates whether the time-slot update succeeded.
-         */
-		@SuppressWarnings('PMD.AvoidBooleanMethodParameters')
-        @AuraEnabled public boolean updateTimeSlot                              {get;set;}
-        /**
-         * Selected schedule day.
-         */
-        @AuraEnabled public Date sDay                                           {get;set;}
-
-        /**
-         * Slots grouped by date.
-         */
-        @AuraEnabled public Map<Date, List<DateTime>> mapOfslots                {get;set;}
-        /**
-         * Selected expert name.
-         */
-        @AuraEnabled public String expertName                                   {get;set;}
-        /**
-         * Current date-time reference used by the scheduler.
-         */
-        @AuraEnabled public DateTime todaysDate                                {get;set;}
-        /**
-         * Registrations impacted by slot updates.
-         */
-        @AuraEnabled public List<Registration_SCH__c> updateSlotReg       {get;set;}
-        /**
-         * Slots grouped by date and display key.
-         */
-        @AuraEnabled public Map<Date, Map<String,String>> mapOfslots2           {get;set;}
-        /**
-         * Existing slot date-times.
-         */
-        @AuraEnabled public List<DateTime> dateExist                            {get;set;}
-        /**
-         * Available expert identifiers.
-         */
-        @AuraEnabled public Set<String> expertIds                               {get;set;}
-        /**
-         * Available service identifiers.
-         */
-        @AuraEnabled public Set<String> serviceIds                              {get;set;}
-        /**
-         * Available location identifiers.
-         */
-        @AuraEnabled public Set<String> locationIds                             {get;set;}
-        /**
-         * Available program names.
-         */
-        @AuraEnabled public Set<String> programs                                {get;set;}
-        /**
-         * Generic disable flag used by the client.
-         */
-        @SuppressWarnings('PMD.AvoidBooleanMethodParameters')
-        @AuraEnabled public boolean dis                                         {get;set;}
-        /**
-         * Secondary disable flag used by the client.
-         */
-        @SuppressWarnings('PMD.AvoidBooleanMethodParameters')
-        @AuraEnabled public boolean disl                                        {get;set;}
-        /**
-         * Available service names.
-         */
-        @AuraEnabled public set<String> allService                              {get;set;}
-        /**
-         * Queue records returned to the client.
-         */
-        @AuraEnabled public List<Queue__c> queue                      {get;set;}
-        /**
-         * Available resource names.
-         */
-        @AuraEnabled public Set<String> allresources                            {get;set;}
-        /**
-         * Available service labels.
-         */
-        @AuraEnabled public Set<String> allServices                             {get;set;}
-        /**
-         * Queue records used for location selection.
-         */
-        @AuraEnabled public List<Queue__c> getLocation                {get;set;}
-        /**
-         * Filtered service value.
-         */
-        @AuraEnabled public  String   fser {get;set;}
-        /**
-         * Filtered resource value.
-         */
-        @AuraEnabled public String   fres                                       {get;set;}
-        /**
-         * Filtered location value.
-         */
-        @AuraEnabled public String   floc                                       {get;set;}
-        /**
-         * Selected location name.
-         */
-        @AuraEnabled public String   locName                                    {get;set;}
-        /**
-         * Attachments linked to the current registration.
-         */
-        @AuraEnabled public List<Attachment> attachments                       {get;set;}
-        /**
-         * Notes linked to the current registration.
-         */
-        @AuraEnabled public List<Note> notes                                   {get;set;}
-        /**
-         * Indicates whether team-related UI should be shown.
-         */
-        @SuppressWarnings('PMD.AvoidBooleanMethodParameters')
-        @AuraEnabled public Boolean   showTeam                                  {get;set;}
-        /**
-         * Selected resource name.
-         */
-        @AuraEnabled public  String resName {get;set;}
-        /**
-         * Selected team identifier.
-         */
-        @AuraEnabled public String selectedTeamID                               {get;set;}
-        /**
-         * Wrapped registration records for the client.
-         */
-        @AuraEnabled public List<Records> regRecords                            {get;set;}
-        /**
-         * Currently selected program.
-         */
-        @AuraEnabled public String currentProgram    {get;set;}
-        /**
-         * Alternate error message field.
-         */
-        @AuraEnabled public String        errmsg                                {get;set;}
-        /**
-         * Selected registration identifier.
-         */
-        @AuraEnabled public String selRG            {get;set;}
-        /**
-         * Selected resource identifier.
-         */
-        @AuraEnabled public String                             selRes            {get;set;}
-        /**
-         * Queue field API names requested by the client.
-         */
-        @AuraEnabled public List<String>                       queueFields      {get;set;}
-        /**
-         * Appointment field API names requested by the client.
-         */
-        @AuraEnabled public List<String>                 appointmentFields      {get;set;}
-        /**
-         * Customer field API names requested by the client.
-         */
-        @AuraEnabled public List<String>                 customerFields         {get;set;}
-        /**
-         * Meeting field API names requested by the client.
-         */
-        @AuraEnabled public List<String>                 meetingFields          {get;set;}
-        /**
-         * Scheduler field API names requested by the client.
-         */
-        @AuraEnabled public List<String>                 schudlarFields         {get;set;}
-        /**
-         * Refresh interval for the workbench view.
-         */
-        @AuraEnabled public Integer                      wbRefresh              { get;set;}
-        /**
-         * Selected user name for resource filtering.
-         */
-        @AuraEnabled public String                       selectedUserName       { get;set;} //User Resource__c
-        /**
-         * Active appointment filter label.
-         */
-        @AuraEnabled public String   appointmentFiler{ get;set;}
-        /**
-         * Initializes the wrapper with default collection and flag values.
-         */
-        public Wrapper(){
-            queueFields=new List<String>();
-            appointmentFields=new List<String>();
-            customerFields=new List<String>();
-            meetingFields=new List<String>();
-            schudlarFields=new List<String>();
-            allService=new set<String>();
-            queue=new List<Queue__c>();
-            allresources=new Set<String>();
-            allServices=new Set<String>();
-            getLocation=new List<Queue__c>();
-            attachments=new List<Attachment>();
-            notes=new List<Note>();
-            showTeam=false;
-            allCategory = new List<Selectoptions>();
-            selectedUserName='';
-            appointmentFiler='Todays Appointments';
-            dateExist=new List<DateTime>();
-            expertIds=new Set<String>();
-            serviceIds=new Set<String>();
-            locationIds=new Set<String>();
-            programs=new Set<String>();
-            dis=false;
-            disl=false;
-            objectValues    = new List<Registration_SCH__c>();
-            records         = new List<Registration_SCH__c>();
-            regRecords      = new List<Records>();
-            mapOfRecords    = new Map<String, Object>();
-            userName        = new List<User>();
-            recordTypeName  = new List<RecordType>();
-            existLocation   = false;
-            inProgress      = false;
-            updateStatus    = false;
-            updateStatusForCancel = false;
-        }
-    }
-    // commented by abuzar on 2026-03-13 for the scanning issue and added below line "moved the support classes into dedicated Apex files so Queue_Expert_Sch compiles cleanly and the helper complexity no longer counts against this class"
-    //changes end here by abuzar
 }

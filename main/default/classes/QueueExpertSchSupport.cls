@@ -16,12 +16,12 @@ public with sharing class QueueExpertSchSupport {
         CHECK_IN_APPOINTMENTS,
         TODAYS_APPOINTMENTS
     };
-    private static final List<Queue_Expert_Sch.SelectOptions> CATEGORY_OPTIONS = new List<Queue_Expert_Sch.SelectOptions>{
-        new Queue_Expert_Sch.SelectOptions(TODAYS_APPOINTMENTS, TODAYS_APPOINTMENTS),
-        new Queue_Expert_Sch.SelectOptions(CHECK_IN_APPOINTMENTS, CHECK_IN_APPOINTMENTS),
-        new Queue_Expert_Sch.SelectOptions(FUTURE_APPOINTMENTS, FUTURE_APPOINTMENTS),
-        new Queue_Expert_Sch.SelectOptions(PAST_APPOINTMENTS, PAST_APPOINTMENTS),
-        new Queue_Expert_Sch.SelectOptions(COMPLETED_APPOINTMENTS, COMPLETED_APPOINTMENTS)
+    private static final List<QueueExpertSelectOptions> CATEGORY_OPTIONS = new List<QueueExpertSelectOptions>{
+        new QueueExpertSelectOptions(TODAYS_APPOINTMENTS, TODAYS_APPOINTMENTS),
+        new QueueExpertSelectOptions(CHECK_IN_APPOINTMENTS, CHECK_IN_APPOINTMENTS),
+        new QueueExpertSelectOptions(FUTURE_APPOINTMENTS, FUTURE_APPOINTMENTS),
+        new QueueExpertSelectOptions(PAST_APPOINTMENTS, PAST_APPOINTMENTS),
+        new QueueExpertSelectOptions(COMPLETED_APPOINTMENTS, COMPLETED_APPOINTMENTS)
     };
     private static final Set<String> ALLOWED_CAT_VALUES = new Set<String>{
         CHECK_IN_APPOINTMENTS,
@@ -87,22 +87,22 @@ public with sharing class QueueExpertSchSupport {
      * @param userId Salesforce user identifier.
      * @return Initial wrapper populated with appointment data.
      */
-    public static Queue_Expert_Sch.Wrapper getInitialWrapper(String userId) {
+    public static QueueExpertWrapper getInitialWrapper(String userId) {
         for (String category : INITIAL_APPOINTMENT_FILTERS) {
-            Queue_Expert_Sch.Wrapper initialWrapper = Queue_Expert_Sch.getRecordsOfLocationsonLoad(null, userId, null, null, category);
+            QueueExpertWrapper initialWrapper = Queue_Expert_Sch.getRecordsOfLocationsonLoad(null, userId, null, null, category);
             initialWrapper.appointmentFiler = category;
             if (!initialWrapper.records.isEmpty() || category == TODAYS_APPOINTMENTS) {
                 return initialWrapper;
             }
         }
-        return new Queue_Expert_Sch.Wrapper();
+        return new QueueExpertWrapper();
     }
 
     /**
      * @description Assigns appointment, customer, and meeting field-set metadata to the wrapper.
      * @param wrapper Wrapper to enrich with field-set metadata.
      */
-    public static void assignFieldSetMetadata(Queue_Expert_Sch.Wrapper wrapper) {
+    public static void assignFieldSetMetadata(QueueExpertWrapper wrapper) {
         wrapper.appointmentFields = Queue_Expert_Sch.getFieldsSetApiName('Registration_SCH__c', 'WB_Appointment_Details');
         wrapper.customerFields = Queue_Expert_Sch.getFieldsSetApiName('Registration_SCH__c', 'WB_Customer_Details');
         wrapper.meetingFields = Queue_Expert_Sch.getFieldsSetApiName('Registration_SCH__c', 'WB_Meeting_Details');
@@ -112,8 +112,8 @@ public with sharing class QueueExpertSchSupport {
      * @description Copies available category options into the wrapper.
      * @param wrapper Wrapper to enrich with category options.
      */
-    public static void assignCategoryOptions(Queue_Expert_Sch.Wrapper wrapper) {
-        wrapper.allCategory = new List<Queue_Expert_Sch.SelectOptions>();
+    public static void assignCategoryOptions(QueueExpertWrapper wrapper) {
+        wrapper.allCategory = new List<QueueExpertSelectOptions>();
         wrapper.allCategory.addAll(CATEGORY_OPTIONS);
     }
 
@@ -152,7 +152,7 @@ public with sharing class QueueExpertSchSupport {
      * @param wrapper Wrapper to populate.
      * @param records Registration records to add to the wrapper.
      */
-    public static void populateWrapperFromRecords(Queue_Expert_Sch.Wrapper wrapper, List<Registration_SCH__c> records) {
+    public static void populateWrapperFromRecords(QueueExpertWrapper wrapper, List<Registration_SCH__c> records) {
         Integer index = 0;
         for (Registration_SCH__c recordItem : records) {
             QueueExpertSchSupportHelper.addInProgressRecord(wrapper, recordItem);
@@ -167,7 +167,7 @@ public with sharing class QueueExpertSchSupport {
      * @description Loads related data for the wrapper's primary registration record.
      * @param wrapper Wrapper to enrich with related data.
      */
-    public static void loadPrimaryRecordRelatedData(Queue_Expert_Sch.Wrapper wrapper) {
+    public static void loadPrimaryRecordRelatedData(QueueExpertWrapper wrapper) {
         QueueExpertSchSupportHelper.loadPrimaryRecordRelatedData(wrapper);
     }
 
@@ -177,7 +177,7 @@ public with sharing class QueueExpertSchSupport {
      * @param wrapper Wrapper used to store error details on failure.
      * @return Deserialized record values, or an empty list when parsing fails.
      */
-    public static List<String> deserializeRecordValues(String recValues, Queue_Expert_Sch.Wrapper wrapper) {
+    public static List<String> deserializeRecordValues(String recValues, QueueExpertWrapper wrapper) {
         try {
             return (List<String>)JSON.deserialize(recValues, List<String>.class);
         } catch (Exception e) {
@@ -233,7 +233,7 @@ public with sharing class QueueExpertSchSupport {
      * @param wrapper Wrapper to populate.
      * @param regId Registration identifier to load.
      */
-    public static void loadWrapperDetailsForRegistration(Queue_Expert_Sch.Wrapper wrapper, String regId) {
+    public static void loadWrapperDetailsForRegistration(QueueExpertWrapper wrapper, String regId) {
         // commented by abuzar on 2026-03-14 for the scanning issue and added below line "duplicate registration detail queries should be centralized to avoid DetectCopyPasteForApex violations"
         // wrapper.objectValues = [SELECT id, Name, OwnerId, RecordTypeId, Account__r.Flagged__c,Account__c,Account__r.Name, Expert_Location__c,Company__c, Customer_Status__c,Is_Amount_Refunded__c,
         //                         Twilio_Message__c, Queue__c,Queue__r.Name,Customer_Type__c, Status__c, Registration_Type__c,Registration_Time__c,Registration_End_Time__c,Product2__r.SCH_Wait_Threshold__c,End_Time__c,Wait_Time_Exceeded__c,

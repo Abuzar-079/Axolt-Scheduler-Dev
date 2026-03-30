@@ -3,30 +3,29 @@
  */
 @SuppressWarnings('PMD.ExcessivePublicCount')
 public with sharing class QueueExpertAccessSupport {
-    private static final Map<Integer, String> UPDATE_RECORD_FIELDS_BY_INDEX = new Map<Integer, String>{
-        0 => 'Customer_Status__c',
-        1 => 'Customer_Type__c',
-        2 => 'Registration_Type__c',
-        3 => 'Meeting_Status__c',
-        4 => 'Meeting_outcome__c',
-        5 => 'Purpose__c',
-        6 => 'Customer_Name__c',
-        7 => 'Customer_Lastname__c',
-        8 => 'Customer_Email__c',
-        9 => 'Customer_Contact__c',
-        15 => 'Contact__c'
-    };
+    // commented by abuzar on 2026-03-30 for the scanning issue and added below line "Validation and object-specific access logic were split into dedicated support classes to reduce QueueExpertAccessSupport class cyclomatic complexity."
+    // original validation constants and branching helper implementations moved to QueueExpertAccessValidationSupport and QueueExpertAccessEntitySupport
+    //changes end here by abuzar
 
     public static final String ACCESS_READ = 'READ';
     public static final String ACCESS_CREATE = 'CREATE';
     public static final String ACCESS_EDIT = 'EDIT';
 
+    /**
+     * @description Request model describing which object fields should be checked for access.
+     */
     public class FieldAccessRequest {
         public Schema.SObjectType sObjectType { get; private set; }
         public Set<String> fieldApiNames { get; private set; }
         public String accessType { get; private set; }
         public String errorMessage { get; private set; }
 
+        /**
+         * @description Creates a field-access request for the provided object, fields, and access type.
+         * @param sObjectType Target sObject type to check.
+         * @param fieldApiNames Field API names to validate.
+         * @param accessType Access type to enforce.
+         */
         public FieldAccessRequest(
             Schema.SObjectType sObjectType,
             Set<String> fieldApiNames,
@@ -37,12 +36,24 @@ public with sharing class QueueExpertAccessSupport {
             this.accessType = accessType;
         }
 
+        /**
+         * @description Adds a custom error message to the field-access request.
+         * @param errorMessage Error message to surface when access fails.
+         * @return Updated field-access request instance.
+         */
         public FieldAccessRequest withErrorMessage(String errorMessage) {
             this.errorMessage = errorMessage;
             return this;
         }
     }
 
+    /**
+     * @description Builds a field-access request wrapper for downstream validation.
+     * @param sObjectType Target sObject type to check.
+     * @param fieldApiNames Field API names to validate.
+     * @param accessType Access type to enforce.
+     * @return Field-access request wrapper.
+     */
     public static FieldAccessRequest buildFieldAccessRequest(
         Schema.SObjectType sObjectType,
         Set<String> fieldApiNames,
@@ -51,273 +62,214 @@ public with sharing class QueueExpertAccessSupport {
         return new FieldAccessRequest(sObjectType, fieldApiNames, accessType);
     }
 
+    /**
+     * @description Ensures the current request is associated with an authenticated user.
+     */
     public static void assertAuthenticatedRequest() {
-        if (String.isBlank(UserInfo.getUserId())) {
-            throw new AuraHandledException('Authentication is required for this action.');
-        }
+        // commented by abuzar on 2026-03-30 for the scanning issue and added below line "Moved authentication validation logic into a dedicated support class to reduce QueueExpertAccessSupport class cyclomatic complexity."
+        // existing method body moved to QueueExpertAccessValidationSupport.assertAuthenticatedRequest()
+        QueueExpertAccessValidationSupport.assertAuthenticatedRequest();
+        //changes end here by abuzar
     }
 
+    /**
+     * @description Validates that the provided string contains a non-blank value.
+     * @param value Input value to validate.
+     * @param errorMessage Error message to throw when the value is blank.
+     */
     public static void validateNotBlank(String value, String errorMessage) {
-        if (String.isBlank(value)) {
-            throw new AuraHandledException(errorMessage);
-        }
+        QueueExpertAccessValidationSupport.validateNotBlank(value, errorMessage);
     }
 
+    /**
+     * @description Validates a Salesforce record identifier.
+     * @param recordIdValue Raw record Id value from the client.
+     * @param errorMessage Error message to throw when the value is invalid.
+     * @return Parsed record Id.
+     */
     public static Id validateRecordId(String recordIdValue, String errorMessage) {
-        validateNotBlank(recordIdValue, errorMessage);
-        try {
-            return (Id)recordIdValue.trim();
-        } catch (TypeException ex) {
-            throw new AuraHandledException(errorMessage);
-        }
+        return QueueExpertAccessValidationSupport.validateRecordId(recordIdValue, errorMessage);
     }
 
+    /**
+     * @description Verifies that a record Id belongs to the expected sObject type.
+     * @param recordId Record identifier to inspect.
+     * @param expectedType Expected sObject type.
+     * @param errorMessage Error message to throw when the type does not match.
+     */
     public static void assertSObjectType(Id recordId, Schema.SObjectType expectedType, String errorMessage) {
-        if (recordId.getSObjectType() != expectedType) {
-            throw new AuraHandledException(errorMessage);
-        }
+        QueueExpertAccessValidationSupport.assertSObjectType(recordId, expectedType, errorMessage);
     }
 
+    /**
+     * @description Validates a registration identifier value.
+     * @param registrationIdValue Raw registration Id value from the client.
+     * @return Parsed registration Id.
+     */
     public static Id validateRegistrationId(String registrationIdValue) {
-        Id registrationId = validateRecordId(registrationIdValue, 'Invalid registration record id.');
-        assertSObjectType(registrationId, Registration_SCH__c.SObjectType, 'The target record must be a registration.');
-        return registrationId;
+        return QueueExpertAccessValidationSupport.validateRegistrationId(registrationIdValue);
     }
 
+    /**
+     * @description Validates a parent record identifier value.
+     * @param parent Raw parent record Id value from the client.
+     * @return Parsed parent record Id.
+     */
     public static Id validateParentRecordId(String parent) {
-        Id parentId = validateRecordId(parent, 'Invalid parent record id.');
-        assertSObjectType(parentId, Registration_SCH__c.SObjectType, 'Parent record must be a registration.');
-        return parentId;
+        return QueueExpertAccessValidationSupport.validateParentRecordId(parent);
     }
 
+    /**
+     * @description Verifies object-level CRUD access for the supplied sObject type.
+     * @param sObjectType Target sObject type to validate.
+     * @param accessType Access type to enforce.
+     * @param errorMessage Error message to throw when access is denied.
+     */
     public static void checkObjectAccess(Schema.SObjectType sObjectType, String accessType, String errorMessage) {
-        Schema.DescribeSObjectResult describeResult = sObjectType.getDescribe(SObjectDescribeOptions.DEFERRED);
-        Boolean hasAccess = accessType == ACCESS_READ
-            ? describeResult.isAccessible()
-            : accessType == ACCESS_CREATE
-                ? describeResult.isCreateable()
-                : describeResult.isUpdateable();
-        if (!hasAccess) {
-            throw new AuraHandledException(errorMessage);
-        }
+        QueueExpertAccessValidationSupport.checkObjectAccess(sObjectType, accessType, errorMessage);
     }
 
+    /**
+     * @description Verifies field-level access using the supplied request definition.
+     * @param request Field-access request wrapper to evaluate.
+     */
     public static void checkFieldAccess(FieldAccessRequest request) {
-        Map<String, Schema.SObjectField> fieldMap = request.sObjectType.getDescribe(SObjectDescribeOptions.DEFERRED).fields.getMap();
-        for (String fieldApiName : request.fieldApiNames) {
-            if (!fieldMap.containsKey(fieldApiName)) {
-                throw new AuraHandledException('Unsupported field requested: ' + fieldApiName);
-            }
-            Schema.DescribeFieldResult fieldDescribe = fieldMap.get(fieldApiName).getDescribe();
-            Boolean hasAccess = request.accessType == ACCESS_READ
-                ? fieldDescribe.isAccessible()
-                : request.accessType == ACCESS_CREATE
-                    ? fieldDescribe.isCreateable()
-                    : fieldDescribe.isUpdateable();
-            if (!hasAccess) {
-                throw new AuraHandledException(request.errorMessage);
-            }
-        }
+        QueueExpertAccessValidationSupport.checkFieldAccess(request);
     }
 
+    /**
+     * @description Deserializes client-submitted values for record updates.
+     * @param payload Serialized payload from the client.
+     * @param errorMessage Error message to throw when deserialization fails.
+     * @return Deserialized list of values.
+     */
     public static List<String> deserializeSubmittedValues(String payload, String errorMessage) {
-        validateNotBlank(payload, errorMessage);
-        try {
-            List<String> submittedValues = (List<String>)JSON.deserialize(payload, List<String>.class);
-            return submittedValues == null ? new List<String>() : submittedValues;
-        } catch (JSONException ex) {
-            throw new AuraHandledException(errorMessage);
-        }
+        return QueueExpertAccessValidationSupport.deserializeSubmittedValues(payload, errorMessage);
     }
 
+    /**
+     * @description Normalizes a client-submitted field value for DML assignment.
+     * @param value Raw value from the client.
+     * @return Normalized value or `null` when blank.
+     */
     public static String normalizeForField(String value) {
-        return String.isBlank(value) ? null : value.trim();
+        return QueueExpertAccessValidationSupport.normalizeForField(value);
     }
 
+    /**
+     * @description Applies approved record-update values to the target registration.
+     * @param registrationToUpdate Registration record being prepared for update.
+     * @param recordValues Ordered values submitted by the client.
+     */
     public static void applyApprovedUpdateRecordValues(Registration_SCH__c registrationToUpdate, List<String> recordValues) {
-        for (Integer indexValue : UPDATE_RECORD_FIELDS_BY_INDEX.keySet()) {
-            if (recordValues.size() <= indexValue) {
-                continue;
-            }
-            registrationToUpdate.put(
-                UPDATE_RECORD_FIELDS_BY_INDEX.get(indexValue),
-                normalizeForField(recordValues[indexValue])
-            );
-        }
-        if (recordValues.size() >= 15) {
-            registrationToUpdate.Status__c = 'Completed';
-        }
+        QueueExpertAccessValidationSupport.applyApprovedUpdateRecordValues(registrationToUpdate, recordValues);
     }
 
+    /**
+     * @description Throws an AuraHandledException when an insert result contains an error.
+     * @param saveResult Database insert result to inspect.
+     * @param errorMessage Base error message to include in the exception.
+     */
     public static void saveInsertResult(Database.SaveResult saveResult, String errorMessage) {
-        if (saveResult == null || !saveResult.isSuccess()) {
-            throw buildDmlException(errorMessage, saveResult == null ? null : saveResult.getErrors());
-        }
+        QueueExpertAccessValidationSupport.saveInsertResult(saveResult, errorMessage);
     }
 
+    /**
+     * @description Throws an AuraHandledException when an update result contains an error.
+     * @param saveResult Database update result to inspect.
+     * @param errorMessage Base error message to include in the exception.
+     */
     public static void saveUpdateResult(Database.SaveResult saveResult, String errorMessage) {
-        if (saveResult == null || !saveResult.isSuccess()) {
-            throw buildDmlException(errorMessage, saveResult == null ? null : saveResult.getErrors());
-        }
+        QueueExpertAccessValidationSupport.saveUpdateResult(saveResult, errorMessage);
     }
 
+    /**
+     * @description Throws an AuraHandledException when a delete result contains an error.
+     * @param deleteResult Database delete result to inspect.
+     * @param errorMessage Base error message to include in the exception.
+     */
     public static void saveDeleteResult(Database.DeleteResult deleteResult, String errorMessage) {
-        if (deleteResult == null || !deleteResult.isSuccess()) {
-            throw buildDmlException(errorMessage, deleteResult == null ? null : deleteResult.getErrors());
-        }
+        QueueExpertAccessValidationSupport.saveDeleteResult(deleteResult, errorMessage);
     }
 
-    private static AuraHandledException buildDmlException(String errorMessage, Database.Error[] errors) {
-        String finalMessage = errorMessage;
-        if (errors != null && !errors.isEmpty() && !String.isBlank(errors[0].getMessage())) {
-            finalMessage += ' ' + errors[0].getMessage();
-        }
-        return new AuraHandledException(finalMessage);
-    }
-
-    private static void checkDeleteAccess(Schema.SObjectType sObjectType, String errorMessage) {
-        if (!sObjectType.getDescribe(SObjectDescribeOptions.DEFERRED).isDeletable()) {
-            throw new AuraHandledException(errorMessage);
-        }
-    }
-
-    private static String getParentObjectApiName(Id parentId) {
-        return parentId.getSObjectType().getDescribe(SObjectDescribeOptions.DEFERRED).getName();
-    }
-
+    /**
+     * @description Verifies that the supplied parent record is accessible.
+     * @param parentId Parent record identifier to validate.
+     */
     public static void assertParentRecordAccessible(Id parentId) {
-        checkObjectAccess(parentId.getSObjectType(), ACCESS_READ, 'Insufficient access to the parent record.');
-        Map<String, Object> bindVars = new Map<String, Object>{
-            'parentId' => parentId
-        };
-        List<SObject> parentRecords = Database.queryWithBinds(
-            'SELECT Id FROM ' + getParentObjectApiName(parentId) + ' WHERE Id = :parentId LIMIT 1',
-            bindVars,
-            AccessLevel.USER_MODE
-        );
-        if (parentRecords.isEmpty()) {
-            throw new AuraHandledException('Parent record is not accessible.');
-        }
+        QueueExpertAccessEntitySupport.assertParentRecordAccessible(parentId);
     }
 
+    /**
+     * @description Verifies that a parent registration record is accessible.
+     * @param parentId Parent registration identifier to validate.
+     */
     public static void assertRegistrationParentAccess(Id parentId) {
-        assertSObjectType(parentId, Registration_SCH__c.SObjectType, 'Parent record must be a registration.');
-        if (!Schema.sObjectType.Registration_SCH__c.isAccessible()) {
-            throw new AuraHandledException('Insufficient access to the parent registration.');
-        }
-        List<Registration_SCH__c> parentRegistrations = [
-            SELECT Id
-            FROM Registration_SCH__c
-            WHERE Id = :parentId
-            WITH USER_MODE
-            LIMIT 1
-        ];
-        if (parentRegistrations.isEmpty()) {
-            throw new AuraHandledException('Parent registration is not accessible.');
-        }
+        QueueExpertAccessEntitySupport.assertRegistrationParentAccess(parentId);
     }
 
+    /**
+     * @description Verifies requested access for the supplied registration record.
+     * @param registrationId Registration identifier to validate.
+     * @param accessType Access type to enforce.
+     */
     public static void assertRegistrationAccess(Id registrationId, String accessType) {
-        checkObjectAccess(
-            Registration_SCH__c.SObjectType,
-            accessType,
-            accessType == ACCESS_EDIT ? 'Insufficient access to update registrations.' : 'Insufficient access to view registrations.'
-        );
-        List<Registration_SCH__c> registrations = [
-            SELECT Id
-            FROM Registration_SCH__c
-            WHERE Id = :registrationId
-            WITH USER_MODE
-            LIMIT 1
-        ];
-        if (registrations.isEmpty()) {
-            throw new AuraHandledException('Registration record is not accessible.');
-        }
+        QueueExpertAccessEntitySupport.assertRegistrationAccess(registrationId, accessType);
     }
 
+    /**
+     * @description Verifies create access for attachments on the supplied parent registration.
+     * @param parentId Parent registration identifier.
+     */
     public static void assertAttachmentCreateAccess(Id parentId) {
-        assertRegistrationParentAccess(parentId);
-        if (!Schema.sObjectType.Attachment.isCreateable()) {
-            throw new AuraHandledException('Insufficient access to upload attachments.');
-        }
-        checkFieldAccess(
-            buildFieldAccessRequest(
-                Attachment.SObjectType,
-                new Set<String>{ 'ParentId', 'Body', 'Name', 'ContentType' },
-                ACCESS_CREATE
-            ).withErrorMessage('Insufficient field access to upload attachments.')
-        );
+        QueueExpertAccessEntitySupport.assertAttachmentCreateAccess(parentId);
     }
 
+    /**
+     * @description Verifies delete access for attachments on the supplied parent registration.
+     * @param parentId Parent registration identifier.
+     */
     public static void assertAttachmentDeleteAccess(Id parentId) {
-        assertRegistrationParentAccess(parentId);
-        checkDeleteAccess(Attachment.SObjectType, 'Insufficient access to delete attachments.');
-        checkFieldAccess(
-            buildFieldAccessRequest(
-                Attachment.SObjectType,
-                new Set<String>{ 'ParentId' },
-                ACCESS_READ
-            ).withErrorMessage('Insufficient access to delete attachments.')
-        );
+        QueueExpertAccessEntitySupport.assertAttachmentDeleteAccess(parentId);
     }
 
+    /**
+     * @description Verifies read access for attachments on the supplied parent registration.
+     * @param parentId Parent registration identifier.
+     */
     public static void assertAttachmentReadAccess(Id parentId) {
-        assertRegistrationParentAccess(parentId);
-        checkObjectAccess(Attachment.SObjectType, ACCESS_READ, 'Insufficient access to view attachments.');
-        checkFieldAccess(
-            buildFieldAccessRequest(
-                Attachment.SObjectType,
-                new Set<String>{ 'Id', 'Name', 'ParentId', 'ContentType' },
-                ACCESS_READ
-            ).withErrorMessage('Insufficient access to view attachments.')
-        );
+        QueueExpertAccessEntitySupport.assertAttachmentReadAccess(parentId);
     }
 
+    /**
+     * @description Verifies create access for notes on the supplied parent registration.
+     * @param parentId Parent registration identifier.
+     */
     public static void assertNoteCreateAccess(Id parentId) {
-        assertRegistrationParentAccess(parentId);
-        checkObjectAccess(Note.SObjectType, ACCESS_CREATE, 'Insufficient access to create notes.');
-        checkFieldAccess(
-            buildFieldAccessRequest(
-                Note.SObjectType,
-                new Set<String>{ 'ParentId', 'Title', 'Body' },
-                ACCESS_CREATE
-            ).withErrorMessage('Insufficient field access to create notes.')
-        );
+        QueueExpertAccessEntitySupport.assertNoteCreateAccess(parentId);
     }
 
+    /**
+     * @description Verifies update access for notes on the supplied parent registration.
+     * @param parentId Parent registration identifier.
+     */
     public static void assertNoteUpdateAccess(Id parentId) {
-        assertRegistrationParentAccess(parentId);
-        checkObjectAccess(Note.SObjectType, ACCESS_EDIT, 'Insufficient access to update notes.');
-        checkFieldAccess(
-            buildFieldAccessRequest(
-                Note.SObjectType,
-                new Set<String>{ 'ParentId', 'Title', 'Body' },
-                ACCESS_EDIT
-            ).withErrorMessage('Insufficient field access to update notes.')
-        );
+        QueueExpertAccessEntitySupport.assertNoteUpdateAccess(parentId);
     }
 
+    /**
+     * @description Verifies read access for notes on the supplied parent registration.
+     * @param parentId Parent registration identifier.
+     */
     public static void assertNoteReadAccess(Id parentId) {
-        assertRegistrationParentAccess(parentId);
-        checkObjectAccess(Note.SObjectType, ACCESS_READ, 'Insufficient access to view notes.');
-        checkFieldAccess(
-            buildFieldAccessRequest(
-                Note.SObjectType,
-                new Set<String>{ 'Id', 'ParentId', 'Title' },
-                ACCESS_READ
-            ).withErrorMessage('Insufficient access to view notes.')
-        );
+        QueueExpertAccessEntitySupport.assertNoteReadAccess(parentId);
     }
 
+    /**
+     * @description Verifies delete access for notes on the supplied parent registration.
+     * @param parentId Parent registration identifier.
+     */
     public static void assertNoteDeleteAccess(Id parentId) {
-        assertRegistrationParentAccess(parentId);
-        checkDeleteAccess(Note.SObjectType, 'Insufficient access to delete notes.');
-        checkFieldAccess(
-            buildFieldAccessRequest(
-                Note.SObjectType,
-                new Set<String>{ 'ParentId' },
-                ACCESS_READ
-            ).withErrorMessage('Insufficient access to delete notes.')
-        );
+        QueueExpertAccessEntitySupport.assertNoteDeleteAccess(parentId);
     }
 }

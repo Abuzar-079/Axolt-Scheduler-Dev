@@ -24,8 +24,22 @@ public with sharing class QueueExpertRecordActionSupport {
         'waiting_Time__c'
     };
 
+    /**
+     * @description Updates a registration record with approved queue-expert field values.
+     * @param regId Registration identifier to update.
+     * @param recValues Serialized field values submitted by the client.
+     * @param userID User identifier associated with the update request.
+     * @param recordType Record type context supplied by the client.
+     * @param queueId Queue identifier supplied by the client.
+     * @param accountId Account identifier supplied by the client.
+     * @param event Event identifier supplied by the client.
+     * @param location Expert location identifier supplied by the client.
+     * @param sDate Start date-time supplied by the client.
+     * @param eDate End date-time supplied by the client.
+     * @return Wrapper containing the update outcome.
+     */
     @SuppressWarnings('PMD.ExcessiveParameterList')
-    public static Queue_Expert_Sch.Wrapper updateRecordValues(
+    public static QueueExpertWrapper updateRecordValues(
         String regId,
         String recValues,
         String userID,
@@ -37,7 +51,7 @@ public with sharing class QueueExpertRecordActionSupport {
         DateTime sDate,
         DateTime eDate
     ) {
-        Queue_Expert_Sch.Wrapper wrapper = new Queue_Expert_Sch.Wrapper();
+        QueueExpertWrapper wrapper = new QueueExpertWrapper();
         QueueExpertAccessSupport.assertAuthenticatedRequest();
         Id registrationId = QueueExpertAccessSupport.validateRegistrationId(regId);
         List<String> recordValues = QueueExpertAccessSupport.deserializeSubmittedValues(recValues, 'Invalid record update payload.');
@@ -58,8 +72,15 @@ public with sharing class QueueExpertRecordActionSupport {
         return wrapper;
     }
 
-    public static Queue_Expert_Sch.Wrapper popUpRecordsOfId(String id, String location, String waitingTime) {
-        Queue_Expert_Sch.Wrapper wrapper = new Queue_Expert_Sch.Wrapper();
+    /**
+     * @description Marks a registration as in progress and reloads its detail wrapper.
+     * @param id Registration identifier to update.
+     * @param location Location context supplied by the client.
+     * @param waitingTime Waiting-time value to store on the registration.
+     * @return Wrapper containing refreshed registration details.
+     */
+    public static QueueExpertWrapper popUpRecordsOfId(String id, String location, String waitingTime) {
+        QueueExpertWrapper wrapper = new QueueExpertWrapper();
         QueueExpertAccessSupport.assertAuthenticatedRequest();
         Id registrationId = QueueExpertAccessSupport.validateRegistrationId(id);
         QueueExpertAccessSupport.assertRegistrationAccess(registrationId, QueueExpertAccessSupport.ACCESS_EDIT);
@@ -101,16 +122,31 @@ public with sharing class QueueExpertRecordActionSupport {
         return wrapper;
     }
 
-    public static Queue_Expert_Sch.Wrapper getRegDetails(String id) {
-        Queue_Expert_Sch.Wrapper wrapper = new Queue_Expert_Sch.Wrapper();
+    /**
+     * @description Loads queue-expert details for the supplied registration.
+     * @param id Registration identifier to load.
+     * @return Wrapper containing registration details and related data.
+     */
+    public static QueueExpertWrapper getRegDetails(String id) {
+        QueueExpertWrapper wrapper = new QueueExpertWrapper();
         Id registrationId = QueueExpertAccessSupport.validateRegistrationId(id);
         QueueExpertAccessSupport.assertRegistrationAccess(registrationId, QueueExpertAccessSupport.ACCESS_READ);
         QueueExpertSchSupport.loadWrapperDetailsForRegistration(wrapper, id);
         return wrapper;
     }
 
-    public static Queue_Expert_Sch.Wrapper setStatus(String passedId, String location, String status, String purpose) {
-        Queue_Expert_Sch.Wrapper wrapper = new Queue_Expert_Sch.Wrapper();
+    // commented by abuzar on 2026-03-30 for the scanning issue and added below line "Avoid long parameter lists (4 parameters - threshold is 4)."
+    // public static QueueExpertWrapper setStatus(String passedId, String location, String status, String purpose) {
+    /**
+     * @description Updates the registration status and completion metadata.
+     * @param passedId Registration identifier to update.
+     * @param status Status value to store on the registration.
+     * @param purpose Cancellation or completion reason from the client.
+     * @return Wrapper containing the status-update outcome.
+     */
+    public static QueueExpertWrapper setStatus(String passedId, String status, String purpose) {
+    //changes end here by abuzar
+        QueueExpertWrapper wrapper = new QueueExpertWrapper();
         QueueExpertAccessSupport.assertAuthenticatedRequest();
         Id registrationId = QueueExpertAccessSupport.validateRegistrationId(passedId);
         QueueExpertAccessSupport.validateNotBlank(status, 'Status is required.');
@@ -153,8 +189,22 @@ public with sharing class QueueExpertRecordActionSupport {
         return wrapper;
     }
 
+    /**
+     * @description Updates a registration and reloads the queue-expert detail wrapper.
+     * @param regId Registration identifier to update.
+     * @param recValues Serialized field values submitted by the client.
+     * @param userID User identifier associated with the update request.
+     * @param recordType Record type context supplied by the client.
+     * @param queueId Queue identifier supplied by the client.
+     * @param accountId Account identifier supplied by the client.
+     * @param event Event identifier supplied by the client.
+     * @param location Expert location identifier supplied by the client.
+     * @param sDate Updated start date-time.
+     * @param eDate Updated end date-time.
+     * @return Wrapper containing refreshed registration details.
+     */
     @SuppressWarnings('PMD.ExcessiveParameterList')
-    public static Queue_Expert_Sch.Wrapper getRegRecordUpdate(
+    public static QueueExpertWrapper getRegRecordUpdate(
         String regId,
         String recValues,
         String userID,
@@ -166,7 +216,7 @@ public with sharing class QueueExpertRecordActionSupport {
         DateTime sDate,
         DateTime eDate
     ) {
-        Queue_Expert_Sch.Wrapper wrapper = new Queue_Expert_Sch.Wrapper();
+        QueueExpertWrapper wrapper = new QueueExpertWrapper();
         QueueExpertAccessSupport.assertAuthenticatedRequest();
         Id registrationId = QueueExpertAccessSupport.validateRegistrationId(regId);
         List<String> recordValues = QueueExpertAccessSupport.deserializeSubmittedValues(recValues, 'Invalid record update payload.');
