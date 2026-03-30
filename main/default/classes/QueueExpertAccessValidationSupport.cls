@@ -92,15 +92,7 @@ public with sharing class QueueExpertAccessValidationSupport {
      * @param errorMessage Error message to throw when access is denied.
      */
     public static void checkObjectAccess(Schema.SObjectType sObjectType, String accessType, String errorMessage) {
-        Schema.DescribeSObjectResult describeResult = sObjectType.getDescribe(SObjectDescribeOptions.DEFERRED);
-        Boolean hasAccess = accessType == QueueExpertAccessSupport.ACCESS_READ
-            ? describeResult.isAccessible()
-            : accessType == QueueExpertAccessSupport.ACCESS_CREATE
-                ? describeResult.isCreateable()
-                : describeResult.isUpdateable();
-        if (!hasAccess) {
-            throw new AuraHandledException(errorMessage);
-        }
+        QueueExpertAccessValidationCrudSupport.checkObjectAccess(sObjectType, accessType, errorMessage);
     }
 
     /**
@@ -108,21 +100,7 @@ public with sharing class QueueExpertAccessValidationSupport {
      * @param request Field-access request wrapper to evaluate.
      */
     public static void checkFieldAccess(QueueExpertAccessSupport.FieldAccessRequest request) {
-        Map<String, Schema.SObjectField> fieldMap = request.sObjectType.getDescribe(SObjectDescribeOptions.DEFERRED).fields.getMap();
-        for (String fieldApiName : request.fieldApiNames) {
-            if (!fieldMap.containsKey(fieldApiName)) {
-                throw new AuraHandledException('Unsupported field requested: ' + fieldApiName);
-            }
-            Schema.DescribeFieldResult fieldDescribe = fieldMap.get(fieldApiName).getDescribe();
-            Boolean hasAccess = request.accessType == QueueExpertAccessSupport.ACCESS_READ
-                ? fieldDescribe.isAccessible()
-                : request.accessType == QueueExpertAccessSupport.ACCESS_CREATE
-                    ? fieldDescribe.isCreateable()
-                    : fieldDescribe.isUpdateable();
-            if (!hasAccess) {
-                throw new AuraHandledException(request.errorMessage);
-            }
-        }
+        QueueExpertAccessValidationCrudSupport.checkFieldAccess(request);
     }
 
     /**
@@ -132,13 +110,7 @@ public with sharing class QueueExpertAccessValidationSupport {
      * @return Deserialized list of values.
      */
     public static List<String> deserializeSubmittedValues(String payload, String errorMessage) {
-        validateNotBlank(payload, errorMessage);
-        try {
-            List<String> submittedValues = (List<String>)JSON.deserialize(payload, List<String>.class);
-            return submittedValues == null ? new List<String>() : submittedValues;
-        } catch (JSONException ex) {
-            throw new AuraHandledException(errorMessage);
-        }
+        return QueueExpertAccessValidationCrudSupport.deserializeSubmittedValues(payload, errorMessage);
     }
 
     /**
@@ -156,18 +128,11 @@ public with sharing class QueueExpertAccessValidationSupport {
      * @param recordValues Ordered values submitted by the client.
      */
     public static void applyApprovedUpdateRecordValues(Registration_SCH__c registrationToUpdate, List<String> recordValues) {
-        for (Integer indexValue : UPDATE_RECORD_FIELDS_BY_INDEX.keySet()) {
-            if (recordValues.size() <= indexValue) {
-                continue;
-            }
-            registrationToUpdate.put(
-                UPDATE_RECORD_FIELDS_BY_INDEX.get(indexValue),
-                normalizeForField(recordValues[indexValue])
-            );
-        }
-        if (recordValues.size() >= 15) {
-            registrationToUpdate.Status__c = 'Completed';
-        }
+        QueueExpertAccessValidationCrudSupport.applyApprovedUpdateRecordValues(
+            registrationToUpdate,
+            recordValues,
+            UPDATE_RECORD_FIELDS_BY_INDEX
+        );
     }
 
     /**
@@ -176,9 +141,7 @@ public with sharing class QueueExpertAccessValidationSupport {
      * @param errorMessage Base error message to include in the exception.
      */
     public static void saveInsertResult(Database.SaveResult saveResult, String errorMessage) {
-        if (saveResult == null || !saveResult.isSuccess()) {
-            throw buildDmlException(errorMessage, saveResult == null ? null : saveResult.getErrors());
-        }
+        QueueExpertAccessValidationCrudSupport.saveInsertResult(saveResult, errorMessage);
     }
 
     /**
@@ -187,9 +150,7 @@ public with sharing class QueueExpertAccessValidationSupport {
      * @param errorMessage Base error message to include in the exception.
      */
     public static void saveUpdateResult(Database.SaveResult saveResult, String errorMessage) {
-        if (saveResult == null || !saveResult.isSuccess()) {
-            throw buildDmlException(errorMessage, saveResult == null ? null : saveResult.getErrors());
-        }
+        QueueExpertAccessValidationCrudSupport.saveUpdateResult(saveResult, errorMessage);
     }
 
     /**
@@ -198,16 +159,6 @@ public with sharing class QueueExpertAccessValidationSupport {
      * @param errorMessage Base error message to include in the exception.
      */
     public static void saveDeleteResult(Database.DeleteResult deleteResult, String errorMessage) {
-        if (deleteResult == null || !deleteResult.isSuccess()) {
-            throw buildDmlException(errorMessage, deleteResult == null ? null : deleteResult.getErrors());
-        }
-    }
-
-    private static AuraHandledException buildDmlException(String errorMessage, Database.Error[] errors) {
-        String finalMessage = errorMessage;
-        if (errors != null && !errors.isEmpty() && !String.isBlank(errors[0].getMessage())) {
-            finalMessage += ' ' + errors[0].getMessage();
-        }
-        return new AuraHandledException(finalMessage);
+        QueueExpertAccessValidationCrudSupport.saveDeleteResult(deleteResult, errorMessage);
     }
 }

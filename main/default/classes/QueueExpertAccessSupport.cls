@@ -15,9 +15,13 @@ public with sharing class QueueExpertAccessSupport {
      * @description Request model describing which object fields should be checked for access.
      */
     public class FieldAccessRequest {
+        /** @description Target sObject type whose fields should be checked. */
         public Schema.SObjectType sObjectType { get; private set; }
+        /** @description Field API names included in the access check. */
         public Set<String> fieldApiNames { get; private set; }
+        /** @description CRUD/FLS access type being enforced. */
         public String accessType { get; private set; }
+        /** @description Error message returned when access validation fails. */
         public String errorMessage { get; private set; }
 
         /**

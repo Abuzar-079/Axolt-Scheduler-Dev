@@ -2,9 +2,13 @@
  * @description Request payload used by the queue scheduler upload action.
  */
 public with sharing class QueueExpertUploadFileRequest {
+    /** @description Parent registration Id that will own the uploaded attachment. */
     @AuraEnabled public String parent { get; set; }
+    /** @description File name supplied by the client for the upload. */
     @AuraEnabled public String fileName { get; set; }
+    /** @description Base64-encoded file body received from the client. */
     @AuraEnabled public String base64Data { get; set; }
+    /** @description MIME content type associated with the uploaded file. */
     @AuraEnabled public String contentType { get; set; }
 
     /**
