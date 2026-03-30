@@ -906,19 +906,17 @@ public with sharing class Queue_Expert_Sch {
 
    /**
  * @description Uploads an attachment to the specified parent record.
- * @param parent Parent record identifier.
- * @param fileName File name to save.
- * @param base64Data Base64-encoded file contents.
- * @param contentType MIME type of the uploaded file.
- * @param userInitiated Indicates whether the upload was triggered by a user action.
+ * @param request Upload request containing the parent identifier and file metadata.
  * @return Attachments currently associated with the parent record.
  */
     @AuraEnabled
-    @SuppressWarnings('PMD.ExcessiveParameterList')
-    public static List<Attachment> uploadFile(String parent, String fileName, String base64Data, String contentType, Boolean userInitiated) {
+    // commented by abuzar on 2026-03-30 for the scanning issue and added below line "The method used a Boolean method parameter, which triggers the AvoidBooleanMethodParameters PMD violation."
+    // public static List<Attachment> uploadFile(String parent, String fileName, String base64Data, String contentType, Boolean userInitiated) {
+    public static List<Attachment> uploadFile(UploadFileRequest request) {
+    //changes end here by abuzar
         assertAuthenticatedRequest();
-        Id parentId = validateParentRecordId(parent);
-        validateUploadInput(fileName, base64Data, contentType);
+        Id parentId = validateParentRecordId(request.parent);
+        validateUploadInput(request.fileName, request.base64Data, request.contentType);
         if (!Schema.sObjectType.Registration_SCH__c.isAccessible()) {
             throw new AuraHandledException('Insufficient access to the parent registration.');
         }
@@ -930,12 +928,12 @@ public with sharing class Queue_Expert_Sch {
             throw new AuraHandledException('Insufficient access to upload attachments.');
         }
         assertAttachmentCreateAccess(parentId);
-        Blob attachmentBody = decodeAttachmentBody(base64Data);
+        Blob attachmentBody = decodeAttachmentBody(request.base64Data);
         Attachment a = new Attachment();
         a.ParentId = parentId;
         a.Body = attachmentBody;
-        a.Name = fileName.trim();
-        a.ContentType = contentType.trim().toLowerCase();
+        a.Name = request.fileName.trim();
+        a.ContentType = request.contentType.trim().toLowerCase();
         saveInsertResult(
             Database.insert(a, false, AccessLevel.USER_MODE),
             'Unable to upload the attachment.'
@@ -943,20 +941,22 @@ public with sharing class Queue_Expert_Sch {
 
         return getAttachmentsByParent(parentId);
     }
-    /**
-     * @description Uploads an attachment for the specified parent record and returns the refreshed attachment list.
-     *
-     * @param parent Parent record identifier.
-     * @param fileName Name of the file being uploaded.
-     * @param base64Data Base64-encoded file body.
-     * @param contentType MIME type of the uploaded file.
-     * @return Attachments related to the provided parent record.
-     *
-     * @throws AuraHandledException If the attachment cannot be uploaded.
-     */
-    public static List<Attachment> uploadFile(String parent, String fileName, String base64Data, String contentType) {
-        return uploadFile(parent, fileName, base64Data, contentType, true);
-    }
+    // commented by abuzar on 2026-03-30 for the scanning issue and added below line "The overload uploadFile(String, String, String, String) exceeds the configured ExcessiveParameterList threshold and is unused because the wrapper-based AuraEnabled upload method is the active implementation."
+    // /**
+    //  * @description Uploads an attachment for the specified parent record and returns the refreshed attachment list.
+    //  *
+    //  * @param parent Parent record identifier.
+    //  * @param fileName Name of the file being uploaded.
+    //  * @param base64Data Base64-encoded file body.
+    //  * @param contentType MIME type of the uploaded file.
+    //  * @return Attachments related to the provided parent record.
+    //  *
+    //  * @throws AuraHandledException If the attachment cannot be uploaded.
+    //  */
+    // public static List<Attachment> uploadFile(String parent, String fileName, String base64Data, String contentType) {
+    //     return uploadFile(new UploadFileRequest(parent, fileName, base64Data, contentType));
+    // }
+    //changes end here by abuzar
 
     /**
      * @description Saves a note for the specified registration and returns related notes.
@@ -976,42 +976,97 @@ public with sharing class Queue_Expert_Sch {
             throw new AuraHandledException('Mismatched note parent record.');
         }
         validateNotBlank(requestedNote.Title, 'Note title is required.');
-
-        if (requestedNote.Id == null) {
-            if (!Schema.sObjectType.Note.isCreateable() ||
-                !Schema.sObjectType.Note.fields.ParentId.isCreateable() ||
-                !Schema.sObjectType.Note.fields.Title.isCreateable() ||
-                !Schema.sObjectType.Note.fields.Body.isCreateable()) {
-                throw new AuraHandledException('Insufficient access to create notes.');
-            }
-            assertNoteCreateAccess(parentId);
-            Note noteToInsert = new Note();
-            noteToInsert.ParentId = parentId;
-            noteToInsert.Title = requestedNote.Title.trim();
-            noteToInsert.Body = requestedNote.Body;
-            saveInsertResult(
-                Database.insert(noteToInsert, false, AccessLevel.USER_MODE),
-                'Unable to save the note.'
-            );
-        } else {
-            Note existingNote = getAccessibleNoteById(validateRecordId(String.valueOf(requestedNote.Id), 'Invalid note record id.'));
-            if (existingNote.ParentId != parentId) {
-                throw new AuraHandledException('Mismatched note parent record.');
-            }
-            if (!Schema.sObjectType.Note.isUpdateable() ||
-                !Schema.sObjectType.Note.fields.ParentId.isUpdateable() ||
-                !Schema.sObjectType.Note.fields.Title.isUpdateable() ||
-                !Schema.sObjectType.Note.fields.Body.isUpdateable()) {
-                throw new AuraHandledException('Insufficient access to update notes.');
-            }
-            assertNoteUpdateAccess(parentId);
-            Note noteToUpdate = buildSafeNoteForUpdate(existingNote.Id, parentId, requestedNote);
-            saveUpdateResult(
-                Database.update(noteToUpdate, false, AccessLevel.USER_MODE),
-                'Unable to save the note.'
-            );
-        }
+        // commented by abuzar on 2026-03-30 for the scanning issue and added below line "The method 'saveNotes(String, String)' has a cyclomatic complexity of 19."
+        // if (requestedNote.Id == null) {
+        //     if (!Schema.sObjectType.Note.isCreateable() ||
+        //         !Schema.sObjectType.Note.fields.ParentId.isCreateable() ||
+        //         !Schema.sObjectType.Note.fields.Title.isCreateable() ||
+        //         !Schema.sObjectType.Note.fields.Body.isCreateable()) {
+        //         throw new AuraHandledException('Insufficient access to create notes.');
+        //     }
+        //     assertNoteCreateAccess(parentId);
+        //     Note noteToInsert = new Note();
+        //     noteToInsert.ParentId = parentId;
+        //     noteToInsert.Title = requestedNote.Title.trim();
+        //     noteToInsert.Body = requestedNote.Body;
+        //     saveInsertResult(
+        //         Database.insert(noteToInsert, false, AccessLevel.USER_MODE),
+        //         'Unable to save the note.'
+        //     );
+        // } else {
+        //     Note existingNote = getAccessibleNoteById(validateRecordId(String.valueOf(requestedNote.Id), 'Invalid note record id.'));
+        //     if (existingNote.ParentId != parentId) {
+        //         throw new AuraHandledException('Mismatched note parent record.');
+        //     }
+        //     if (!Schema.sObjectType.Note.isUpdateable() ||
+        //         !Schema.sObjectType.Note.fields.ParentId.isUpdateable() ||
+        //         !Schema.sObjectType.Note.fields.Title.isUpdateable() ||
+        //         !Schema.sObjectType.Note.fields.Body.isUpdateable()) {
+        //         throw new AuraHandledException('Insufficient access to update notes.');
+        //     }
+        //     assertNoteUpdateAccess(parentId);
+        //     Note noteToUpdate = buildSafeNoteForUpdate(existingNote.Id, parentId, requestedNote);
+        //     saveUpdateResult(
+        //         Database.update(noteToUpdate, false, AccessLevel.USER_MODE),
+        //         'Unable to save the note.'
+        //     );
+        // }
+        persistRequestedNote(parentId, requestedNote);
+        //changes end here by abuzar
         return getNotesByParent(parentId);
+    }
+
+    private static void persistRequestedNote(Id parentId, Note requestedNote) {
+        if (requestedNote.Id == null) {
+            saveNewNote(parentId, requestedNote);
+            return;
+        }
+        saveExistingNote(parentId, requestedNote);
+    }
+
+    private static void saveNewNote(Id parentId, Note requestedNote) {
+        assertNoteCreateableFields();
+        assertNoteCreateAccess(parentId);
+        Note noteToInsert = new Note();
+        noteToInsert.ParentId = parentId;
+        noteToInsert.Title = requestedNote.Title.trim();
+        noteToInsert.Body = requestedNote.Body;
+        saveInsertResult(
+            Database.insert(noteToInsert, false, AccessLevel.USER_MODE),
+            'Unable to save the note.'
+        );
+    }
+
+    private static void saveExistingNote(Id parentId, Note requestedNote) {
+        Note existingNote = getAccessibleNoteById(validateRecordId(String.valueOf(requestedNote.Id), 'Invalid note record id.'));
+        if (existingNote.ParentId != parentId) {
+            throw new AuraHandledException('Mismatched note parent record.');
+        }
+        assertNoteUpdateableFields();
+        assertNoteUpdateAccess(parentId);
+        Note noteToUpdate = buildSafeNoteForUpdate(existingNote.Id, parentId, requestedNote);
+        saveUpdateResult(
+            Database.update(noteToUpdate, false, AccessLevel.USER_MODE),
+            'Unable to save the note.'
+        );
+    }
+
+    private static void assertNoteCreateableFields() {
+        if (!Schema.sObjectType.Note.isCreateable() ||
+            !Schema.sObjectType.Note.fields.ParentId.isCreateable() ||
+            !Schema.sObjectType.Note.fields.Title.isCreateable() ||
+            !Schema.sObjectType.Note.fields.Body.isCreateable()) {
+            throw new AuraHandledException('Insufficient access to create notes.');
+        }
+    }
+
+    private static void assertNoteUpdateableFields() {
+        if (!Schema.sObjectType.Note.isUpdateable() ||
+            !Schema.sObjectType.Note.fields.ParentId.isUpdateable() ||
+            !Schema.sObjectType.Note.fields.Title.isUpdateable() ||
+            !Schema.sObjectType.Note.fields.Body.isUpdateable()) {
+            throw new AuraHandledException('Insufficient access to update notes.');
+        }
     }
 
     /**
@@ -1264,9 +1319,26 @@ public with sharing class Queue_Expert_Sch {
     //changes end here by abuzar
 
     /**
-     * Response wrapper shared across queue scheduler Aura/LWC actions.
+     * Request payload used by the queue scheduler upload action.
      */
     @SuppressWarnings('PMD.ExcessivePublicCount')
+    public class UploadFileRequest {
+        @AuraEnabled public String parent { get; set; }
+        @AuraEnabled public String fileName { get; set; }
+        @AuraEnabled public String base64Data { get; set; }
+        @AuraEnabled public String contentType { get; set; }
+
+        public UploadFileRequest() {
+        }
+
+        public UploadFileRequest(String parent, String fileName, String base64Data, String contentType) {
+            this.parent = parent;
+            this.fileName = fileName;
+            this.base64Data = base64Data;
+            this.contentType = contentType;
+        }
+    }
+
     public class Wrapper{
         /**
          * Category options available to the client.

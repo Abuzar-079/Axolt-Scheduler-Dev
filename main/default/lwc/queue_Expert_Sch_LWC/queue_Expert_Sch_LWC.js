@@ -557,7 +557,10 @@ export default class QueueExpertSch extends LightningElement {
             return;
         }
         this.spinner = true;
-        uploadFile({...this.pendingUploadPayload, userInitiated: true })
+        // commented by abuzar on 2026-03-30 for the scanning issue and added below line "The Apex upload method now accepts a single wrapper request instead of a Boolean method parameter, so the payload must be passed under the request parameter."
+        // uploadFile({...this.pendingUploadPayload, userInitiated: true })
+        uploadFile({ request: this.pendingUploadPayload })
+        //changes end here by abuzar
             .then(result => {
                 this.refAttach = false;
                 this.selectedAttachments = result;
