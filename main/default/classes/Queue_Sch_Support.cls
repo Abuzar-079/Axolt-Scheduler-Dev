@@ -222,8 +222,12 @@ public with sharing class Queue_Sch_Support {
     public static Queue_Sch_Wrapper updateCancelReg(String reg, String cancelReason) {
         Queue_Sch_Wrapper wrapper = new Queue_Sch_Wrapper();
         try{
-            List<Registration_SCH__c> registrationsToUpdate = prepareCancellationRegistrationsForUpdate(reg, cancelReason);
-            updateCancellationRegistrations(registrationsToUpdate);
+            String normalizedCancelReason = normalizeCancellationReason(cancelReason);
+            List<Registration_SCH__c> registrationsToUpdate =
+                prepareCancellationRegistrationsForUpdate(reg, normalizedCancelReason);
+            updateCancellationRegistrations(
+                prepareCancellationRegistrationsForDml(registrationsToUpdate)
+            );
         }catch(Exception e){
             wrapper.errMsg = e.getMessage();
         }
@@ -338,7 +342,7 @@ public with sharing class Queue_Sch_Support {
             pendingUpdate.Cancellation_Reasons__c = cancelReason;
         }
         registrationsToUpdate.add(pendingUpdate);
-        return sanitizeCancellationRegistrationsForUpdate(registrationsToUpdate);
+        return registrationsToUpdate;
     }
 
     private static void assertRegistrationCancellationUpdateAccess(Boolean updatesCancellationReason) {
@@ -365,6 +369,47 @@ public with sharing class Queue_Sch_Support {
             AccessType.UPDATABLE,
             registrationsToUpdate
         ).getRecords();
+    }
+
+    private static String normalizeCancellationReason(String cancelReason) {
+        if (String.isBlank(cancelReason)) {
+            return null;
+        }
+
+        for (Schema.PicklistEntry picklistEntry :
+            Registration_SCH__c.Cancellation_Reasons__c.getDescribe().getPicklistValues()) {
+            if (picklistEntry.getValue() == cancelReason) {
+                return String.valueOf(picklistEntry.getValue());
+            }
+        }
+
+        throw new AuraHandledException('Invalid cancellation reason.');
+    }
+
+    private static List<Registration_SCH__c> prepareCancellationRegistrationsForDml(
+        List<Registration_SCH__c> registrationsToUpdate
+    ) {
+        List<Registration_SCH__c> preparedUpdates = new List<Registration_SCH__c>();
+        if (registrationsToUpdate == null || registrationsToUpdate.isEmpty()) {
+            return preparedUpdates;
+        }
+
+        for (Registration_SCH__c sourceRegistration : registrationsToUpdate) {
+            if (sourceRegistration == null || sourceRegistration.Id == null) {
+                continue;
+            }
+
+            Registration_SCH__c preparedUpdate = new Registration_SCH__c(
+                Id = sourceRegistration.Id,
+                Status__c = sourceRegistration.Status__c
+            );
+            if (String.isNotBlank(sourceRegistration.Cancellation_Reasons__c)) {
+                preparedUpdate.Cancellation_Reasons__c = sourceRegistration.Cancellation_Reasons__c;
+            }
+            preparedUpdates.add(preparedUpdate);
+        }
+
+        return sanitizeCancellationRegistrationsForUpdate(preparedUpdates);
     }
 
     private static void updateCancellationRegistrations(List<Registration_SCH__c> regsToUpdate) {
