@@ -601,7 +601,19 @@ public with sharing class Queue_Expert_Sch {
         return parentId.getSObjectType().getDescribe(SObjectDescribeOptions.DEFERRED).getName();
         //changes end here by abuzar
     }
-
+/**
+ * @description Verifies that the current user has read access to the specified parent record.
+ *              Performs both object-level permission checks and a USER_MODE query to confirm
+ *              the record exists and is accessible to the running user.
+ *
+ * @param parentId The Salesforce record Id of the parent object to validate access for.
+ *
+ * @throws AuraHandledException If the parent record is not found or is inaccessible to the current user.
+ *
+ * @example
+ * Id accountId = '001XXXXXXXXXXXXXXX';
+ * assertParentRecordAccessible(accountId);
+ */
     public static void assertParentRecordAccessible(Id parentId) {
         checkObjectAccess(parentId.getSObjectType(), FieldAccessType.READ, 'Insufficient access to the parent record.');
         Map<String, Object> bindVars = new Map<String, Object>{
@@ -730,7 +742,19 @@ public with sharing class Queue_Expert_Sch {
             'Insufficient access to delete notes.'
         );
     }
-
+/**
+ * @description Verifies that the current user has read access to the specified parent record.
+ *              Performs both object-level permission checks and a USER_MODE query to confirm
+ *              the record exists and is accessible to the running user.
+ *
+ * @param parentId The Salesforce record Id of the parent object to validate access for.
+ *
+ * @throws AuraHandledException If the parent record is not found or is inaccessible to the current user.
+ *
+ * @example
+ * Id accountId = '001XXXXXXXXXXXXXXX';
+ * assertParentRecordAccessible(accountId);
+ */
     public static List<Attachment> getAttachmentsByParent(Id parentId) {
         assertAttachmentReadAccess(parentId);
         return [
@@ -742,7 +766,19 @@ public with sharing class Queue_Expert_Sch {
             LIMIT 1000
         ];
     }
-
+/**
+ * @description Verifies that the current user has read access to the specified parent record.
+ *              Performs both object-level permission checks and a USER_MODE query to confirm
+ *              the record exists and is accessible to the running user.
+ *
+ * @param parentId The Salesforce record Id of the parent object to validate access for.
+ *
+ * @throws AuraHandledException If the parent record is not found or is inaccessible to the current user.
+ *
+ * @example
+ * Id accountId = '001XXXXXXXXXXXXXXX';
+ * assertParentRecordAccessible(accountId);
+ */
     public static List<Note> getNotesByParent(Id parentId) {
         if (!Schema.sObjectType.Registration_SCH__c.isAccessible()) {
             throw new AuraHandledException('Insufficient access to the parent registration.');

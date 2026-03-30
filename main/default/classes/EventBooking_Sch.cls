@@ -24,8 +24,6 @@ public with sharing class EventBooking_Sch {
         'Send_Email__c',
         'Status__c'
     };
-
-    
     /** @description Stores the event allocation record type identifier. */
     @AuraEnabled public static Id evallocRecType {get;set;}
     /** @description Stores the event allocation records returned to the client. */
@@ -5301,12 +5299,7 @@ private static Registration_SCH__c buildPreparedRegistrationInsertRecord(
     private static void ensurePrimaryParentContact(List<Registration_SCH__c> parentRegs) {
         if (parentRegs.isEmpty() || !String.isBlank(parentRegs[0].Contact__c)) {
             return;
-        }
-
-
-        
-
-        
+        }        
         Registration_SCH__c pr = parentRegs[0];
         // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
         // List<Contact> existingContacts = [
