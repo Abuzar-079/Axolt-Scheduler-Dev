@@ -3716,16 +3716,13 @@ public with sharing class EventBooking_Sch {
         handleRegistrationSaveResults(saveResults, 'create');
     }
 
- private static void updateRegistrationsInUserMode(
-    List<Registration_SCH__c> registrationsToUpdate
-) {
-    if (registrationsToUpdate.isEmpty()) {
-        return;
+    private static void updateRegistrationsInUserMode(List<Registration_SCH__c> registrationsToUpdate) {
+        if (registrationsToUpdate.isEmpty()) {
+            return;
+        }
+        Database.SaveResult[] saveResults = Database.update(registrationsToUpdate, false, AccessLevel.USER_MODE);
+        handleRegistrationSaveResults(saveResults, 'update');
     }
-    Database.SaveResult[] saveResults =
-        Database.update(registrationsToUpdate, false, AccessLevel.USER_MODE);
-    handleRegistrationSaveResults(saveResults, 'update');
-}
 
     private static void handleRegistrationSaveResults(Database.SaveResult[] saveResults, String operationName) {
         List<String> errors = new List<String>();
@@ -3889,7 +3886,7 @@ public with sharing class EventBooking_Sch {
     */
 
     // Handles the case where no existing contact is found — builds new contacts and links them
- /*   private static List<Registration_SCH__c> buildRegistrationsWithNewContacts(
+    private static List<Registration_SCH__c> buildRegistrationsWithNewContacts(
         List<Registration_SCH__c> regList,
         RegistrationBuildContext context
     ) {
@@ -3941,68 +3938,7 @@ public with sharing class EventBooking_Sch {
         linkRegistrationsToCreatedContacts(rList, new ContactRegistrationLink(regsNeedingNewContact, contactsToUpsert), context);
         appendRegistrationsUsingExistingContact(rList, regsUsingExistingContact, context);
         return rList;
-    } */
-
-   private static List<Registration_SCH__c> buildRegistrationsWithNewContacts(
-    List<Registration_SCH__c> regList,
-    RegistrationBuildContext context
-) {
-    List<Registration_SCH__c> rList = new List<Registration_SCH__c>();
-    if (!context.canCreateReg) {
-        return rList;
     }
-
-    Boolean createNewContact = shouldCreateNewContact(regList[0], context.contactId);
-    ContactFieldAccess access = context.getContactFieldAccess();
-
-    List<Contact> contactsToUpsert = new List<Contact>();
-    List<Registration_SCH__c> regsNeedingNewContact  = new List<Registration_SCH__c>();
-    List<Registration_SCH__c> regsUsingExistingContact = new List<Registration_SCH__c>();
-
-    for (Registration_SCH__c reg : regList) {
-        Contact con = buildContactFromReg(reg, access);
-        if (shouldLinkWithNewContact(con, createNewContact)) {
-            contactsToUpsert.add(con);
-            regsNeedingNewContact.add(reg);
-        } else {
-            regsUsingExistingContact.add(reg);
-        }
-    }
-
-    Boolean canInsertContacts = context.canCreateContact && access.canSetLastName;
-
-    if (!contactsToUpsert.isEmpty() && canInsertContacts) {
-        insertContactsForRegistrations(contactsToUpsert);
-    }
-
-    linkRegistrationsToCreatedContacts(
-        rList,
-        new ContactRegistrationLink(regsNeedingNewContact, contactsToUpsert),
-        context
-    );
-    appendRegistrationsUsingExistingContact(rList, regsUsingExistingContact, context);
-    return rList;
-}
-
-
-private static void insertContactsForRegistrations(List<Contact> rawContacts) {
-    if (rawContacts.isEmpty()) {
-        return;
-    }
-
-    List<Contact> sanitized = new List<Contact>();
-    for (Contact c : rawContacts) {
-        sanitized.add(sanitizeContactForCreate(c));
-    }
-
-    Database.SaveResult[] saveResults =
-        Database.insert(sanitized, false, AccessLevel.USER_MODE);
-    handleContactSaveResults(saveResults);
-
-    for (Integer i = 0; i < rawContacts.size(); i++) {
-        rawContacts[i] = sanitized[i];
-    }
-}
 
     // Handles the case where an existing contact (by email or contactId) is already known
     private static List<Registration_SCH__c> buildRegistrationsWithExistingContact(
@@ -4239,85 +4175,25 @@ private static void insertContactsForRegistrations(List<Contact> rawContacts) {
         return sanitizedRegistration;
     }
 
-    // private static Contact sanitizeContactForCreate(Contact sourceContact) {
-    //     Contact sanitizedContact = new Contact();
-    //     Map<String, Object> populatedFields = sourceContact.getPopulatedFieldsAsMap();
-    //     Map<String, Schema.SObjectField> contactFields = Schema.sObjectType.Contact.fields.getMap();
-    //     for (String fieldName : populatedFields.keySet()) {
-    //         if (fieldName == 'Id' || !contactFields.containsKey(fieldName)) {
-    //             continue;
-    //         }
-    //         if (contactFields.get(fieldName).getDescribe().isCreateable()) {
-    //             sanitizedContact.put(fieldName, populatedFields.get(fieldName));
-    //         }
-    //     }
-    //     return sanitizedContact;
-    // }
-
-    // ✅ Zero loops — direct field assignment, zero taint surface.
-private static Contact sanitizeContactForCreate(Contact sourceContact) {
-    Contact sanitized = new Contact();
-
-    Map<String, Schema.SObjectField> fm =
-        Schema.sObjectType.Contact.fields.getMap();
-    Map<String, Object> populated =
-        sourceContact.getPopulatedFieldsAsMap();
-
-    // Direct assignments — no loop, no taint chain possible.
-    if (populated.containsKey('firstname')
-            && fm.get('firstname').getDescribe().isCreateable()) {
-        sanitized.FirstName = (String) populated.get('firstname');
-    }
-    if (populated.containsKey('lastname')
-            && fm.get('lastname').getDescribe().isCreateable()) {
-        sanitized.LastName = (String) populated.get('lastname');
-    }
-    if (populated.containsKey('mobilephone')
-            && fm.get('mobilephone').getDescribe().isCreateable()) {
-        sanitized.MobilePhone = (String) populated.get('mobilephone');
-    }
-    if (populated.containsKey('email')
-            && fm.get('email').getDescribe().isCreateable()) {
-        sanitized.Email = (String) populated.get('email');
-    }
-    if (populated.containsKey('event__c')
-            && fm.get('event__c').getDescribe().isCreateable()) {
-        sanitized.Event__c = (Id) populated.get('event__c');
-    }
-    // Add any other fields buildContactFromReg sets, following the same pattern.
-
-    return sanitized;
-}
-
-    private static void persistRegistrationContactAssignments(
-    RegistrationContactAssignmentDmlPlan dmlPlan
-) {
-    insertRegistrationsInUserMode(dmlPlan.registrationsToInsert);
-
-    // ✅ Re-materialise the list from IDs inside this method so the scanner
-    // sees no cross-method taint chain leading into the DML call.
-    updateRegistrationsInUserMode(
-        prepareRegistrationsForUpdate(dmlPlan.registrationsToUpdate)
-    );
-}
-
-private static List<Registration_SCH__c> prepareRegistrationsForUpdate(
-    List<Registration_SCH__c> source
-) {
-    List<Registration_SCH__c> prepared = new List<Registration_SCH__c>();
-    if (source == null || source.isEmpty()) {
-        return prepared;
-    }
-    Set<Id> seenIds = new Set<Id>();
-    for (Registration_SCH__c rec : source) {
-        if (rec.Id != null && !seenIds.contains(rec.Id)) {
-            seenIds.add(rec.Id);
-            prepared.add(rec);
+    private static Contact sanitizeContactForCreate(Contact sourceContact) {
+        Contact sanitizedContact = new Contact();
+        Map<String, Object> populatedFields = sourceContact.getPopulatedFieldsAsMap();
+        Map<String, Schema.SObjectField> contactFields = Schema.sObjectType.Contact.fields.getMap();
+        for (String fieldName : populatedFields.keySet()) {
+            if (fieldName == 'Id' || !contactFields.containsKey(fieldName)) {
+                continue;
+            }
+            if (contactFields.get(fieldName).getDescribe().isCreateable()) {
+                sanitizedContact.put(fieldName, populatedFields.get(fieldName));
+            }
         }
+        return sanitizedContact;
     }
-    return prepared;
-}
 
+    private static void persistRegistrationContactAssignments(RegistrationContactAssignmentDmlPlan dmlPlan) {
+        insertRegistrationsInUserMode(dmlPlan.registrationsToInsert);
+        updateRegistrationsInUserMode(dmlPlan.registrationsToUpdate);
+    }
 
     private static void insertContactsForRegistrations(List<Contact> contactsToInsert) {
         if (contactsToInsert.isEmpty()) {
@@ -5117,49 +4993,37 @@ private static List<Registration_SCH__c> prepareRegistrationsForUpdate(
         // Boolean canSetEmail = canAccessCreateAndUpdateContactField(Schema.sObjectType.Contact.fields.Email);
         // Boolean canSetMobilePhone = canAccessCreateAndUpdateContactField(Schema.sObjectType.Contact.fields.MobilePhone);
         // Boolean canSetPhone = canAccessCreateAndUpdateContactField(Schema.sObjectType.Contact.fields.Phone);
-        if (
-            Schema.sObjectType.Contact.isCreateable() &&
-            Schema.sObjectType.Registration_SCH__c.fields.Customer_Lastname__c.isAccessible() &&
-            Schema.sObjectType.Contact.fields.LastName.isCreateable()
-        ) {
+        Boolean canCreateContact = Schema.sObjectType.Contact.isCreateable();
+        Boolean canReadCustomerName = Schema.sObjectType.Registration_SCH__c.fields.Customer_Name__c.isAccessible();
+        Boolean canReadCustomerLastName = Schema.sObjectType.Registration_SCH__c.fields.Customer_Lastname__c.isAccessible();
+        Boolean canReadCustomerEmail = Schema.sObjectType.Registration_SCH__c.fields.Customer_Email__c.isAccessible();
+        Boolean canReadCustomerContact = Schema.sObjectType.Registration_SCH__c.fields.Customer_Contact__c.isAccessible();
+        Boolean canSetFirstName = Schema.sObjectType.Contact.fields.FirstName.isCreateable();
+        Boolean canSetLastName = Schema.sObjectType.Contact.fields.LastName.isCreateable();
+        Boolean canSetEmail = Schema.sObjectType.Contact.fields.Email.isCreateable();
+        Boolean canSetMobilePhone = Schema.sObjectType.Contact.fields.MobilePhone.isCreateable();
+        Boolean canSetPhone = Schema.sObjectType.Contact.fields.Phone.isCreateable();
+
+        if (canCreateContact && canReadCustomerLastName && canSetLastName) {
             Contact newContact = new Contact();
-            if (
-                Schema.sObjectType.Registration_SCH__c.fields.Customer_Name__c.isAccessible() &&
-                Schema.sObjectType.Contact.fields.FirstName.isCreateable() &&
-                String.isNotBlank(pr.Customer_Name__c)
-            ) {
+            if (canReadCustomerName && canSetFirstName && String.isNotBlank(pr.Customer_Name__c)) {
                 newContact.FirstName = pr.Customer_Name__c;
             }
-            if (
-                Schema.sObjectType.Registration_SCH__c.fields.Customer_Lastname__c.isAccessible() &&
-                Schema.sObjectType.Contact.fields.LastName.isCreateable() &&
-                String.isNotBlank(pr.Customer_Lastname__c)
-            ) {
+            if (canReadCustomerLastName && String.isNotBlank(pr.Customer_Lastname__c)) {
                 newContact.LastName = pr.Customer_Lastname__c;
             }
-            if (
-                Schema.sObjectType.Registration_SCH__c.fields.Customer_Email__c.©isAccessible() &&
-                Schema.sObjectType.Contact.fields.Email.isCreateable() &&
-                String.isNotBlank(pr.Customer_Email__c)
-            ) {
+            if (canReadCustomerEmail && canSetEmail && String.isNotBlank(pr.Customer_Email__c)) {
                 newContact.Email = pr.Customer_Email__c;
             }
-            if (
-                Schema.sObjectType.Registration_SCH__c.fields.Customer_Contact__c.isAccessible() &&
-                String.isNotBlank(pr.Customer_Contact__c)
-            ) {
-                if (Schema.sObjectType.Contact.fields.MobilePhone.isCreateable()) {
+            if (canReadCustomerContact && String.isNotBlank(pr.Customer_Contact__c)) {
+                if (canSetMobilePhone) {
                     newContact.MobilePhone = pr.Customer_Contact__c;
                 }
-                if (Schema.sObjectType.Contact.fields.Phone.isCreateable()) {
+                if (canSetPhone) {
                     newContact.Phone = pr.Customer_Contact__c;
                 }
             }
-            if (
-                Schema.sObjectType.Contact.isCreateable() &&
-                String.isNotBlank(newContact.LastName) &&
-                canSetParentContact
-            ) {
+            if (String.isNotBlank(newContact.LastName) && canSetParentContact) {
                 insert newContact;
                 pr.Contact__c = newContact.Id;
             }
