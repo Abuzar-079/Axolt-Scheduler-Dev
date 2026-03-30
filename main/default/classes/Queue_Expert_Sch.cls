@@ -1,7 +1,6 @@
 /**
  * @description Provides queue expert scheduling operations for appointment management.
  */
-@SuppressWarnings('PMD.CognitiveComplexity')
 public with sharing class Queue_Expert_Sch {
     // commented by abuzar on 2026-03-30 for the scanning issue and added below line "Shared constants and helper request models were extracted into dedicated support classes to reduce Queue_Expert_Sch class cyclomatic complexity, cognitive complexity, and NCSS."
     // private static final Set<String> SUPPORTED_RELATED_RECORD_OBJECTS = new Set<String>{ ... };
@@ -13,7 +12,6 @@ public with sharing class Queue_Expert_Sch {
     // private enum FieldAccessType { READ, CREATE, EDIT }
     // private class FieldAccessRequest { ... }
     // private static FieldAccessRequest buildFieldAccessRequest(...) { ... }
-    // this controller now mainly preserves Aura entry points and delegates work to focused support classes, so PMD's class-total cognitive complexity is inflated even though each remaining method is trivial
     //changes end here by abuzar
     private static final String TODAYS_APPOINTMENTS = 'Todays Appointments';
     private static final String CHECK_IN_APPOINTMENTS = 'Check In Appointments';
