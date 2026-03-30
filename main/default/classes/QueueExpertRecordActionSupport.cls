@@ -24,6 +24,12 @@ public with sharing class QueueExpertRecordActionSupport {
         'waiting_Time__c'
     };
 
+    private class RecordUpdateContext {
+        private Id registrationId;
+        private List<String> recordValues;
+        private Registration_SCH__c registrationToUpdate;
+    }
+
     /**
      * @description Updates a registration record with approved queue-expert field values.
      * @param regId Registration identifier to update.
@@ -52,21 +58,10 @@ public with sharing class QueueExpertRecordActionSupport {
         DateTime eDate
     ) {
         QueueExpertWrapper wrapper = new QueueExpertWrapper();
-        QueueExpertAccessSupport.assertAuthenticatedRequest();
-        Id registrationId = QueueExpertAccessSupport.validateRegistrationId(regId);
-        List<String> recordValues = QueueExpertAccessSupport.deserializeSubmittedValues(recValues, 'Invalid record update payload.');
-        QueueExpertAccessSupport.assertRegistrationAccess(registrationId, QueueExpertAccessSupport.ACCESS_EDIT);
-        QueueExpertAccessSupport.checkFieldAccess(
-            QueueExpertAccessSupport.buildFieldAccessRequest(
-                Registration_SCH__c.SObjectType,
-                UPDATE_RECORD_MUTABLE_FIELDS,
-                QueueExpertAccessSupport.ACCESS_EDIT
-            ).withErrorMessage('Insufficient field access to update the registration.')
-        );
-        Registration_SCH__c registrationToUpdate = new Registration_SCH__c(Id = registrationId);
-        QueueExpertAccessSupport.applyApprovedUpdateRecordValues(registrationToUpdate, recordValues);
+        RecordUpdateContext updateContext = buildRecordUpdateContext(regId, recValues);
+        QueueExpertAccessSupport.applyApprovedUpdateRecordValues(updateContext.registrationToUpdate, updateContext.recordValues);
         QueueExpertAccessSupport.saveUpdateResult(
-            Database.update(registrationToUpdate, false, AccessLevel.USER_MODE),
+            Database.update(updateContext.registrationToUpdate, false, AccessLevel.USER_MODE),
             'Unable to update the registration.'
         );
         return wrapper;
@@ -217,28 +212,16 @@ public with sharing class QueueExpertRecordActionSupport {
         DateTime eDate
     ) {
         QueueExpertWrapper wrapper = new QueueExpertWrapper();
-        QueueExpertAccessSupport.assertAuthenticatedRequest();
-        Id registrationId = QueueExpertAccessSupport.validateRegistrationId(regId);
-        List<String> recordValues = QueueExpertAccessSupport.deserializeSubmittedValues(recValues, 'Invalid record update payload.');
-        QueueExpertAccessSupport.assertRegistrationAccess(registrationId, QueueExpertAccessSupport.ACCESS_EDIT);
-        QueueExpertAccessSupport.checkFieldAccess(
-            QueueExpertAccessSupport.buildFieldAccessRequest(
-                Registration_SCH__c.SObjectType,
-                UPDATE_RECORD_MUTABLE_FIELDS,
-                QueueExpertAccessSupport.ACCESS_EDIT
-            ).withErrorMessage('Insufficient field access to update the registration.')
-        );
-
-        Registration_SCH__c registrationToUpdate = new Registration_SCH__c(Id = registrationId);
-        registrationToUpdate.Status__c = 'Completed';
-        registrationToUpdate.Customer_Status__c = 'Attended';
-        registrationToUpdate.Registration_Time__c = sDate;
-        registrationToUpdate.End_Time__c = eDate;
-        QueueExpertAccessSupport.applyApprovedUpdateRecordValues(registrationToUpdate, recordValues);
-        registrationToUpdate.Booked_Current_Status__c = 'Completed';
-        registrationToUpdate.Serve_Finished_Time__c = System.now();
+        RecordUpdateContext updateContext = buildRecordUpdateContext(regId, recValues);
+        updateContext.registrationToUpdate.Status__c = 'Completed';
+        updateContext.registrationToUpdate.Customer_Status__c = 'Attended';
+        updateContext.registrationToUpdate.Registration_Time__c = sDate;
+        updateContext.registrationToUpdate.End_Time__c = eDate;
+        QueueExpertAccessSupport.applyApprovedUpdateRecordValues(updateContext.registrationToUpdate, updateContext.recordValues);
+        updateContext.registrationToUpdate.Booked_Current_Status__c = 'Completed';
+        updateContext.registrationToUpdate.Serve_Finished_Time__c = System.now();
         QueueExpertAccessSupport.saveUpdateResult(
-            Database.update(registrationToUpdate, false, AccessLevel.USER_MODE),
+            Database.update(updateContext.registrationToUpdate, false, AccessLevel.USER_MODE),
             'Unable to update the registration.'
         );
 
@@ -252,7 +235,7 @@ public with sharing class QueueExpertRecordActionSupport {
         Registration_SCH__c refreshedRecord = [
             SELECT Status__c
             FROM Registration_SCH__c
-            WHERE Id = :registrationId
+            WHERE Id = :updateContext.registrationId
             WITH USER_MODE
             LIMIT 1
         ];
@@ -262,5 +245,29 @@ public with sharing class QueueExpertRecordActionSupport {
         QueueExpertSchSupport.loadWrapperDetailsForRegistration(wrapper, regId);
         wrapper.errmsg = null;
         return wrapper;
+    }
+
+    private static RecordUpdateContext buildRecordUpdateContext(String regId, String recValues) {
+        QueueExpertAccessSupport.assertAuthenticatedRequest();
+
+        RecordUpdateContext updateContext = new RecordUpdateContext();
+        updateContext.registrationId = QueueExpertAccessSupport.validateRegistrationId(regId);
+        updateContext.recordValues = QueueExpertAccessSupport.deserializeSubmittedValues(
+            recValues,
+            'Invalid record update payload.'
+        );
+        QueueExpertAccessSupport.assertRegistrationAccess(
+            updateContext.registrationId,
+            QueueExpertAccessSupport.ACCESS_EDIT
+        );
+        QueueExpertAccessSupport.checkFieldAccess(
+            QueueExpertAccessSupport.buildFieldAccessRequest(
+                Registration_SCH__c.SObjectType,
+                UPDATE_RECORD_MUTABLE_FIELDS,
+                QueueExpertAccessSupport.ACCESS_EDIT
+            ).withErrorMessage('Insufficient field access to update the registration.')
+        );
+        updateContext.registrationToUpdate = new Registration_SCH__c(Id = updateContext.registrationId);
+        return updateContext;
     }
 }

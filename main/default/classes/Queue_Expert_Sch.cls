@@ -15,42 +15,6 @@ public with sharing class Queue_Expert_Sch {
     // private static FieldAccessRequest buildFieldAccessRequest(...) { ... }
     // this controller now mainly preserves Aura entry points and delegates work to focused support classes, so PMD's class-total cognitive complexity is inflated even though each remaining method is trivial
     //changes end here by abuzar
-    private static final String TODAYS_APPOINTMENTS = 'Todays Appointments';
-    private static final String CHECK_IN_APPOINTMENTS = 'Check In Appointments';
-    private static final String FUTURE_APPOINTMENTS = 'Future Appointments';
-    private static final String PAST_APPOINTMENTS = 'Past Appointments';
-    private static final String COMPLETED_APPOINTMENTS = 'Completed Appointments';
-    private static final List<String> INITIAL_APPOINTMENT_FILTERS = new List<String>{
-        CHECK_IN_APPOINTMENTS,
-        TODAYS_APPOINTMENTS
-    };
-    private static final List<QueueExpertSelectOptions> CATEGORY_OPTIONS = new List<QueueExpertSelectOptions>{
-        new QueueExpertSelectOptions(TODAYS_APPOINTMENTS, TODAYS_APPOINTMENTS),
-        new QueueExpertSelectOptions(CHECK_IN_APPOINTMENTS, CHECK_IN_APPOINTMENTS),
-        new QueueExpertSelectOptions(FUTURE_APPOINTMENTS, FUTURE_APPOINTMENTS),
-        new QueueExpertSelectOptions(PAST_APPOINTMENTS, PAST_APPOINTMENTS),
-        new QueueExpertSelectOptions(COMPLETED_APPOINTMENTS, COMPLETED_APPOINTMENTS)
-    };
-    private static final Set<String> ALLOWED_CAT_VALUES = new Set<String>{
-        CHECK_IN_APPOINTMENTS,
-        TODAYS_APPOINTMENTS,
-        PAST_APPOINTMENTS,
-        COMPLETED_APPOINTMENTS,
-        FUTURE_APPOINTMENTS
-    };
-    private static final Map<String, String> CATEGORY_QUERY_FILTERS = new Map<String, String>{
-        CHECK_IN_APPOINTMENTS => ' AND Appointment_DateDt__c = TODAY AND Status__c = \'Booked\' AND Check_In__c = TRUE',
-        TODAYS_APPOINTMENTS => ' AND Appointment_DateDt__c = TODAY AND Status__c = \'Booked\' AND Registration_Time__c >= :nowTime',
-        PAST_APPOINTMENTS => ' AND Check_In__c = FALSE AND Registration_Time__c <= :nowTime',
-        COMPLETED_APPOINTMENTS => ' AND Status__c = \'Completed\'',
-        FUTURE_APPOINTMENTS => ' AND Appointment_DateDt__c > TODAY AND Status__c = \'Booked\' AND Registration_Time__c >= :nowTime'
-    };
-    private static final String LOCATION_LOAD_FIELDS =
-        'Id, Name, OwnerId, RecordTypeId, Status__c, Appointment_DateDt__c, Check_In__c, '
-        + 'Registration_Time__c, Booked_Date__c, Expert_Location__c, Product2__c, User__c, '
-        + 'Account__r.Flagged__c, Contact__r.Flagged__c, Product2__r.SCH_Wait_Threshold__c, '
-        + 'Contact__r.Name, Booked_Current_Status__c, Checked_in_Date_Time__c';
-
     /**
      * @description Updates a registration record with queue expert completion details.
      * @param regId Registration identifier to update.
