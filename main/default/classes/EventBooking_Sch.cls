@@ -2945,21 +2945,6 @@ public with sharing class EventBooking_Sch {
         }
     }
 
-    // commented by abuzar on 2026-03-12 for the scanning issue and added below line the reason of issue as mentioned above "Avoid using if...else statements without curly braces and avoid using if statements without curly braces"
-    /*
-    private static void linkContactIfIndividual(Boolean showIndivisualform, List<Registration_SCH__c> regList, Registration_SCH__c reg) {
-        if (!showIndivisualform) return;
-
-        Boolean canAccess =
-            Schema.sObjectType.Registration_SCH__c.isAccessible() &&
-            Schema.sObjectType.Registration_SCH__c.isCreateable() &&
-            Schema.sObjectType.Registration_SCH__c.isUpdateable();
-
-        if (canAccess) {
-            getCreateContact(JSON.serialize(regList), reg.Contact__c);
-        }
-    }
-    */
     // Calls getCreateContact only when showIndivisualform is true and object access allows it
     private static void linkContactIfIndividual(Boolean showIndivisualform, List<Registration_SCH__c> regList, Registration_SCH__c reg) {
         if (!showIndivisualform) {
@@ -4410,21 +4395,6 @@ private static List<Contact> buildSafeContactsForInsert(List<Contact> sourceCont
             REGISTRATION_CONTACT_ASSIGNMENT_FIELDS.contains(fieldName) &&
             fieldRef.getDescribe().isCreateable();
     }
-
-    // private static Contact sanitizeContactForCreate(Contact sourceContact) {
-    //     Contact sanitizedContact = new Contact();
-    //     Map<String, Object> populatedFields = sourceContact.getPopulatedFieldsAsMap();
-    //     Map<String, Schema.SObjectField> contactFields = Schema.sObjectType.Contact.fields.getMap();
-    //     for (String fieldName : populatedFields.keySet()) {
-    //         if (fieldName == 'Id' || !contactFields.containsKey(fieldName)) {
-    //             continue;
-    //         }
-    //         if (contactFields.get(fieldName).getDescribe().isCreateable()) {
-    //             sanitizedContact.put(fieldName, populatedFields.get(fieldName));
-    //         }
-    //     }
-    //     return sanitizedContact;
-    // }
 
     // ✅ Zero loops — direct field assignment, zero taint surface.
 private static Contact sanitizeContactForCreate(Contact sourceContact) {
