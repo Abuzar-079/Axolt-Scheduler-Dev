@@ -105,6 +105,15 @@ public with sharing class QueueExpertAttachmentActionSupport {
      * @return Accessible attachment record.
      */
     public static Attachment getAccessibleAttachmentForDelete(Id relatedRecordId) {
+        if (!Schema.sObjectType.Attachment.isAccessible()) {
+            throw new AuraHandledException('Insufficient access to delete attachments.');
+        }
+        if (!Schema.sObjectType.Attachment.fields.Id.isAccessible()) {
+            throw new AuraHandledException('Insufficient access to delete attachments.');
+        }
+        if (!Schema.sObjectType.Attachment.fields.ParentId.isAccessible()) {
+            throw new AuraHandledException('Insufficient access to delete attachments.');
+        }
         QueueExpertAccessSupport.checkObjectAccess(Attachment.SObjectType, QueueExpertAccessSupport.ACCESS_READ, 'Insufficient access to delete attachments.');
         QueueExpertAccessSupport.checkFieldAccess(
             QueueExpertAccessSupport.buildFieldAccessRequest(

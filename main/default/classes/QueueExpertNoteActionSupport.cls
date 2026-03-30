@@ -42,6 +42,31 @@ public with sharing class QueueExpertNoteActionSupport {
         QueueExpertAccessSupport.validateNotBlank(requestedNote.Title, 'Note title is required.');
 
         if (requestedNote.Id == null) {
+            if (!Schema.sObjectType.Registration_SCH__c.isAccessible()) {
+                throw new AuraHandledException('Insufficient access to the parent registration.');
+            }
+            List<Registration_SCH__c> parentRegistrations = [
+                SELECT Id
+                FROM Registration_SCH__c
+                WHERE Id = :parentId
+                WITH USER_MODE
+                LIMIT 1
+            ];
+            if (parentRegistrations.isEmpty()) {
+                throw new AuraHandledException('Parent registration is not accessible.');
+            }
+            if (!Schema.sObjectType.Note.isCreateable()) {
+                throw new AuraHandledException('Insufficient access to create notes.');
+            }
+            if (!Schema.sObjectType.Note.fields.ParentId.isCreateable()) {
+                throw new AuraHandledException('Insufficient field access to create notes.');
+            }
+            if (!Schema.sObjectType.Note.fields.Title.isCreateable()) {
+                throw new AuraHandledException('Insufficient field access to create notes.');
+            }
+            if (!Schema.sObjectType.Note.fields.Body.isCreateable()) {
+                throw new AuraHandledException('Insufficient field access to create notes.');
+            }
             QueueExpertAccessSupport.assertNoteCreateAccess(parentId);
             Note noteToInsert = new Note();
             noteToInsert.ParentId = parentId;
@@ -57,6 +82,31 @@ public with sharing class QueueExpertNoteActionSupport {
             );
             if (existingNote.ParentId != parentId) {
                 throw new AuraHandledException('Mismatched note parent record.');
+            }
+            if (!Schema.sObjectType.Registration_SCH__c.isAccessible()) {
+                throw new AuraHandledException('Insufficient access to the parent registration.');
+            }
+            List<Registration_SCH__c> parentRegistrations = [
+                SELECT Id
+                FROM Registration_SCH__c
+                WHERE Id = :parentId
+                WITH USER_MODE
+                LIMIT 1
+            ];
+            if (parentRegistrations.isEmpty()) {
+                throw new AuraHandledException('Parent registration is not accessible.');
+            }
+            if (!Schema.sObjectType.Note.isUpdateable()) {
+                throw new AuraHandledException('Insufficient access to update notes.');
+            }
+            if (!Schema.sObjectType.Note.fields.ParentId.isUpdateable()) {
+                throw new AuraHandledException('Insufficient field access to update notes.');
+            }
+            if (!Schema.sObjectType.Note.fields.Title.isUpdateable()) {
+                throw new AuraHandledException('Insufficient field access to update notes.');
+            }
+            if (!Schema.sObjectType.Note.fields.Body.isUpdateable()) {
+                throw new AuraHandledException('Insufficient field access to update notes.');
             }
             QueueExpertAccessSupport.assertNoteUpdateAccess(parentId);
             Note noteToUpdate = buildSafeNoteForUpdate(existingNote.Id, parentId, requestedNote);
@@ -84,6 +134,22 @@ public with sharing class QueueExpertNoteActionSupport {
         if (objName == 'Attachment') {
             QueueExpertAccessSupport.assertSObjectType(relatedRecordId, Attachment.SObjectType, 'Related record must be an attachment.');
             Attachment attachmentRecord = QueueExpertAttachmentActionSupport.getAccessibleAttachmentForDelete(relatedRecordId);
+            if (!Schema.sObjectType.Registration_SCH__c.isAccessible()) {
+                throw new AuraHandledException('Insufficient access to the parent registration.');
+            }
+            List<Registration_SCH__c> parentRegistrations = [
+                SELECT Id
+                FROM Registration_SCH__c
+                WHERE Id = :attachmentRecord.ParentId
+                WITH USER_MODE
+                LIMIT 1
+            ];
+            if (parentRegistrations.isEmpty()) {
+                throw new AuraHandledException('Parent registration is not accessible.');
+            }
+            if (!Schema.sObjectType.Attachment.isDeletable()) {
+                throw new AuraHandledException('Insufficient access to delete attachments.');
+            }
             QueueExpertAccessSupport.assertRegistrationParentAccess(attachmentRecord.ParentId);
             QueueExpertAccessSupport.assertAttachmentDeleteAccess(attachmentRecord.ParentId);
             QueueExpertAccessSupport.saveDeleteResult(
