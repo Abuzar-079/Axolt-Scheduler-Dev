@@ -75,6 +75,17 @@ public with sharing class QueueExpertAttachmentActionSupport {
 
     /**
      * @description Returns an attachment that is accessible for deletion.
+     * @param relatedRecordIdValue Raw attachment identifier to validate.
+     * @return Accessible attachment record.
+     */
+    public static Attachment getAccessibleAttachmentForDeleteByValue(String relatedRecordIdValue) {
+        Id relatedRecordId = QueueExpertAccessSupport.validateRecordId(relatedRecordIdValue, 'Invalid related record id.');
+        QueueExpertAccessSupport.assertSObjectType(relatedRecordId, Attachment.SObjectType, 'Related record must be an attachment.');
+        return getAccessibleAttachmentForDelete(relatedRecordId);
+    }
+
+    /**
+     * @description Returns an attachment that is accessible for deletion.
      * @param relatedRecordId Attachment identifier to validate.
      * @return Accessible attachment record.
      */

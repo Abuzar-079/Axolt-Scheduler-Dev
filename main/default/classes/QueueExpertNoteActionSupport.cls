@@ -184,10 +184,8 @@ public static void assertNoteUpdateAccess(Id parentId) {
         if (!SUPPORTED_RELATED_RECORD_OBJECTS.contains(objName)) {
             throw new AuraHandledException('Unsupported related record type.');
         }
-        Id relatedRecordId = QueueExpertAccessSupport.validateRecordId(raId, 'Invalid related record id.');
         if (objName == 'Attachment') {
-            QueueExpertAccessSupport.assertSObjectType(relatedRecordId, Attachment.SObjectType, 'Related record must be an attachment.');
-            Attachment attachmentRecord = QueueExpertAttachmentActionSupport.getAccessibleAttachmentForDelete(relatedRecordId);
+            Attachment attachmentRecord = QueueExpertAttachmentActionSupport.getAccessibleAttachmentForDeleteByValue(raId);
             if (!Schema.sObjectType.Registration_SCH__c.isAccessible()) {
                 throw new AuraHandledException('Insufficient access to the parent registration.');
             }
@@ -213,8 +211,7 @@ public static void assertNoteUpdateAccess(Id parentId) {
             return wrapper;
         }
 
-        QueueExpertAccessSupport.assertSObjectType(relatedRecordId, Note.SObjectType, 'Related record must be a note.');
-        Note noteRecord = getAccessibleNoteById(relatedRecordId);
+        Note noteRecord = getAccessibleNoteByIdByValue(raId);
         QueueExpertAccessSupport.assertSObjectType(noteRecord.ParentId, Registration_SCH__c.SObjectType, 'Parent record must be a registration.');
         if (!Schema.sObjectType.Registration_SCH__c.isAccessible()) {
             throw new AuraHandledException('Insufficient access to the parent registration.');
@@ -239,6 +236,17 @@ public static void assertNoteUpdateAccess(Id parentId) {
             'Unable to delete the related record.'
         );
         return wrapper;
+    }
+
+    /**
+     * @description Returns a note that is accessible to the running user.
+     * @param noteIdValue Raw note identifier to validate.
+     * @return Accessible note record.
+     */
+    public static Note getAccessibleNoteByIdByValue(String noteIdValue) {
+        Id noteId = QueueExpertAccessSupport.validateRecordId(noteIdValue, 'Invalid note record id.');
+        QueueExpertAccessSupport.assertSObjectType(noteId, Note.SObjectType, 'Related record must be a note.');
+        return getAccessibleNoteById(noteId);
     }
 
     /**
