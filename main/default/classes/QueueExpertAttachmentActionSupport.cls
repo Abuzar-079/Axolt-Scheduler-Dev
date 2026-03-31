@@ -53,45 +53,19 @@ public with sharing class QueueExpertAttachmentActionSupport {
      */
     public static List<Attachment> uploadFile(QueueExpertUploadFileRequest request) {
         QueueExpertAccessSupport.assertAuthenticatedRequest();
-        Id parentId = QueueExpertAccessSupport.validateRecordId(request.parent, 'Invalid parent record id.');
-        QueueExpertAccessSupport.assertSObjectType(parentId, Registration_SCH__c.SObjectType, 'Parent record must be a registration.');
-        if (!Schema.sObjectType.Registration_SCH__c.isAccessible()) {
-            throw new AuraHandledException('Insufficient access to the parent registration.');
+        if (request == null) {
+            throw new AuraHandledException('Upload request is required.');
         }
-        List<Registration_SCH__c> parentRegistrations = [
-            SELECT Id
-            FROM Registration_SCH__c
-            WHERE Id = :parentId
-            WITH USER_MODE
-            LIMIT 1
-        ];
-        if (parentRegistrations.isEmpty()) {
-            throw new AuraHandledException('Parent registration is not accessible.');
-        }
-        if (!Schema.sObjectType.Attachment.isCreateable()) {
-            throw new AuraHandledException('Insufficient access to upload attachments.');
-        }
-        if (!Schema.sObjectType.Attachment.fields.ParentId.isCreateable()) {
-            throw new AuraHandledException('Insufficient field access to upload attachments.');
-        }
-        if (!Schema.sObjectType.Attachment.fields.Body.isCreateable()) {
-            throw new AuraHandledException('Insufficient field access to upload attachments.');
-        }
-        if (!Schema.sObjectType.Attachment.fields.Name.isCreateable()) {
-            throw new AuraHandledException('Insufficient field access to upload attachments.');
-        }
-        if (!Schema.sObjectType.Attachment.fields.ContentType.isCreateable()) {
-            throw new AuraHandledException('Insufficient field access to upload attachments.');
-        }
-        QueueExpertAccessSupport.assertRegistrationParentAccess(parentId);
+        Id parentId = QueueExpertAccessSupport.validateAccessibleParentRecordId(request.parent);
         validateUploadInput(request.fileName, request.base64Data, request.contentType);
         QueueExpertAccessSupport.assertAttachmentCreateAccess(parentId);
         Blob attachmentBody = decodeAttachmentBody(request.base64Data);
-        Attachment attachmentRecord = new Attachment();
-        attachmentRecord.ParentId = parentId;
-        attachmentRecord.Body = attachmentBody;
-        attachmentRecord.Name = request.fileName.trim();
-        attachmentRecord.ContentType = request.contentType.trim().toLowerCase();
+        Attachment attachmentRecord = buildAttachmentForInsert(
+            parentId,
+            attachmentBody,
+            request.fileName.trim(),
+            request.contentType.trim().toLowerCase()
+        );
         QueueExpertAccessSupport.saveInsertResult(
             Database.insert(attachmentRecord, false, AccessLevel.USER_MODE),
             'Unable to upload the attachment.'
@@ -169,6 +143,37 @@ public with sharing class QueueExpertAttachmentActionSupport {
         } catch (StringException ex) {
             throw new AuraHandledException('File content could not be decoded.');
         }
+    }
+
+    private static Attachment buildAttachmentForInsert(
+        Id parentId,
+        Blob attachmentBody,
+        String fileName,
+        String contentType
+    ) {
+        Attachment attachmentRecord = new Attachment(
+            ParentId = parentId,
+            Body = attachmentBody,
+            Name = fileName,
+            ContentType = contentType
+        );
+        return sanitizeAttachmentForCreate(attachmentRecord);
+    }
+
+    private static Attachment sanitizeAttachmentForCreate(Attachment attachmentRecord) {
+        SObjectAccessDecision accessDecision = Security.stripInaccessible(
+            AccessType.CREATABLE,
+            new List<SObject>{ attachmentRecord }
+        );
+        Set<String> removedFields = accessDecision.getRemovedFields().get('Attachment');
+        if (removedFields != null && !removedFields.isEmpty()) {
+            throw new AuraHandledException('Insufficient field access to upload attachments.');
+        }
+        List<SObject> sanitizedRecords = accessDecision.getRecords();
+        if (sanitizedRecords.isEmpty()) {
+            throw new AuraHandledException('Unable to prepare the attachment for upload.');
+        }
+        return (Attachment) sanitizedRecords[0];
     }
 
 }

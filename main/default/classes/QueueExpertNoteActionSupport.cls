@@ -157,10 +157,11 @@ public static List<Note> saveNotes(String nn, String regID) {
     if (requestedNote.Id == null) {
         QueueExpertAccessSupport.assertNoteCreateAccess(parentId);
 
-        Note noteToInsert = new Note();
-        noteToInsert.ParentId = parentId;
-        noteToInsert.Title = requestedNote.Title.trim();
-        noteToInsert.Body = requestedNote.Body;
+        Note noteToInsert = sanitizeNoteForCreate(new Note(
+            ParentId = parentId,
+            Title = requestedNote.Title.trim(),
+            Body = requestedNote.Body
+        ));
 
         Database.SaveResult insertResult = Database.insert(
             noteToInsert,
@@ -190,6 +191,7 @@ public static List<Note> saveNotes(String nn, String regID) {
             parentId,
             requestedNote
         );
+        noteToUpdate = sanitizeNoteForUpdate(noteToUpdate);
 
         Database.SaveResult updateResult = Database.update(
             noteToUpdate,
@@ -400,6 +402,30 @@ public static void assertNoteUpdateAccess(Id parentId) {
             noteToUpdate.Body = requestedNote.Body;
         }
         return noteToUpdate;
+    }
+
+    private static Note sanitizeNoteForCreate(Note noteToInsert) {
+        return sanitizeSingleNoteRecord(noteToInsert, AccessType.CREATABLE, 'Insufficient field access to create notes.');
+    }
+
+    private static Note sanitizeNoteForUpdate(Note noteToUpdate) {
+        return sanitizeSingleNoteRecord(noteToUpdate, AccessType.UPDATABLE, 'Insufficient field access to update notes.');
+    }
+
+    private static Note sanitizeSingleNoteRecord(Note noteRecord, AccessType accessType, String errorMessage) {
+        SObjectAccessDecision accessDecision = Security.stripInaccessible(
+            accessType,
+            new List<SObject>{ noteRecord }
+        );
+        Set<String> removedFields = accessDecision.getRemovedFields().get('Note');
+        if (removedFields != null && !removedFields.isEmpty()) {
+            throw new AuraHandledException(errorMessage);
+        }
+        List<SObject> sanitizedRecords = accessDecision.getRecords();
+        if (sanitizedRecords.isEmpty()) {
+            throw new AuraHandledException('Unable to prepare the note for save.');
+        }
+        return (Note) sanitizedRecords[0];
     }
 
 }
