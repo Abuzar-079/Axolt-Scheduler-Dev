@@ -25,101 +25,6 @@ public with sharing class QueueExpertNoteActionSupport {
     }
 
     /**
-     * @description Saves a note for the provided registration and returns the refreshed note list.
-     * @param nn Serialized note payload from the client.
-     * @param regID Registration identifier that owns the note.
-     * @return Notes associated with the registration after save.
-     */
-    // public static List<Note> saveNotes(String nn, String regID) {
-    //     QueueExpertAccessSupport.assertAuthenticatedRequest();
-    //     Id parentId = QueueExpertAccessSupport.validateRecordId(regID, 'Invalid parent record id.');
-    //     QueueExpertAccessSupport.assertSObjectType(parentId, Registration_SCH__c.SObjectType, 'Parent record must be a registration.');
-    //     QueueExpertAccessSupport.assertRegistrationParentAccess(parentId);
-    //     Note requestedNote = parseNotePayload(nn);
-    //     if (requestedNote.ParentId != null && requestedNote.ParentId != parentId) {
-    //         throw new AuraHandledException('Mismatched note parent record.');
-    //     }
-    //     QueueExpertAccessSupport.validateNotBlank(requestedNote.Title, 'Note title is required.');
-
-    //     if (requestedNote.Id == null) {
-    //         if (!Schema.sObjectType.Registration_SCH__c.isAccessible()) {
-    //             throw new AuraHandledException('Insufficient access to the parent registration.');
-    //         }
-    //         List<Registration_SCH__c> parentRegistrations = [
-    //             SELECT Id
-    //             FROM Registration_SCH__c
-    //             WHERE Id = :parentId
-    //             WITH USER_MODE
-    //             LIMIT 1
-    //         ];
-    //         if (parentRegistrations.isEmpty()) {
-    //             throw new AuraHandledException('Parent registration is not accessible.');
-    //         }
-    //         if (!Schema.sObjectType.Note.isCreateable()) {
-    //             throw new AuraHandledException('Insufficient access to create notes.');
-    //         }
-    //         if (!Schema.sObjectType.Note.fields.ParentId.isCreateable()) {
-    //             throw new AuraHandledException('Insufficient field access to create notes.');
-    //         }
-    //         if (!Schema.sObjectType.Note.fields.Title.isCreateable()) {
-    //             throw new AuraHandledException('Insufficient field access to create notes.');
-    //         }
-    //         if (!Schema.sObjectType.Note.fields.Body.isCreateable()) {
-    //             throw new AuraHandledException('Insufficient field access to create notes.');
-    //         }
-    //         QueueExpertAccessSupport.assertNoteCreateAccess(parentId);
-    //         Note noteToInsert = new Note();
-    //         noteToInsert.ParentId = parentId;
-    //         noteToInsert.Title = requestedNote.Title.trim();
-    //         noteToInsert.Body = requestedNote.Body;
-    //         QueueExpertAccessSupport.saveInsertResult(
-    //             Database.insert(noteToInsert, false, AccessLevel.USER_MODE),
-                
-    //             'Unable to save the note.'
-    //         );
-    //     } else {
-    //         Note existingNote = getAccessibleNoteById(
-    //             QueueExpertAccessSupport.validateRecordId(String.valueOf(requestedNote.Id), 'Invalid note record id.')
-    //         );
-    //         if (existingNote.ParentId != parentId) {
-    //             throw new AuraHandledException('Mismatched note parent record.');
-    //         }
-    //         if (!Schema.sObjectType.Registration_SCH__c.isAccessible()) {
-    //             throw new AuraHandledException('Insufficient access to the parent registration.');
-    //         }
-    //         List<Registration_SCH__c> parentRegistrations = [
-    //             SELECT Id
-    //             FROM Registration_SCH__c
-    //             WHERE Id = :parentId
-    //             WITH USER_MODE
-    //             LIMIT 1
-    //         ];
-    //         if (parentRegistrations.isEmpty()) {
-    //             throw new AuraHandledException('Parent registration is not accessible.');
-    //         }
-    //         if (!Schema.sObjectType.Note.isUpdateable()) {
-    //             throw new AuraHandledException('Insufficient access to update notes.');
-    //         }
-    //         if (!Schema.sObjectType.Note.fields.ParentId.isUpdateable()) {
-    //             throw new AuraHandledException('Insufficient field access to update notes.');
-    //         }
-    //         if (!Schema.sObjectType.Note.fields.Title.isUpdateable()) {
-    //             throw new AuraHandledException('Insufficient field access to update notes.');
-    //         }
-    //         if (!Schema.sObjectType.Note.fields.Body.isUpdateable()) {
-    //             throw new AuraHandledException('Insufficient field access to update notes.');
-    //         }
-    //         QueueExpertAccessSupport.assertNoteUpdateAccess(parentId);
-    //         Note noteToUpdate = buildSafeNoteForUpdate(existingNote.Id, parentId, requestedNote);
-    //         QueueExpertAccessSupport.saveUpdateResult(
-    //             Database.update(noteToUpdate, false, AccessLevel.USER_MODE),
-    //             'Unable to save the note.'
-    //         );
-    //     }
-    //     return getNotesByParent(parentId);
-    // }
-
-    /**
  * @description Saves a note for the provided registration and returns the refreshed note list.
  * @param nn Serialized note payload from the client.
  * @param regID Registration identifier that owns the note.
@@ -137,6 +42,18 @@ public static List<Note> saveNotes(String nn, String regID) {
     QueueExpertAccessSupport.validateNotBlank(requestedNote.Title, 'Note title is required.');
 
     if (requestedNote.Id == null) {
+        QueueExpertAccessSupport.checkObjectAccess(
+            Registration_SCH__c.SObjectType,
+            QueueExpertAccessSupport.ACCESS_READ,
+            'Insufficient access to the parent registration.'
+        );
+        QueueExpertAccessSupport.checkFieldAccess(
+            QueueExpertAccessSupport.buildFieldAccessRequest(
+                Registration_SCH__c.SObjectType,
+                new Set<String>{ 'Id' },
+                QueueExpertAccessSupport.ACCESS_READ
+            ).withErrorMessage('Insufficient access to the parent registration.')
+        );
         if (!Schema.sObjectType.Registration_SCH__c.isAccessible()) {
             throw new AuraHandledException('Insufficient access to the parent registration.');
         }
@@ -189,10 +106,14 @@ public static List<Note> saveNotes(String nn, String regID) {
             typedList.add(safeNote);
         }
         if (!typedList.isEmpty()) {
-            QueueExpertAccessSupport.saveInsertResult(
-                Database.insert(typedList[0], false, AccessLevel.USER_MODE),
-                'Unable to save the note.'
-            );
+            if (Schema.sObjectType.Note.isCreateable()) {
+                QueueExpertAccessSupport.saveInsertResult(
+                    Database.insert(typedList[0], false, AccessLevel.USER_MODE),
+                    'Unable to save the note.'
+                );
+            } else {
+                throw new AuraHandledException('Insufficient access to create notes.');
+            }
         }
 
     } else {
@@ -202,6 +123,18 @@ public static List<Note> saveNotes(String nn, String regID) {
         if (existingNote.ParentId != parentId) {
             throw new AuraHandledException('Mismatched note parent record.');
         }
+        QueueExpertAccessSupport.checkObjectAccess(
+            Registration_SCH__c.SObjectType,
+            QueueExpertAccessSupport.ACCESS_READ,
+            'Insufficient access to the parent registration.'
+        );
+        QueueExpertAccessSupport.checkFieldAccess(
+            QueueExpertAccessSupport.buildFieldAccessRequest(
+                Registration_SCH__c.SObjectType,
+                new Set<String>{ 'Id' },
+                QueueExpertAccessSupport.ACCESS_READ
+            ).withErrorMessage('Insufficient access to the parent registration.')
+        );
         if (!Schema.sObjectType.Registration_SCH__c.isAccessible()) {
             throw new AuraHandledException('Insufficient access to the parent registration.');
         }
@@ -251,10 +184,14 @@ public static List<Note> saveNotes(String nn, String regID) {
             typedList.add(safeNote);
         }
         if (!typedList.isEmpty()) {
-            QueueExpertAccessSupport.saveUpdateResult(
-                Database.update(typedList[0], false, AccessLevel.USER_MODE),
-                'Unable to save the note.'
-            );
+            if (Schema.sObjectType.Note.isUpdateable()) {
+                QueueExpertAccessSupport.saveUpdateResult(
+                    Database.update(typedList[0], false, AccessLevel.USER_MODE),
+                    'Unable to save the note.'
+                );
+            } else {
+                throw new AuraHandledException('Insufficient access to update notes.');
+            }
         }
     }
     return getNotesByParent(parentId);

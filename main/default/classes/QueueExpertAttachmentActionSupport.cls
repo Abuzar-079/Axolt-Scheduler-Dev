@@ -55,15 +55,27 @@ public with sharing class QueueExpertAttachmentActionSupport {
     QueueExpertAccessSupport.assertAuthenticatedRequest();
     Id parentId = QueueExpertAccessSupport.validateRecordId(request.parent, 'Invalid parent record id.');
     QueueExpertAccessSupport.assertSObjectType(parentId, Registration_SCH__c.SObjectType, 'Parent record must be a registration.');
-    
+
+    QueueExpertAccessSupport.checkObjectAccess(
+        Registration_SCH__c.SObjectType,
+        QueueExpertAccessSupport.ACCESS_READ,
+        'Insufficient access to the parent registration.'
+    );
+    QueueExpertAccessSupport.checkFieldAccess(
+        QueueExpertAccessSupport.buildFieldAccessRequest(
+            Registration_SCH__c.SObjectType,
+            new Set<String>{ 'Id' },
+            QueueExpertAccessSupport.ACCESS_READ
+        ).withErrorMessage('Insufficient access to the parent registration.')
+    );
     if (!Schema.sObjectType.Registration_SCH__c.isAccessible()) {
         throw new AuraHandledException('Insufficient access to the parent registration.');
     }
-    
+
     List<Registration_SCH__c> parentRegistrations = [
         SELECT Id FROM Registration_SCH__c WHERE Id = :parentId WITH USER_MODE LIMIT 1
     ];
-    
+
     if (parentRegistrations.isEmpty()) {
         throw new AuraHandledException('Parent registration is not accessible.');
     }
@@ -112,8 +124,9 @@ public with sharing class QueueExpertAttachmentActionSupport {
     if (!typedList.isEmpty()) {
         // 3. Checkmarx Compliance: Explicit standard check right before the DML
         if (Schema.sObjectType.Attachment.isCreateable()) {
+            List<Database.SaveResult> saveResults = Database.insert(typedList, false, AccessLevel.USER_MODE);
             QueueExpertAccessSupport.saveInsertResult(
-                Database.insert(typedList[0], false, AccessLevel.USER_MODE),
+                saveResults[0],
                 'Unable to upload the attachment.'
             );
         } else {
