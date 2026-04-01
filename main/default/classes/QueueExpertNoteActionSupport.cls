@@ -345,6 +345,18 @@ public static void assertNoteUpdateAccess(Id parentId) {
         if (objName == 'Attachment') {
             QueueExpertAccessSupport.assertSObjectType(relatedRecordId, Attachment.SObjectType, 'Related record must be an attachment.');
             Attachment attachmentRecord = QueueExpertAttachmentActionSupport.getAccessibleAttachmentForDelete(relatedRecordId);
+            QueueExpertAccessSupport.checkObjectAccess(
+                Registration_SCH__c.SObjectType,
+                QueueExpertAccessSupport.ACCESS_READ,
+                'Insufficient access to the parent registration.'
+            );
+            QueueExpertAccessSupport.checkFieldAccess(
+                QueueExpertAccessSupport.buildFieldAccessRequest(
+                    Registration_SCH__c.SObjectType,
+                    new Set<String>{ 'Id' },
+                    QueueExpertAccessSupport.ACCESS_READ
+                ).withErrorMessage('Insufficient access to the parent registration.')
+            );
             if (!Schema.sObjectType.Registration_SCH__c.isAccessible()) {
                 throw new AuraHandledException('Insufficient access to the parent registration.');
             }
@@ -373,6 +385,18 @@ public static void assertNoteUpdateAccess(Id parentId) {
         QueueExpertAccessSupport.assertSObjectType(relatedRecordId, Note.SObjectType, 'Related record must be a note.');
         Note noteRecord = getAccessibleNoteById(relatedRecordId);
         QueueExpertAccessSupport.assertSObjectType(noteRecord.ParentId, Registration_SCH__c.SObjectType, 'Parent record must be a registration.');
+        QueueExpertAccessSupport.checkObjectAccess(
+            Registration_SCH__c.SObjectType,
+            QueueExpertAccessSupport.ACCESS_READ,
+            'Insufficient access to the parent registration.'
+        );
+        QueueExpertAccessSupport.checkFieldAccess(
+            QueueExpertAccessSupport.buildFieldAccessRequest(
+                Registration_SCH__c.SObjectType,
+                new Set<String>{ 'Id' },
+                QueueExpertAccessSupport.ACCESS_READ
+            ).withErrorMessage('Insufficient access to the parent registration.')
+        );
         if (!Schema.sObjectType.Registration_SCH__c.isAccessible()) {
             throw new AuraHandledException('Insufficient access to the parent registration.');
         }
