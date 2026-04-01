@@ -127,41 +127,34 @@ public with sharing class QueueExpertNoteActionSupport {
  */
 public static List<Note> saveNotes(String nn, String regID) {
     QueueExpertAccessSupport.assertAuthenticatedRequest();
-    Id parentId = QueueExpertAccessSupport.validateRecordId(regID, 'Invalid parent record id.');
-    QueueExpertAccessSupport.assertSObjectType(parentId, Registration_SCH__c.SObjectType, 'Parent record must be a registration.');
+
+    Id parentId = QueueExpertAccessSupport.validateRecordId(
+        regID,
+        'Invalid parent record id.'
+    );
+    QueueExpertAccessSupport.assertSObjectType(
+        parentId,
+        Registration_SCH__c.SObjectType,
+        'Parent record must be a registration.'
+    );
     QueueExpertAccessSupport.assertRegistrationParentAccess(parentId);
+
     Note requestedNote = parseNotePayload(nn);
+
+    if (requestedNote == null) {
+        throw new AuraHandledException('Invalid note payload.');
+    }
+
     if (requestedNote.ParentId != null && requestedNote.ParentId != parentId) {
         throw new AuraHandledException('Mismatched note parent record.');
     }
-    QueueExpertAccessSupport.validateNotBlank(requestedNote.Title, 'Note title is required.');
+
+    QueueExpertAccessSupport.validateNotBlank(
+        requestedNote.Title,
+        'Note title is required.'
+    );
 
     if (requestedNote.Id == null) {
-        if (!Schema.sObjectType.Registration_SCH__c.isAccessible()) {
-            throw new AuraHandledException('Insufficient access to the parent registration.');
-        }
-        List<Registration_SCH__c> parentRegistrations = [
-            SELECT Id
-            FROM Registration_SCH__c
-            WHERE Id = :parentId
-            WITH USER_MODE
-            LIMIT 1
-        ];
-        if (parentRegistrations.isEmpty()) {
-            throw new AuraHandledException('Parent registration is not accessible.');
-        }
-        if (!Schema.sObjectType.Note.isCreateable()) {
-            throw new AuraHandledException('Insufficient access to create notes.');
-        }
-        if (!Schema.sObjectType.Note.fields.ParentId.isCreateable()) {
-            throw new AuraHandledException('Insufficient field access to create notes.');
-        }
-        if (!Schema.sObjectType.Note.fields.Title.isCreateable()) {
-            throw new AuraHandledException('Insufficient field access to create notes.');
-        }
-        if (!Schema.sObjectType.Note.fields.Body.isCreateable()) {
-            throw new AuraHandledException('Insufficient field access to create notes.');
-        }
         QueueExpertAccessSupport.assertNoteCreateAccess(parentId);
 
         Note noteToInsert = new Note();
@@ -169,94 +162,46 @@ public static List<Note> saveNotes(String nn, String regID) {
         noteToInsert.Title = requestedNote.Title.trim();
         noteToInsert.Body = requestedNote.Body;
 
-        // ✅ FLS-Compliant Insert using FLSHelperSch
-        List<SObject> safeList = FLSHelperSch.getSafeRecords(
-            new List<Note>{ noteToInsert },
-            'Note',
-            AccessType.CREATABLE
+        Database.SaveResult insertResult = Database.insert(
+            noteToInsert,
+            false,
+            AccessLevel.USER_MODE
         );
-        List<Note> typedList = new List<Note>();
-        for (SObject s : safeList) {
-            Note safeNote = (Note) s;
-            // Restore required master-detail ParentId field if stripped by FLS
-            if (!safeNote.getPopulatedFieldsAsMap().containsKey('ParentId') && parentId != null) {
-                safeNote.ParentId = parentId;
-            }
-            // Restore Title if stripped by FLS
-            if (!safeNote.getPopulatedFieldsAsMap().containsKey('Title') && noteToInsert.Title != null) {
-                safeNote.Title = noteToInsert.Title;
-            }
-            typedList.add(safeNote);
-        }
-        if (!typedList.isEmpty()) {
-            QueueExpertAccessSupport.saveInsertResult(
-                Database.insert(typedList[0], false, AccessLevel.USER_MODE),
-                'Unable to save the note.'
-            );
-        }
-
+        QueueExpertAccessSupport.saveInsertResult(
+            insertResult,
+            'Unable to save the note.'
+        );
     } else {
-        Note existingNote = getAccessibleNoteById(
-            QueueExpertAccessSupport.validateRecordId(String.valueOf(requestedNote.Id), 'Invalid note record id.')
+        Id noteId = QueueExpertAccessSupport.validateRecordId(
+            String.valueOf(requestedNote.Id),
+            'Invalid note record id.'
         );
+
+        Note existingNote = getAccessibleNoteById(noteId);
+
         if (existingNote.ParentId != parentId) {
             throw new AuraHandledException('Mismatched note parent record.');
         }
-        if (!Schema.sObjectType.Registration_SCH__c.isAccessible()) {
-            throw new AuraHandledException('Insufficient access to the parent registration.');
-        }
-        List<Registration_SCH__c> parentRegistrations = [
-            SELECT Id
-            FROM Registration_SCH__c
-            WHERE Id = :parentId
-            WITH USER_MODE
-            LIMIT 1
-        ];
-        if (parentRegistrations.isEmpty()) {
-            throw new AuraHandledException('Parent registration is not accessible.');
-        }
-        if (!Schema.sObjectType.Note.isUpdateable()) {
-            throw new AuraHandledException('Insufficient access to update notes.');
-        }
-        if (!Schema.sObjectType.Note.fields.ParentId.isUpdateable()) {
-            throw new AuraHandledException('Insufficient field access to update notes.');
-        }
-        if (!Schema.sObjectType.Note.fields.Title.isUpdateable()) {
-            throw new AuraHandledException('Insufficient field access to update notes.');
-        }
-        if (!Schema.sObjectType.Note.fields.Body.isUpdateable()) {
-            throw new AuraHandledException('Insufficient field access to update notes.');
-        }
+
         QueueExpertAccessSupport.assertNoteUpdateAccess(parentId);
 
-        Note noteToUpdate = buildSafeNoteForUpdate(existingNote.Id, parentId, requestedNote);
-
-        // ✅ FLS-Compliant Update using FLSHelperSch
-        List<SObject> safeList = FLSHelperSch.getSafeRecords(
-            new List<Note>{ noteToUpdate },
-            'Note',
-            AccessType.UPDATABLE
+        Note noteToUpdate = buildSafeNoteForUpdate(
+            existingNote.Id,
+            parentId,
+            requestedNote
         );
-        List<Note> typedList = new List<Note>();
-        for (SObject s : safeList) {
-            Note safeNote = (Note) s;
-            // Restore required master-detail ParentId field if stripped by FLS
-            if (!safeNote.getPopulatedFieldsAsMap().containsKey('ParentId') && parentId != null) {
-                safeNote.ParentId = parentId;
-            }
-            // Restore Title if stripped by FLS
-            if (!safeNote.getPopulatedFieldsAsMap().containsKey('Title') && noteToUpdate.Title != null) {
-                safeNote.Title = noteToUpdate.Title;
-            }
-            typedList.add(safeNote);
-        }
-        if (!typedList.isEmpty()) {
-            QueueExpertAccessSupport.saveUpdateResult(
-                Database.update(typedList[0], false, AccessLevel.USER_MODE),
-                'Unable to save the note.'
-            );
-        }
+
+        Database.SaveResult updateResult = Database.update(
+            noteToUpdate,
+            false,
+            AccessLevel.USER_MODE
+        );
+        QueueExpertAccessSupport.saveUpdateResult(
+            updateResult,
+            'Unable to save the note.'
+        );
     }
+
     return getNotesByParent(parentId);
 }
     /**
