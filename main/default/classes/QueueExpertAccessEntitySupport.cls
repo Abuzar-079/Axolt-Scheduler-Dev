@@ -27,18 +27,6 @@ public with sharing class QueueExpertAccessEntitySupport {
      */
     public static void assertRegistrationParentAccess(Id parentId) {
         QueueExpertAccessValidationSupport.assertSObjectType(parentId, Registration_SCH__c.SObjectType, 'Parent record must be a registration.');
-        QueueExpertAccessValidationSupport.checkObjectAccess(
-            Registration_SCH__c.SObjectType,
-            QueueExpertAccessSupport.ACCESS_READ,
-            'Insufficient access to the parent registration.'
-        );
-        QueueExpertAccessValidationSupport.checkFieldAccess(
-            QueueExpertAccessSupport.buildFieldAccessRequest(
-                Registration_SCH__c.SObjectType,
-                new Set<String>{ 'Id' },
-                QueueExpertAccessSupport.ACCESS_READ
-            ).withErrorMessage('Insufficient access to the parent registration.')
-        );
         if (!Schema.sObjectType.Registration_SCH__c.isAccessible()) {
             throw new AuraHandledException('Insufficient access to the parent registration.');
         }
@@ -64,17 +52,6 @@ public with sharing class QueueExpertAccessEntitySupport {
             Registration_SCH__c.SObjectType,
             accessType,
             accessType == QueueExpertAccessSupport.ACCESS_EDIT ? 'Insufficient access to update registrations.' : 'Insufficient access to view registrations.'
-        );
-        QueueExpertAccessValidationSupport.checkFieldAccess(
-            QueueExpertAccessSupport.buildFieldAccessRequest(
-                Registration_SCH__c.SObjectType,
-                new Set<String>{ 'Id' },
-                QueueExpertAccessSupport.ACCESS_READ
-            ).withErrorMessage(
-                accessType == QueueExpertAccessSupport.ACCESS_EDIT
-                    ? 'Insufficient access to update registrations.'
-                    : 'Insufficient access to view registrations.'
-            )
         );
         List<Registration_SCH__c> registrations = [
             SELECT Id
