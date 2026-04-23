@@ -1,5 +1,4 @@
 import { LightningElement, api, track } from 'lwc';
-import updateWTExceed from '@salesforce/apex/Queue_Sch_Support.updateWTExceed';
 
 export default class CounterSchlwc extends LightningElement {
     @api count;
@@ -113,14 +112,14 @@ export default class CounterSchlwc extends LightningElement {
                 if (totalMinutes >= this.waitingThreshold) {
                     this.expires = true;
                     if (this.change) {
-                        console.log('Calling updateWTExceed...');
                         this.change = false;
-                        try {
-                            await updateWTExceed({ RegId: this.regId });
-                        } catch (err) {
-                            console.error('Error in updateWTExceed', err);
-                            this.change = true; // Reset so it can retry on next tick
-                        }
+                        this.dispatchEvent(
+                            new CustomEvent('waitthresholdreached', {
+                                detail: { regId: this.regId },
+                                bubbles: true,
+                                composed: true
+                            })
+                        );
                     }
                 }
             } else {
