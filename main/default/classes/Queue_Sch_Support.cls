@@ -1,10 +1,14 @@
 @SuppressWarnings('PMD.ApexDoc,PMD.AvoidDebugStatements,PMD.DebugsShouldUseLoggingLevel,PMD.CyclomaticComplexity,PMD.CognitiveComplexity,PMD.NcssCount,PMD.NcssTypeCount')
 public with sharing class Queue_Sch_Support {
     @AuraEnabled
-    public static Queue_Sch_Wrapper updateWTExceed(String regId){
+    public static Queue_Sch_Wrapper updateWTExceed(String regId, String csrfToken){
         Queue_Sch_Wrapper wrapper = new Queue_Sch_Wrapper();
         try{
             if(String.isNotEmpty(regId)){
+                Queue_Sch_CsrfGuard.assertValidToken(
+                    'Queue_Sch_Support.updateWTExceed',
+                    csrfToken
+                );
                 // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
                 // Registration_SCH__c reg = [
                 //     SELECT Id, Wait_Time_Exceeded__c
@@ -206,9 +210,13 @@ public with sharing class Queue_Sch_Support {
     }
 
     @AuraEnabled
-    public static Queue_Sch_Wrapper updateReg(String rId, String status) {
+    public static Queue_Sch_Wrapper updateReg(String rId, String status, String csrfToken) {
         Queue_Sch_Wrapper wrapper = new Queue_Sch_Wrapper();
         try{
+            Queue_Sch_CsrfGuard.assertValidToken(
+                'Queue_Sch_Support.updateReg',
+                csrfToken
+            );
             Registration_SCH__c reg = new Registration_SCH__c(Id = rId, Status__c = status);
             Database.update(reg, false, AccessLevel.USER_MODE);
         } catch(Exception e){
