@@ -6,7 +6,6 @@ import getQueueRecords from '@salesforce/apex/Queue_Sch_Support.getQueueRecords'
 import addQueueRecord from '@salesforce/apex/Queue_Sch_RecordHelper.insertRecords';
 import getBookedRegsList from '@salesforce/apex/Queue_Sch_QueryHelper.getBookedRegsList';
 import updateReg from '@salesforce/apex/Queue_Sch_Support.updateReg';
-import issueCsrfToken from '@salesforce/apex/Queue_Sch_CsrfGuard.issueToken';
 //import getTimeSlot from '@salesforce/apex/Queue_Sch.getTimeSlot';
 import setLocations from '@salesforce/apex/Queue_Sch_Support.setLocations';
 import getCancellationReasons from '@salesforce/apex/Queue_Sch_Support.getCancellationReasons';
@@ -20,11 +19,6 @@ import { loadStyle } from 'lightning/platformResourceLoader';
 
 
 export default class Queue_Sch_LWC extends LightningElement {
-    csrfActionNames = {
-        insertRecord: 'Queue_Sch_RecordHelper.insertRecords',
-        updateExistingRecord: 'Queue_Sch_RecordHelper.updateExistRecords',
-        updateRegistrationStatus: 'Queue_Sch_Support.updateReg'
-    };
 
     @track showFilters = false;
 
@@ -130,10 +124,9 @@ export default class Queue_Sch_LWC extends LightningElement {
                 });
                 this.showCancelModal = true;
             } else {
-                const csrfToken = await this.getMutationToken(this.csrfActionNames.updateRegistrationStatus);
                 // commented by abuzar on 2026-03-30 for the scanning issue and added below line "The variable 'result' was assigned but never used, which triggers the no-unused-vars eslint violation."
                 // const result = await updateReg({ rId: String(recordId), status: status });
-                await updateReg({ rId: String(recordId), status: status, csrfToken });
+                await updateReg({ rId: String(recordId), status: status });
                 //changes end here by abuzar
                 this.toastMessage = 'Registration marked as ' + status + ' succesfully.';
                 await this.handleFind();
@@ -311,10 +304,6 @@ export default class Queue_Sch_LWC extends LightningElement {
         } catch (error) {
             console.error('Queue refresh failed.', error);
         }
-    }
-
-    async getMutationToken(actionName) {
-        return issueCsrfToken({ actionName });
     }
 
     applyQueueResponseState(response) {
@@ -647,7 +636,6 @@ export default class Queue_Sch_LWC extends LightningElement {
             if (record.Id) {
                 await this.handleUpdateRecord();
             } else {
-                const csrfToken = await this.getMutationToken(this.csrfActionNames.insertRecord);
                 // commented by abuzar on 2026-03-12 for the scanning issue and added below line "updated Apex request payload after insertRecords signature fix"
                 /*
                 await addQueueRecord({
@@ -680,8 +668,7 @@ export default class Queue_Sch_LWC extends LightningElement {
                         selSlotST: record.Slot_Start_Time__c || null,
                         selSlotET: record.Slot_End_Time__c || null,
                         serviceId: record.Service__c,
-                        res: record.User__c,
-                        csrfToken
+                        res: record.User__c
                     }
                 });
                 //changes end here by abuzar
@@ -729,7 +716,6 @@ export default class Queue_Sch_LWC extends LightningElement {
         this.isDisabled = true;
 
         try {
-            const csrfToken = await this.getMutationToken(this.csrfActionNames.updateExistingRecord);
             // commented by abuzar on 2026-03-12 for the scanning issue and added below line "updated Apex request payload after updateExistRecords signature fix"
             /*
             const result = await updateExistRecords({
@@ -764,8 +750,7 @@ export default class Queue_Sch_LWC extends LightningElement {
                     queueId: this.selectedQueue,
                     selSlotST: selST,
                     selSlotET: selET,
-                    reschedule: this.rescheduleValue,
-                    csrfToken
+                    reschedule: this.rescheduleValue
                 }
             });
             //changes end here by abuzar
