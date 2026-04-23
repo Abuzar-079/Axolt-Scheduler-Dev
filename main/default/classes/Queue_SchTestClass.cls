@@ -1,16 +1,8 @@
 @IsTest
 public class Queue_SchTestClass {
-    private static final String UPDATE_WT_EXCEED_ACTION = 'Queue_Sch_Support.updateWTExceed';
-    private static final String UPDATE_REG_ACTION = 'Queue_Sch_Support.updateReg';
-    private static final String UPDATE_EXISTING_RECORD_ACTION = 'Queue_Sch_RecordHelper.updateExistRecords';
-    private static final String INSERT_RECORD_ACTION = 'Queue_Sch_RecordHelper.insertRecords';
 
     private static User getRunAsUser() {
         return [SELECT Id FROM User WHERE Id = :UserInfo.getUserId()];
-    }
-
-    private static String issueMutationToken(String actionName) {
-        return Queue_Sch_CsrfGuard.issueToken(actionName);
     }
 
     @TestSetup
@@ -82,7 +74,7 @@ public class Queue_SchTestClass {
         System.runAs(getRunAsUser()) {
             Registration_SCH__c reg = [SELECT Id FROM Registration_SCH__c WHERE Customer_Email__c = 'john.doe@test.com' LIMIT 1];
             Test.startTest();
-            Queue_Sch_Support.updateWTExceed(reg.Id, issueMutationToken(UPDATE_WT_EXCEED_ACTION));
+            Queue_Sch_Support.updateWTExceed(reg.Id);
             Test.stopTest();
             Registration_SCH__c updatedReg = [SELECT Wait_Time_Exceeded__c FROM Registration_SCH__c WHERE Id = :reg.Id];
             System.assertNotEquals(null, updatedReg, 'Updated reg should not be null');
@@ -242,11 +234,7 @@ public class Queue_SchTestClass {
                 LIMIT 1
             ];
             Test.startTest();
-            Queue_Sch_Wrapper result = Queue_Sch_Support.updateReg(
-                reg.Id,
-                'Completed',
-                issueMutationToken(UPDATE_REG_ACTION)
-            );
+            Queue_Sch_Wrapper result = Queue_Sch_Support.updateReg(reg.Id, 'Completed');
             Test.stopTest();
             Registration_SCH__c updatedReg = [SELECT Status__c FROM Registration_SCH__c WHERE Id = :reg.Id];
             System.assertNotEquals(null, result, 'Result should not be null');
@@ -312,7 +300,6 @@ public class Queue_SchTestClass {
             context.slotStart = slotStart;
             context.slotEnd = slotEnd;
             Queue_Sch_UpdateExistRecordsRequest request = buildDefaultUpdateExistRecordsRequest(context);
-            request.csrfToken = issueMutationToken(UPDATE_EXISTING_RECORD_ACTION);
             //changes end here by abuzar
             Test.startTest();
             try {
@@ -375,7 +362,6 @@ public class Queue_SchTestClass {
             context.slotStart = slotStart;
             context.slotEnd = slotEnd;
             Queue_Sch_UpdateExistRecordsRequest request = buildDefaultUpdateExistRecordsRequest(context);
-            request.csrfToken = issueMutationToken(UPDATE_EXISTING_RECORD_ACTION);
             //changes end here by abuzar
             Test.startTest();
         // commented by abuzar on 2026-03-12 for the scanning issue and added below line "updated unit test to use UpdateExistRecordsRequest after updateExistRecords signature fix"
@@ -413,7 +399,6 @@ public class Queue_SchTestClass {
             request.selSlotET = slotEnd;
             request.serviceId = service.Id;
             request.res = '';
-            request.csrfToken = issueMutationToken(INSERT_RECORD_ACTION);
             Test.startTest();
         // commented by abuzar on 2026-03-12 for the scanning issue and added below line "updated unit test to use InsertRecordsRequest after insertRecords signature fix"
         /*
@@ -453,7 +438,6 @@ public class Queue_SchTestClass {
             request.selSlotET = slotEnd;
             request.serviceId = service.Id;
             request.res = '';
-            request.csrfToken = issueMutationToken(INSERT_RECORD_ACTION);
             Test.startTest();
         // commented by abuzar on 2026-03-12 for the scanning issue and added below line "updated unit test to use InsertRecordsRequest after insertRecords signature fix"
         /*
@@ -490,7 +474,6 @@ public class Queue_SchTestClass {
             request.selSlotET = slotEnd;
             request.serviceId = service.Id;
             request.res = '';
-            request.csrfToken = issueMutationToken(INSERT_RECORD_ACTION);
             Test.startTest();
         // commented by abuzar on 2026-03-12 for the scanning issue and added below line "updated unit test to use InsertRecordsRequest after insertRecords signature fix"
         /*
@@ -656,7 +639,6 @@ public class Queue_SchTestClass {
             request.selSlotST = slotStart;
             request.selSlotET = slotEnd;
             request.reschedule = null;
-            request.csrfToken = issueMutationToken(UPDATE_EXISTING_RECORD_ACTION);
             // commented by abuzar on 2026-03-12 for the scanning issue and added below line "updated unit test to use UpdateExistRecordsRequest after updateExistRecords signature fix"
             /*
             result = Queue_Sch.updateExistRecords(
@@ -696,7 +678,6 @@ public class Queue_SchTestClass {
             request.selSlotET = slotEnd;
             request.serviceId = service.Id;
             request.res = '';
-            request.csrfToken = issueMutationToken(INSERT_RECORD_ACTION);
 
             Test.startTest();
             Queue_Sch_Wrapper result;
