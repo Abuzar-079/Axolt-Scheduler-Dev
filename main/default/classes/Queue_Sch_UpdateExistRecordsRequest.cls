@@ -58,6 +58,10 @@ public class Queue_Sch_UpdateExistRecordsRequest {
      * @description Indicates whether the request is for rescheduling.
      */
     @AuraEnabled public String reschedule { get; set; }
+    /**
+     * @description Server-issued verification token for this mutation request.
+     */
+    @AuraEnabled public String csrfToken { get; set; }
 
     /**
      * @description Initializes the request with an empty existing-record map.
