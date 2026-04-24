@@ -52,90 +52,70 @@ public with sharing class QueueExpertAttachmentActionSupport {
      * @return Attachments associated with the parent registration after upload.
      */
     public static List<Attachment> uploadFile(QueueExpertUploadFileRequest request) {
-    QueueExpertAccessSupport.assertAuthenticatedRequest();
-    Id parentId = QueueExpertAccessSupport.validateRecordId(request.parent, 'Invalid parent record id.');
-    QueueExpertAccessSupport.assertSObjectType(parentId, Registration_SCH__c.SObjectType, 'Parent record must be a registration.');
+        QueueExpertAccessSupport.assertAuthenticatedRequest();
+        Id parentId = validateUploadParent(request.parent);
+        validateUploadInput(request.fileName, request.base64Data, request.contentType);
+        QueueExpertAccessSupport.assertAttachmentCreateAccess(parentId);
 
-    QueueExpertAccessSupport.checkObjectAccess(
-        Registration_SCH__c.SObjectType,
-        QueueExpertAccessSupport.ACCESS_READ,
-        'Insufficient access to the parent registration.'
-    );
-    QueueExpertAccessSupport.checkFieldAccess(
-        QueueExpertAccessSupport.buildFieldAccessRequest(
-            Registration_SCH__c.SObjectType,
-            new Set<String>{ 'Id' },
-            QueueExpertAccessSupport.ACCESS_READ
-        ).withErrorMessage('Insufficient access to the parent registration.')
-    );
-    if (!Schema.sObjectType.Registration_SCH__c.isAccessible()) {
-        throw new AuraHandledException('Insufficient access to the parent registration.');
+        List<Attachment> typedList = getSafeAttachments(
+            buildAttachmentRecord(parentId, request, decodeAttachmentBody(request.base64Data))
+        );
+        insertSafeAttachments(typedList);
+        return getAttachmentsByParent(parentId);
     }
 
-    List<Registration_SCH__c> parentRegistrations = [
-        SELECT Id FROM Registration_SCH__c WHERE Id = :parentId WITH USER_MODE LIMIT 1
-    ];
-
-    if (parentRegistrations.isEmpty()) {
-        throw new AuraHandledException('Parent registration is not accessible.');
+    private static Id validateUploadParent(String parent) {
+        Id parentId = QueueExpertAccessSupport.validateRecordId(parent, 'Invalid parent record id.');
+        QueueExpertAccessSupport.assertSObjectType(parentId, Registration_SCH__c.SObjectType, 'Parent record must be a registration.');
+        QueueExpertAccessSupport.assertRegistrationParentAccess(parentId);
+        return parentId;
     }
 
-    QueueExpertAccessSupport.assertRegistrationParentAccess(parentId);
-    validateUploadInput(request.fileName, request.base64Data, request.contentType);
-    QueueExpertAccessSupport.assertAttachmentCreateAccess(parentId);
-    
-    Blob attachmentBody = decodeAttachmentBody(request.base64Data);
-
-    Attachment attachmentRecord = new Attachment();
-    attachmentRecord.ParentId = parentId;
-    attachmentRecord.Body = attachmentBody;
-    attachmentRecord.Name = request.fileName.trim();
-    attachmentRecord.ContentType = request.contentType.trim().toLowerCase();
-
-    // 1. Internal Guideline Compliance: Use custom FLSHelperSch
-    List<SObject> safeList = FLSHelperSch.getSafeRecords(
-        new List<Attachment>{ attachmentRecord },
-        'Attachment',
-        AccessType.CREATABLE
-    );
-
-    List<Attachment> typedList = new List<Attachment>();
-    
-    for (SObject s : safeList) {
-        Attachment typeRecord = (Attachment)s;
-        
-        // 2. Internal Guideline Compliance: Manual restoration of stripped required fields
-        if (!typeRecord.getPopulatedFieldsAsMap().containsKey('ParentId') && parentId != null) {
-            typeRecord.ParentId = parentId;
-        }
-        if (!typeRecord.getPopulatedFieldsAsMap().containsKey('Body') && attachmentBody != null) {
-            typeRecord.Body = attachmentBody;
-        }
-        if (!typeRecord.getPopulatedFieldsAsMap().containsKey('Name') && request.fileName != null) {
-            typeRecord.Name = request.fileName.trim();
-        }
-        if (!typeRecord.getPopulatedFieldsAsMap().containsKey('ContentType') && request.contentType != null) {
-            typeRecord.ContentType = request.contentType.trim().toLowerCase();
-        }
-        
-        typedList.add(typeRecord);
+    private static Attachment buildAttachmentRecord(Id parentId, QueueExpertUploadFileRequest request, Blob attachmentBody) {
+        return new Attachment(
+            ParentId = parentId,
+            Body = attachmentBody,
+            Name = request.fileName.trim(),
+            ContentType = request.contentType.trim().toLowerCase()
+        );
     }
 
-    if (!typedList.isEmpty()) {
-        // 3. Checkmarx Compliance: Explicit standard check right before the DML
-        if (Schema.sObjectType.Attachment.isCreateable()) {
+    private static List<Attachment> getSafeAttachments(Attachment attachmentRecord) {
+        List<SObject> safeList = FLSHelperSch.getSafeRecords(
+            new List<Attachment>{ attachmentRecord },
+            'Attachment',
+            AccessType.CREATABLE
+        );
+        List<Attachment> typedList = new List<Attachment>();
+        for (SObject safeRecord : safeList) {
+            typedList.add(restoreRequiredAttachmentFields((Attachment)safeRecord, attachmentRecord));
+        }
+        return typedList;
+    }
+
+    private static Attachment restoreRequiredAttachmentFields(Attachment safeRecord, Attachment sourceRecord) {
+        restoreRequiredAttachmentField(safeRecord, 'ParentId', sourceRecord.ParentId);
+        restoreRequiredAttachmentField(safeRecord, 'Body', sourceRecord.Body);
+        restoreRequiredAttachmentField(safeRecord, 'Name', sourceRecord.Name);
+        restoreRequiredAttachmentField(safeRecord, 'ContentType', sourceRecord.ContentType);
+        return safeRecord;
+    }
+
+    private static void restoreRequiredAttachmentField(Attachment safeRecord, String fieldName, Object fieldValue) {
+        if (fieldValue != null && !safeRecord.getPopulatedFieldsAsMap().containsKey(fieldName)) {
+            safeRecord.put(fieldName, fieldValue);
+        }
+    }
+
+    private static void insertSafeAttachments(List<Attachment> typedList) {
+        if (!typedList.isEmpty()) {
             List<Database.SaveResult> saveResults = Database.insert(typedList, false, AccessLevel.USER_MODE);
             QueueExpertAccessSupport.saveInsertResult(
                 saveResults[0],
                 'Unable to upload the attachment.'
             );
-        } else {
-             throw new AuraHandledException('Insufficient access to upload attachments.');
         }
     }
-
-    return getAttachmentsByParent(parentId);
-}
     /**
      * @description Returns an attachment that is accessible for deletion.
      * @param relatedRecordId Attachment identifier to validate.
