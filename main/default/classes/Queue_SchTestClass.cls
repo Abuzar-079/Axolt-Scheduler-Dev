@@ -395,36 +395,9 @@ public class Queue_SchTestClass {
     @IsTest
     static void testInsertRecords() {
         System.runAs(getRunAsUser()) {
-            Expert_Location__c loc = [SELECT Id FROM Expert_Location__c LIMIT 1];
-            Product2 service = [SELECT Id FROM Product2 LIMIT 1];
-            Queue__c queue = [SELECT Id FROM Queue__c LIMIT 1];
-            DateTime slotStart = System.now().addDays(1).addHours(2);
-            DateTime slotEnd = slotStart.addMinutes(30);
-            Queue_Sch_InsertRecordsRequest request = new Queue_Sch_InsertRecordsRequest();
-            request.fname = 'NewFirst';
-            request.lname = 'NewLast';
-            request.email = 'new@test.com';
-            request.phone = '5555555555';
-            request.location = loc.Id;
-            request.service = service.Id;
-            request.event = null;
-            request.queueId = queue.Id;
-            request.selSlotST = slotStart;
-            request.selSlotET = slotEnd;
-            request.serviceId = service.Id;
-            request.res = '';
-            request.csrfToken = issueMutationToken(INSERT_RECORD_ACTION);
-            Test.startTest();
-        // commented by abuzar on 2026-03-12 for the scanning issue and added below line "updated unit test to use InsertRecordsRequest after insertRecords signature fix"
-        /*
-        Queue_Sch.Wrapper result = Queue_Sch.insertRecords(
-            'NewFirst', 'NewLast', 'new@test.com', '5555555555',
-            loc.Id, service.Id, new Map<Integer, Registration_SCH__c>(), null, queue.Id, slotStart, slotEnd, service.Id, ''
-        );
-        */
-            Queue_Sch_Wrapper result = Queue_Sch_RecordHelper.insertRecords(request);
-            //changes end here by abuzar
-            Test.stopTest();
+            Queue_Sch_Wrapper result = QueueSchInsertRecordsTestSupport.execute(
+                QueueSchInsertRecordsTestSupport.buildDefaultContext()
+            );
             //List<Registration_SCH__c> newRegs = [SELECT Id, Customer_Email__c FROM Registration_SCH__c WHERE Customer_Email__c = 'new@test.com'];
             System.assertNotEquals(null, result, 'Result should not be null');
             //System.assert(newRegs.size() > 0, 'New registration should have been inserted');
@@ -434,37 +407,15 @@ public class Queue_SchTestClass {
     @IsTest
     static void testInsertRecordsWithExistingContact() {
         System.runAs(getRunAsUser()) {
-            Expert_Location__c loc = [SELECT Id FROM Expert_Location__c LIMIT 1];
-            Product2 service = [SELECT Id FROM Product2 LIMIT 1];
-            Queue__c queue = [SELECT Id FROM Queue__c LIMIT 1];
             Contact existingContact = [SELECT Email, MobilePhone FROM Contact LIMIT 1];
-            DateTime slotStart = System.now().addDays(1).addHours(3);
-            DateTime slotEnd = slotStart.addMinutes(30);
-            Queue_Sch_InsertRecordsRequest request = new Queue_Sch_InsertRecordsRequest();
-            request.fname = 'ExistingContact';
-            request.lname = 'Customer';
-            request.email = existingContact.Email;
-            request.phone = existingContact.MobilePhone;
-            request.location = loc.Id;
-            request.service = service.Id;
-            request.event = null;
-            request.queueId = queue.Id;
-            request.selSlotST = slotStart;
-            request.selSlotET = slotEnd;
-            request.serviceId = service.Id;
-            request.res = '';
-            request.csrfToken = issueMutationToken(INSERT_RECORD_ACTION);
-            Test.startTest();
-        // commented by abuzar on 2026-03-12 for the scanning issue and added below line "updated unit test to use InsertRecordsRequest after insertRecords signature fix"
-        /*
-        Queue_Sch.Wrapper result = Queue_Sch.insertRecords(
-            'ExistingContact', 'Customer', existingContact.Email, existingContact.MobilePhone,
-            loc.Id, service.Id, new Map<Integer, Registration_SCH__c>(), null, queue.Id, slotStart, slotEnd, service.Id, ''
-        );
-        */
-            Queue_Sch_Wrapper result = Queue_Sch_RecordHelper.insertRecords(request);
-            //changes end here by abuzar
-            Test.stopTest();
+            QueueSchInsertRecordsTestSupport.Context context = QueueSchInsertRecordsTestSupport.buildDefaultContext();
+            context.firstName = 'ExistingContact';
+            context.lastName = 'Customer';
+            context.email = existingContact.Email;
+            context.phone = existingContact.MobilePhone;
+            QueueSchInsertRecordsTestSupport.applySlot(context, System.now().addDays(1).addHours(3));
+
+            Queue_Sch_Wrapper result = QueueSchInsertRecordsTestSupport.execute(context);
             System.assertNotEquals(null, result, 'Result should not be null');
         }
     }
@@ -472,36 +423,14 @@ public class Queue_SchTestClass {
     @IsTest
     static void testInsertRecordsPastTime() {
         System.runAs(getRunAsUser()) {
-            Expert_Location__c loc = [SELECT Id FROM Expert_Location__c LIMIT 1];
-            Product2 service = [SELECT Id FROM Product2 LIMIT 1];
-            Queue__c queue = [SELECT Id FROM Queue__c LIMIT 1];
-            DateTime slotStart = System.now().addHours(-2);
-            DateTime slotEnd = slotStart.addMinutes(30);
-            Queue_Sch_InsertRecordsRequest request = new Queue_Sch_InsertRecordsRequest();
-            request.fname = 'PastTime';
-            request.lname = 'Test';
-            request.email = 'past@test.com';
-            request.phone = '6666666666';
-            request.location = loc.Id;
-            request.service = service.Id;
-            request.event = null;
-            request.queueId = queue.Id;
-            request.selSlotST = slotStart;
-            request.selSlotET = slotEnd;
-            request.serviceId = service.Id;
-            request.res = '';
-            request.csrfToken = issueMutationToken(INSERT_RECORD_ACTION);
-            Test.startTest();
-        // commented by abuzar on 2026-03-12 for the scanning issue and added below line "updated unit test to use InsertRecordsRequest after insertRecords signature fix"
-        /*
-        Queue_Sch.Wrapper result = Queue_Sch.insertRecords(
-            'PastTime', 'Test', 'past@test.com', '6666666666',
-            loc.Id, service.Id, new Map<Integer, Registration_SCH__c>(), null, queue.Id, slotStart, slotEnd, service.Id, ''
-        );
-        */
-            Queue_Sch_Wrapper result = Queue_Sch_RecordHelper.insertRecords(request);
-            //changes end here by abuzar
-            Test.stopTest();
+            QueueSchInsertRecordsTestSupport.Context context = QueueSchInsertRecordsTestSupport.buildDefaultContext();
+            context.firstName = 'PastTime';
+            context.lastName = 'Test';
+            context.email = 'past@test.com';
+            context.phone = '6666666666';
+            QueueSchInsertRecordsTestSupport.applySlot(context, System.now().addHours(-2));
+
+            Queue_Sch_Wrapper result = QueueSchInsertRecordsTestSupport.execute(context);
             System.assertNotEquals(null, result, 'Result should not be null for past time');
         }
     }
@@ -679,42 +608,19 @@ public class Queue_SchTestClass {
     static void testInsertRecordsNoLocation() {
         System.runAs(getRunAsUser()) {
             Product2 service = [SELECT Id FROM Product2 LIMIT 1];
-            DateTime slotStart = System.now().addDays(1).addHours(2);
-            DateTime slotEnd = slotStart.addMinutes(30);
             Expert_Location__c newLoc = new Expert_Location__c(Name = 'Location Without Queue 2', Address__c = '789 Test Blvd');
             insert newLoc;
-            Queue_Sch_InsertRecordsRequest request = new Queue_Sch_InsertRecordsRequest();
-            request.fname = 'NoQueue';
-            request.lname = 'Test';
-            request.email = 'noqueue@test.com';
-            request.phone = '8888888888';
-            request.location = newLoc.Id;
-            request.service = service.Id;
-            request.event = null;
-            request.queueId = null;
-            request.selSlotST = slotStart;
-            request.selSlotET = slotEnd;
-            request.serviceId = service.Id;
-            request.res = '';
-            request.csrfToken = issueMutationToken(INSERT_RECORD_ACTION);
+            QueueSchInsertRecordsTestSupport.Context context = new QueueSchInsertRecordsTestSupport.Context();
+            context.firstName = 'NoQueue';
+            context.lastName = 'Test';
+            context.email = 'noqueue@test.com';
+            context.phone = '8888888888';
+            context.locationId = newLoc.Id;
+            context.serviceId = service.Id;
+            context.queueId = null;
+            QueueSchInsertRecordsTestSupport.applySlot(context, System.now().addDays(1).addHours(2));
 
-            Test.startTest();
-            Queue_Sch_Wrapper result;
-            try {
-            // commented by abuzar on 2026-03-12 for the scanning issue and added below line "updated unit test to use InsertRecordsRequest after insertRecords signature fix"
-            /*
-            result = Queue_Sch.insertRecords(
-                'NoQueue', 'Test', 'noqueue@test.com', '8888888888',
-                newLoc.Id, service.Id, new Map<Integer, Registration_SCH__c>(), null, null, slotStart, slotEnd, service.Id, ''
-            );
-            */
-                result = Queue_Sch_RecordHelper.insertRecords(request);
-                //changes end here by abuzar
-            } catch (Exception e) {
-                result = new Queue_Sch_Wrapper();
-                //System.debug(LoggingLevel.DEBUG, 'Exception caught: ' + e.getMessage());
-            }
-            Test.stopTest();
+            Queue_Sch_Wrapper result = QueueSchInsertRecordsTestSupport.executeSafely(context);
             System.assertNotEquals(null, result, 'Result should not be null whether method succeeds or catches exception');
         }
     }

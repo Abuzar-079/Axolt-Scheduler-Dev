@@ -14,28 +14,54 @@ public with sharing class FLSHelperSch {
         String objectApiName,
         AccessType accessType
     ) {
-        if (records == null || records.isEmpty()) {
+        if (hasNoRecords(records)) {
             return new List<SObject>();
         }
+
+        Schema.SObjectType expectedType = getExpectedType(objectApiName);
+        validateRecordsMatchType(records, expectedType);
+        return getStrippedRecords(records, accessType);
+    }
+
+    private static Boolean hasNoRecords(List<SObject> records) {
+        return records == null || records.isEmpty();
+    }
+
+    private static Schema.SObjectType getExpectedType(String objectApiName) {
+        validateObjectApiName(objectApiName);
+        Map<String, Schema.SObjectType> describeByName = Schema.getGlobalDescribe();
+        validateSupportedObject(objectApiName, describeByName);
+        return describeByName.get(objectApiName);
+    }
+
+    private static void validateObjectApiName(String objectApiName) {
         if (String.isBlank(objectApiName)) {
             throw new AuraHandledException('Object API name is required for FLS enforcement.');
         }
+    }
 
-        Map<String, Schema.SObjectType> describeByName = Schema.getGlobalDescribe();
+    private static void validateSupportedObject(String objectApiName, Map<String, Schema.SObjectType> describeByName) {
         if (!describeByName.containsKey(objectApiName)) {
             throw new AuraHandledException('Unsupported object for FLS enforcement: ' + objectApiName);
         }
+    }
 
-        Schema.SObjectType expectedType = describeByName.get(objectApiName);
+    private static void validateRecordsMatchType(List<SObject> records, Schema.SObjectType expectedType) {
         for (SObject record : records) {
-            if (record == null) {
-                throw new AuraHandledException('A null record cannot be sanitized.');
-            }
-            if (record.getSObjectType() != expectedType) {
-                throw new AuraHandledException('Mismatched record type for FLS enforcement.');
-            }
+            validateRecordMatchesType(record, expectedType);
         }
+    }
 
+    private static void validateRecordMatchesType(SObject record, Schema.SObjectType expectedType) {
+        if (record == null) {
+            throw new AuraHandledException('A null record cannot be sanitized.');
+        }
+        if (record.getSObjectType() != expectedType) {
+            throw new AuraHandledException('Mismatched record type for FLS enforcement.');
+        }
+    }
+
+    private static List<SObject> getStrippedRecords(List<SObject> records, AccessType accessType) {
         return Security.stripInaccessible(accessType, records).getRecords();
     }
 }
