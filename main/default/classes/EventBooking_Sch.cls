@@ -5,8 +5,6 @@
 @SuppressWarnings('PMD.NcssCount,PMD.CognitiveComplexity,PMD.CyclomaticComplexity,PMD.ExcessivePublicCount')
 public with sharing class EventBooking_Sch {
 
-   
-    
     /** @description Stores the event allocation record type identifier. */
     @AuraEnabled public static Id evallocRecType {get;set;}
     /** @description Stores the event allocation records returned to the client. */
@@ -41,7 +39,7 @@ public with sharing class EventBooking_Sch {
     @AuraEnabled public static String eventDescription {get; set;}
     /** @description Stores the selected event venue label. */
     @AuraEnabled public static String eventVenue {get; set;}
-    @SuppressWarnings('PMD.AvoidBooleanMethodParameters') 
+    @SuppressWarnings('PMD.AvoidBooleanMethodParameters')
     /** @description Indicates whether captcha validation is required. */
     @AuraEnabled public static Boolean isCaptchaRequired {get; set;}
     /** @description Stores the selected event zone name. */
@@ -1997,6 +1995,7 @@ public with sharing class EventBooking_Sch {
                     con.Event__c = reg1[0].Event__c;
                 }
 
+    */
     /**
      * @description Creates or updates a contact from registration data and links it back to the registration.
      * @param rJson Serialized registration payload.
@@ -3416,6 +3415,7 @@ public with sharing class EventBooking_Sch {
             rList = buildRegistrationsWithExistingContact(regList, context);
         }
 
+    */
     /**
      * @description Creates or updates registration contact assignments from serialized registration data.
      * @param regs Serialized list of registration records to process.
@@ -4470,10 +4470,6 @@ public with sharing class EventBooking_Sch {
             return;
         }
 
-
-        
-
-        
         Registration_SCH__c pr = parentRegs[0];
         // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
         // List<Contact> existingContacts = [
@@ -4498,9 +4494,7 @@ public with sharing class EventBooking_Sch {
         Boolean canSetParentContact = Schema.sObjectType.Registration_SCH__c.fields.Contact__c.isCreateable();
 
         if (!existingContacts.isEmpty()) {
-            if (canSetParentContact) {
-                pr.Contact__c = existingContacts[0].Id;
-            }
+            applyExistingPrimaryParentContact(pr, existingContacts, canSetParentContact);
             return;
         }
 
@@ -4516,54 +4510,104 @@ public with sharing class EventBooking_Sch {
         // Boolean canSetEmail = canAccessCreateAndUpdateContactField(Schema.sObjectType.Contact.fields.Email);
         // Boolean canSetMobilePhone = canAccessCreateAndUpdateContactField(Schema.sObjectType.Contact.fields.MobilePhone);
         // Boolean canSetPhone = canAccessCreateAndUpdateContactField(Schema.sObjectType.Contact.fields.Phone);
-        if (
-            Schema.sObjectType.Contact.isCreateable() &&
-            Schema.sObjectType.Registration_SCH__c.fields.Customer_Lastname__c.isAccessible() &&
-            Schema.sObjectType.Contact.fields.LastName.isCreateable()
-        ) {
-            Contact newContact = new Contact();
-            if (
-                Schema.sObjectType.Registration_SCH__c.fields.Customer_Name__c.isAccessible() &&
-                Schema.sObjectType.Contact.fields.FirstName.isCreateable() &&
-                String.isNotBlank(pr.Customer_Name__c)
-            ) {
-                newContact.FirstName = pr.Customer_Name__c;
-            }
-            if (
-                Schema.sObjectType.Registration_SCH__c.fields.Customer_Lastname__c.isAccessible() &&
-                Schema.sObjectType.Contact.fields.LastName.isCreateable() &&
-                String.isNotBlank(pr.Customer_Lastname__c)
-            ) {
-                newContact.LastName = pr.Customer_Lastname__c;
-            }
-            if (
-                Schema.sObjectType.Registration_SCH__c.fields.Customer_Email__c.isAccessible() &&
-                Schema.sObjectType.Contact.fields.Email.isCreateable() &&
-                String.isNotBlank(pr.Customer_Email__c)
-            ) {
-                newContact.Email = pr.Customer_Email__c;
-            }
-            if (
-                Schema.sObjectType.Registration_SCH__c.fields.Customer_Contact__c.isAccessible() &&
-                String.isNotBlank(pr.Customer_Contact__c)
-            ) {
-                if (Schema.sObjectType.Contact.fields.MobilePhone.isCreateable()) {
-                    newContact.MobilePhone = pr.Customer_Contact__c;
-                }
-                if (Schema.sObjectType.Contact.fields.Phone.isCreateable()) {
-                    newContact.Phone = pr.Customer_Contact__c;
-                }
-            }
-            if (
-                String.isNotBlank(newContact.LastName) &&
-                canSetParentContact &&
-                Schema.sObjectType.Contact.isCreateable()
-            ) {
-                EventBookingSchDmlSupport.insertContact(newContact);
-                pr.Contact__c = newContact.Id;
-            }
+        if (!canCreatePrimaryParentContact()) {
+            return;
         }
+
+        Contact newContact = buildPrimaryParentContact(pr);
+        insertPrimaryParentContactIfAllowed(pr, newContact, canSetParentContact);
         //changes end here by Abuzar
+    }
+
+    private static void applyExistingPrimaryParentContact(
+        Registration_SCH__c parentRegistration,
+        List<Contact> existingContacts,
+        Boolean canSetParentContact
+    ) {
+        if (!canSetParentContact) {
+            return;
+        }
+        parentRegistration.Contact__c = existingContacts[0].Id;
+    }
+
+    private static Boolean canCreatePrimaryParentContact() {
+        return Schema.sObjectType.Contact.isCreateable() &&
+            Schema.sObjectType.Registration_SCH__c.fields.Customer_Lastname__c.isAccessible() &&
+            Schema.sObjectType.Contact.fields.LastName.isCreateable();
+    }
+
+    private static Contact buildPrimaryParentContact(Registration_SCH__c parentRegistration) {
+        Contact newContact = new Contact();
+        applyCreateableContactFirstName(newContact, parentRegistration);
+        applyCreateableContactLastName(newContact, parentRegistration);
+        applyCreateableContactEmail(newContact, parentRegistration);
+        applyCreateableContactNumber(newContact, parentRegistration);
+        return newContact;
+    }
+
+    private static void applyCreateableContactFirstName(Contact newContact, Registration_SCH__c parentRegistration) {
+        if (
+            Schema.sObjectType.Registration_SCH__c.fields.Customer_Name__c.isAccessible() &&
+            Schema.sObjectType.Contact.fields.FirstName.isCreateable() &&
+            String.isNotBlank(parentRegistration.Customer_Name__c)
+        ) {
+            newContact.FirstName = parentRegistration.Customer_Name__c;
+        }
+    }
+
+    private static void applyCreateableContactLastName(Contact newContact, Registration_SCH__c parentRegistration) {
+        if (
+            Schema.sObjectType.Registration_SCH__c.fields.Customer_Lastname__c.isAccessible() &&
+            Schema.sObjectType.Contact.fields.LastName.isCreateable() &&
+            String.isNotBlank(parentRegistration.Customer_Lastname__c)
+        ) {
+            newContact.LastName = parentRegistration.Customer_Lastname__c;
+        }
+    }
+
+    private static void applyCreateableContactEmail(Contact newContact, Registration_SCH__c parentRegistration) {
+        if (
+            Schema.sObjectType.Registration_SCH__c.fields.Customer_Email__c.isAccessible() &&
+            Schema.sObjectType.Contact.fields.Email.isCreateable() &&
+            String.isNotBlank(parentRegistration.Customer_Email__c)
+        ) {
+            newContact.Email = parentRegistration.Customer_Email__c;
+        }
+    }
+
+    private static void applyCreateableContactNumber(Contact newContact, Registration_SCH__c parentRegistration) {
+        if (
+            Schema.sObjectType.Registration_SCH__c.fields.Customer_Contact__c.isAccessible() &&
+            String.isNotBlank(parentRegistration.Customer_Contact__c)
+        ) {
+            applyCreateableContactPhoneFields(newContact, parentRegistration.Customer_Contact__c);
+        }
+    }
+
+    private static void applyCreateableContactPhoneFields(Contact newContact, String contactNumber) {
+        if (Schema.sObjectType.Contact.fields.MobilePhone.isCreateable()) {
+            newContact.MobilePhone = contactNumber;
+        }
+        if (Schema.sObjectType.Contact.fields.Phone.isCreateable()) {
+            newContact.Phone = contactNumber;
+        }
+    }
+
+    private static void insertPrimaryParentContactIfAllowed(
+        Registration_SCH__c parentRegistration,
+        Contact newContact,
+        Boolean canSetParentContact
+    ) {
+        if (
+            String.isBlank(newContact.LastName) ||
+            !canSetParentContact ||
+            !Schema.sObjectType.Contact.isCreateable()
+        ) {
+            return;
+        }
+
+        EventBookingSchDmlSupport.insertContact(newContact);
+        parentRegistration.Contact__c = newContact.Id;
     }
 
     private static void insertParentRegistrations(List<Registration_SCH__c> parentRegs) {
