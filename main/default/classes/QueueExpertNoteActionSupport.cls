@@ -295,7 +295,7 @@ public static void assertNoteUpdateAccess(Id parentId) {
                 ).withErrorMessage('Insufficient access to the parent registration.')
             );
             if (!Schema.sObjectType.Registration_SCH__c.isAccessible()) {
-                throw new AuraHandledException('Insufficient access to the parent registration.');
+                throw new System.NoAccessException();
             }
             List<Registration_SCH__c> parentRegistrations = [
                 SELECT Id
@@ -335,7 +335,7 @@ public static void assertNoteUpdateAccess(Id parentId) {
             ).withErrorMessage('Insufficient access to the parent registration.')
         );
         if (!Schema.sObjectType.Registration_SCH__c.isAccessible()) {
-            throw new AuraHandledException('Insufficient access to the parent registration.');
+            throw new System.NoAccessException();
         }
         List<Registration_SCH__c> parentRegistrations = [
             SELECT Id

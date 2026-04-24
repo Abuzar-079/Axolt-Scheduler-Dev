@@ -26,6 +26,9 @@ public with sharing class QueueExpertAccessEntitySupport {
      * @param parentId Parent registration identifier to validate.
      */
     public static void assertRegistrationParentAccess(Id parentId) {
+        if (!Schema.sObjectType.Registration_SCH__c.isAccessible()) {
+            throw new System.NoAccessException();
+        }
         QueueExpertAccessValidationSupport.assertSObjectType(parentId, Registration_SCH__c.SObjectType, 'Parent record must be a registration.');
         QueueExpertAccessValidationSupport.checkObjectAccess(
             Registration_SCH__c.SObjectType,
@@ -39,9 +42,6 @@ public with sharing class QueueExpertAccessEntitySupport {
                 QueueExpertAccessSupport.ACCESS_READ
             ).withErrorMessage('Insufficient access to the parent registration.')
         );
-        if (!Schema.sObjectType.Registration_SCH__c.isAccessible()) {
-            throw new AuraHandledException('Insufficient access to the parent registration.');
-        }
         List<Registration_SCH__c> parentRegistrations = [
             SELECT Id
             FROM Registration_SCH__c
