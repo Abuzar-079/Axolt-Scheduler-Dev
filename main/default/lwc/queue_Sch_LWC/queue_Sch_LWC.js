@@ -5,7 +5,7 @@ import saveExistingRegistration from '@salesforce/apex/Queue_Sch_RecordHelper.up
 import getQueueRecords from '@salesforce/apex/Queue_Sch_Support.getQueueRecords';
 import insertRecord from '@salesforce/apex/Queue_Sch_RecordHelper.insertRecords';
 import getBookedRegsList from '@salesforce/apex/Queue_Sch_QueryHelper.getBookedRegsList';
-import updateReg from '@salesforce/apex/Queue_Sch_Support.updateReg';
+import saveRegistrationStatus from '@salesforce/apex/Queue_Sch_Support.updateReg';
 import issueCsrfToken from '@salesforce/apex/Queue_Sch_CsrfGuard.issueToken';
 //import getTimeSlot from '@salesforce/apex/Queue_Sch.getTimeSlot';
 import setLocations from '@salesforce/apex/Queue_Sch_Support.setLocations';
@@ -16,7 +16,7 @@ import { loadStyle } from 'lightning/platformResourceLoader';
 
 const INSERT_RECORD_ACTION = 'Queue_Sch_RecordHelper.insertRecords';
 const UPDATE_EXISTING_RECORD_ACTION = 'Queue_Sch_RecordHelper.updateExistRecords';
-const UPDATE_REGISTRATION_STATUS_ACTION = 'Queue_Sch_Support.updateReg';
+const STATUS_CHANGE_ACTION = 'Queue_Sch_Support.updateReg';
 
 export default class Queue_Sch_LWC extends LightningElement {
     @track showFilters = false;
@@ -123,18 +123,12 @@ export default class Queue_Sch_LWC extends LightningElement {
                 });
                 this.showCancelModal = true;
             } else {
-                const csrfToken = await this.getMutationToken(UPDATE_REGISTRATION_STATUS_ACTION);
-                // commented by abuzar on 2026-03-30 for the scanning issue and added below line "The variable 'result' was assigned but never used, which triggers the no-unused-vars eslint violation."
-                // const result = await updateReg({ rId: String(recordId), status: status });
-                await updateReg({ rId: String(recordId), status: status, csrfToken });
-                //changes end here by abuzar
+                const csrfToken = await this.getMutationToken(STATUS_CHANGE_ACTION);
+                await saveRegistrationStatus({ rId: String(recordId), status: status, csrfToken });
                 this.toastMessage = 'Registration marked as ' + status + ' succesfully.';
                 await this.handleFind();
             }
-        // commented by abuzar on 2026-03-30 for the scanning issue and added below line "The catch parameter 'error' was defined but never used, which triggers the no-unused-vars eslint violation."
-        // } catch (error) {
         } catch {
-        //changes end here by abuzar
             // ✅ FIX (line 59): replaced setTimeout with Promise.resolve()
             Promise.resolve().then(() => {
                 this.errorMessage = '';
