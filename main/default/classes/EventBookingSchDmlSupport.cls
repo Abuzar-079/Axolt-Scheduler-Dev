@@ -2,42 +2,66 @@
  * @description Dedicated DML support for event booking flows to keep orchestration logic separate from persistence.
  */
 public with sharing class EventBookingSchDmlSupport {
+    /**
+     * @description Upserts a contact in user mode.
+     * @param contactRecord Contact record to persist.
+     */
     public static void upsertContactUserMode(Contact contactRecord) {
         Database.upsert(contactRecord, AccessLevel.USER_MODE);
     }
 
+    /**
+     * @description Upserts a registration in user mode.
+     * @param registrationRecord Registration record to persist.
+     */
     public static void upsertRegistrationUserMode(Registration_SCH__c registrationRecord) {
         Database.upsert(registrationRecord, AccessLevel.USER_MODE);
     }
 
+    /**
+     * @description Inserts registration records in user mode when records are supplied.
+     * @param registrations Registration records to insert.
+     */
     public static void insertRegistrations(List<Registration_SCH__c> registrations) {
-        if (registrations == null || registrations.isEmpty()) {
-            return;
+        if (registrations != null) {
+            Database.insert(registrations, AccessLevel.USER_MODE);
         }
-        insert registrations;
     }
 
+    /**
+     * @description Updates registration records in user mode when records are supplied.
+     * @param registrations Registration records to update.
+     */
     public static void updateRegistrations(List<Registration_SCH__c> registrations) {
-        if (registrations == null || registrations.isEmpty()) {
-            return;
+        if (registrations != null) {
+            Database.update(registrations, AccessLevel.USER_MODE);
         }
-        update registrations;
     }
 
+    /**
+     * @description Inserts contact records in user mode when records are supplied.
+     * @param contacts Contact records to insert.
+     */
     public static void insertContacts(List<Contact> contacts) {
-        if (contacts == null || contacts.isEmpty()) {
-            return;
+        if (contacts != null) {
+            Database.insert(contacts, AccessLevel.USER_MODE);
         }
-        insert contacts;
     }
 
+    /**
+     * @description Upserts contact records in user mode when records are supplied.
+     * @param contacts Contact records to persist.
+     */
     public static void upsertContacts(List<Contact> contacts) {
-        if (contacts == null || contacts.isEmpty()) {
-            return;
+        if (contacts != null) {
+            Database.upsert(contacts, AccessLevel.USER_MODE);
         }
-        upsert contacts;
     }
 
+    /**
+     * @description Upserts a single registration after splitting create and update paths.
+     * @param registrationRecord Registration record to persist.
+     */
     public static void upsertRegistration(Registration_SCH__c registrationRecord) {
         if (registrationRecord == null) {
             return;
@@ -47,23 +71,38 @@ public with sharing class EventBookingSchDmlSupport {
         persistRegistrationRecords(registrationRecords);
     }
 
+    /**
+     * @description Upserts registration records after splitting create and update paths.
+     * @param registrationRecords Registration records to persist.
+     */
     public static void upsertRegistrations(List<Registration_SCH__c> registrationRecords) {
-        if (registrationRecords == null || registrationRecords.isEmpty()) {
-            return;
+        if (registrationRecords != null) {
+            persistRegistrationRecords(registrationRecords);
         }
-        persistRegistrationRecords(registrationRecords);
     }
 
+    /**
+     * @description Upserts a contact in user mode.
+     * @param contactRecord Contact record to persist.
+     */
     public static void upsertContact(Contact contactRecord) {
-        upsert contactRecord;
+        Database.upsert(contactRecord, AccessLevel.USER_MODE);
     }
 
+    /**
+     * @description Updates an event in user mode.
+     * @param eventRecord Event record to update.
+     */
     public static void updateEvent(Event__c eventRecord) {
-        update eventRecord;
+        Database.update(eventRecord, AccessLevel.USER_MODE);
     }
 
+    /**
+     * @description Inserts a contact in user mode.
+     * @param contactRecord Contact record to insert.
+     */
     public static void insertContact(Contact contactRecord) {
-        insert contactRecord;
+        Database.insert(contactRecord, AccessLevel.USER_MODE);
     }
 
     private static void persistRegistrationRecords(List<Registration_SCH__c> registrationRecords) {
@@ -85,19 +124,11 @@ public with sharing class EventBookingSchDmlSupport {
         List<Registration_SCH__c> updateRecords = getSafeRegistrationUpdateRecords(updateCandidates);
 
         if (!createRecords.isEmpty()) {
-            if (Schema.sObjectType.Registration_SCH__c.isCreateable()) {
-                insert createRecords;
-            } else {
-                throw new AuraHandledException('Insufficient access to create registrations.');
-            }
+            Database.insert(createRecords, AccessLevel.USER_MODE);
         }
 
         if (!updateRecords.isEmpty()) {
-            if (Schema.sObjectType.Registration_SCH__c.isUpdateable()) {
-                update updateRecords;
-            } else {
-                throw new AuraHandledException('Insufficient access to update registrations.');
-            }
+            Database.update(updateRecords, AccessLevel.USER_MODE);
         }
     }
 
