@@ -1,9 +1,9 @@
 import { LightningElement, track } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getRegLocationqueueRecords from '@salesforce/apex/Queue_Sch_QueryHelper.getRegLocationqueueRecords';
-import updateExistRecords from '@salesforce/apex/Queue_Sch_RecordHelper.updateExistRecords';
+import saveExistingRegistration from '@salesforce/apex/Queue_Sch_RecordHelper.updateExistRecords';
 import getQueueRecords from '@salesforce/apex/Queue_Sch_Support.getQueueRecords';
-import addQueueRecord from '@salesforce/apex/Queue_Sch_RecordHelper.insertRecords';
+import insertRecord from '@salesforce/apex/Queue_Sch_RecordHelper.insertRecords';
 import getBookedRegsList from '@salesforce/apex/Queue_Sch_QueryHelper.getBookedRegsList';
 import updateReg from '@salesforce/apex/Queue_Sch_Support.updateReg';
 import issueCsrfToken from '@salesforce/apex/Queue_Sch_CsrfGuard.issueToken';
@@ -14,18 +14,11 @@ import updateCancelReg from '@salesforce/apex/Queue_Sch_Support.updateCancelReg'
 import schedulingapp from '@salesforce/resourceUrl/schedulingapp';
 import { loadStyle } from 'lightning/platformResourceLoader';
 
-
-
-
-
+const INSERT_RECORD_ACTION = 'Queue_Sch_RecordHelper.insertRecords';
+const UPDATE_EXISTING_RECORD_ACTION = 'Queue_Sch_RecordHelper.updateExistRecords';
+const UPDATE_REGISTRATION_STATUS_ACTION = 'Queue_Sch_Support.updateReg';
 
 export default class Queue_Sch_LWC extends LightningElement {
-    csrfActionNames = {
-        insertRecord: 'Queue_Sch_RecordHelper.insertRecords',
-        updateExistingRecord: 'Queue_Sch_RecordHelper.updateExistRecords',
-        updateRegistrationStatus: 'Queue_Sch_Support.updateReg'
-    };
-
     @track showFilters = false;
 
     toggleFilters() {
@@ -130,7 +123,7 @@ export default class Queue_Sch_LWC extends LightningElement {
                 });
                 this.showCancelModal = true;
             } else {
-                const csrfToken = await this.getMutationToken(this.csrfActionNames.updateRegistrationStatus);
+                const csrfToken = await this.getMutationToken(UPDATE_REGISTRATION_STATUS_ACTION);
                 // commented by abuzar on 2026-03-30 for the scanning issue and added below line "The variable 'result' was assigned but never used, which triggers the no-unused-vars eslint violation."
                 // const result = await updateReg({ rId: String(recordId), status: status });
                 await updateReg({ rId: String(recordId), status: status, csrfToken });
@@ -647,26 +640,8 @@ export default class Queue_Sch_LWC extends LightningElement {
             if (record.Id) {
                 await this.handleUpdateRecord();
             } else {
-                const csrfToken = await this.getMutationToken(this.csrfActionNames.insertRecord);
-                // commented by abuzar on 2026-03-12 for the scanning issue and added below line "updated Apex request payload after insertRecords signature fix"
-                /*
-                await addQueueRecord({
-                    fname: record.First_Name__c,
-                    lname: record.Last_Name__c,
-                    email: record.Email__c,
-                    phone: record.Phone__c,
-                    location: record.Location__c,
-                    service: record.Service__c,
-                    existMap: {},
-                    event: '',
-                    queueId: '',
-                    selSlotST: record.Slot_Start_Time__c || null,
-                    selSlotET: record.Slot_End_Time__c || null,
-                    serviceId: record.Service__c,
-                    res: record.User__c
-                });
-                */
-                await addQueueRecord({
+                const csrfToken = await this.getMutationToken(INSERT_RECORD_ACTION);
+                await insertRecord({
                     request: {
                         fname: record.First_Name__c,
                         lname: record.Last_Name__c,
@@ -684,7 +659,6 @@ export default class Queue_Sch_LWC extends LightningElement {
                         csrfToken
                     }
                 });
-                //changes end here by abuzar
                 this.toastMessage = 'Registration added successfully.';
                 // ✅ FIX (line 699): replaced setTimeout with Promise.resolve()
                 Promise.resolve().then(() => {
@@ -729,27 +703,8 @@ export default class Queue_Sch_LWC extends LightningElement {
         this.isDisabled = true;
 
         try {
-            const csrfToken = await this.getMutationToken(this.csrfActionNames.updateExistingRecord);
-            // commented by abuzar on 2026-03-12 for the scanning issue and added below line "updated Apex request payload after updateExistRecords signature fix"
-            /*
-            const result = await updateExistRecords({
-                qId: this.queueRecord.Id,
-                fname: this.queueRecord.firstName,
-                lname: this.queueRecord.lastName,
-                email: this.queueRecord.email,
-                phone: this.queueRecord.phone,
-                location: this.initLocation,
-                expert: exp,
-                service: ser,
-                existMap: this.orginalMap,
-                event: this.setQueueEvent,
-                queueId: this.selectedQueue,
-                selSlotST: selST,
-                selSlotET: selET,
-                reschedule: this.rescheduleValue
-            });
-            */
-            const result = await updateExistRecords({
+            const csrfToken = await this.getMutationToken(UPDATE_EXISTING_RECORD_ACTION);
+            const result = await saveExistingRegistration({
                 request: {
                     qId: this.queueRecord.Id,
                     fname: this.queueRecord.firstName,
@@ -768,7 +723,6 @@ export default class Queue_Sch_LWC extends LightningElement {
                     csrfToken
                 }
             });
-            //changes end here by abuzar
 
             if (result?.errMsg) {
                 this.errorMessage = result.errMsg;
@@ -793,8 +747,8 @@ export default class Queue_Sch_LWC extends LightningElement {
                 this.fetchLocationData();
             }
         } catch (error) {
-            console.error('Error in updateExistRecords:', error);
-            this.Erromessage = error.body?.message || 'Unknown error occurred';
+            console.error('Error saving registration:', error);
+            this.errorMessage = error.body?.message || 'Unknown error occurred';
         } finally {
             this.isDisabled = false;
             this.isLoading = false;
