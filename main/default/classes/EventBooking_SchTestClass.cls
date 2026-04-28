@@ -8,30 +8,6 @@ public class EventBooking_SchTestClass {
         //changes end here by Abuzar
     }
 
-    private static Registration_SCH__c createLightweightParentRegistration(
-        String firstName,
-        String lastName,
-        String email,
-        String phone
-    ) {
-        Id eventRecordTypeId = Schema.SObjectType.Registration_SCH__c
-            .getRecordTypeInfosByDeveloperName()
-            .get('Event')
-            .getRecordTypeId();
-
-        Registration_SCH__c parentReg = new Registration_SCH__c(
-            Customer_Name__c = firstName,
-            Customer_Lastname__c = lastName,
-            Customer_Email__c = email,
-            Customer_Contact__c = phone,
-            Status__c = 'Booked',
-            Registration_Type__c = 'Online',
-            RecordTypeId = eventRecordTypeId
-        );
-        insert parentReg;
-        return parentReg;
-    }
-
     @TestSetup
     static void makeData() {
         // commented by abuzar on 2026-03-13 for the scanning issue and added below line "The class 'EventBooking_SchTestClass' has a total cyclomatic complexity of 42 (highest 1)."
@@ -827,13 +803,6 @@ public class EventBooking_SchTestClass {
     @IsTest
     static void testGetCreateRecord() {
         System.runAs(getRunAsUser()) {
-            Registration_SCH__c reg = createLightweightParentRegistration(
-                'ParentIndividual',
-                'Record',
-                'parent.individual@test.com',
-                '6666666661'
-            );
-
             List<Registration_SCH__c> personList = new List<Registration_SCH__c>();
             Registration_SCH__c person = new Registration_SCH__c(
                 Customer_Name__c = 'TestPerson',
@@ -850,7 +819,7 @@ public class EventBooking_SchTestClass {
             // Registration_SCH__c result = EventBooking_Sch.getCreateRecord(personJSON, reg.Id, 'Event', true, null);
             EventBooking_Sch.GetCreateRecordRequest requestData = new EventBooking_Sch.GetCreateRecordRequest();
             requestData.person = personJSON;
-            requestData.rId = reg.Id;
+            requestData.rId = null;
             requestData.recordType = 'Event';
             requestData.showIndivisualform = true;
             requestData.ticketId = null;
@@ -867,13 +836,6 @@ public class EventBooking_SchTestClass {
     @IsTest
     static void testGetCreateRecordNonIndividual() {
         System.runAs(getRunAsUser()) {
-            Registration_SCH__c reg = createLightweightParentRegistration(
-                'ParentGroup',
-                'Record',
-                'parent.group@test.com',
-                '6666666662'
-            );
-
             List<Registration_SCH__c> personList = new List<Registration_SCH__c>();
             Registration_SCH__c person = new Registration_SCH__c(
                 Customer_Name__c = 'TestPerson2',
@@ -890,7 +852,7 @@ public class EventBooking_SchTestClass {
             // Registration_SCH__c result = EventBooking_Sch.getCreateRecord(personJSON, reg.Id, 'Event', false, null);
             EventBooking_Sch.GetCreateRecordRequest requestData = new EventBooking_Sch.GetCreateRecordRequest();
             requestData.person = personJSON;
-            requestData.rId = reg.Id;
+            requestData.rId = null;
             requestData.recordType = 'Event';
             requestData.showIndivisualform = false;
             requestData.ticketId = null;
