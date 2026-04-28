@@ -40,8 +40,6 @@ public class Queue_SchTestDataFactory {
             Email = 'test@example.com',
             MobilePhone = '1234567890',
             MailingCity = 'Test City',
-            MailingState = 'Test State',
-            MailingCountry = 'Test Country',
             MailingPostalCode = '12345'
         );
         insert con;
