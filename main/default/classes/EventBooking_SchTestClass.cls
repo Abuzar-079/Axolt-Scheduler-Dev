@@ -8,6 +8,30 @@ public class EventBooking_SchTestClass {
         //changes end here by Abuzar
     }
 
+    private static Registration_SCH__c createLightweightParentRegistration(
+        String firstName,
+        String lastName,
+        String email,
+        String phone
+    ) {
+        Id eventRecordTypeId = Schema.SObjectType.Registration_SCH__c
+            .getRecordTypeInfosByDeveloperName()
+            .get('Event')
+            .getRecordTypeId();
+
+        Registration_SCH__c parentReg = new Registration_SCH__c(
+            Customer_Name__c = firstName,
+            Customer_Lastname__c = lastName,
+            Customer_Email__c = email,
+            Customer_Contact__c = phone,
+            Status__c = 'Booked',
+            Registration_Type__c = 'Online',
+            RecordTypeId = eventRecordTypeId
+        );
+        insert parentReg;
+        return parentReg;
+    }
+
     @TestSetup
     static void makeData() {
         // commented by abuzar on 2026-03-13 for the scanning issue and added below line "The class 'EventBooking_SchTestClass' has a total cyclomatic complexity of 42 (highest 1)."
@@ -803,10 +827,12 @@ public class EventBooking_SchTestClass {
     @IsTest
     static void testGetCreateRecord() {
         System.runAs(getRunAsUser()) {
-            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
-            // Registration_SCH__c reg = [SELECT Id FROM Registration_SCH__c LIMIT 1];
-            Registration_SCH__c reg = [SELECT Id FROM Registration_SCH__c WITH USER_MODE LIMIT 1];
-            //changes end here by Abuzar
+            Registration_SCH__c reg = createLightweightParentRegistration(
+                'ParentIndividual',
+                'Record',
+                'parent.individual@test.com',
+                '6666666661'
+            );
 
             List<Registration_SCH__c> personList = new List<Registration_SCH__c>();
             Registration_SCH__c person = new Registration_SCH__c(
@@ -841,10 +867,12 @@ public class EventBooking_SchTestClass {
     @IsTest
     static void testGetCreateRecordNonIndividual() {
         System.runAs(getRunAsUser()) {
-            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
-            // Registration_SCH__c reg = [SELECT Id FROM Registration_SCH__c LIMIT 1];
-            Registration_SCH__c reg = [SELECT Id FROM Registration_SCH__c WITH USER_MODE LIMIT 1];
-            //changes end here by Abuzar
+            Registration_SCH__c reg = createLightweightParentRegistration(
+                'ParentGroup',
+                'Record',
+                'parent.group@test.com',
+                '6666666662'
+            );
 
             List<Registration_SCH__c> personList = new List<Registration_SCH__c>();
             Registration_SCH__c person = new Registration_SCH__c(
@@ -1032,11 +1060,12 @@ public class EventBooking_SchTestClass {
             // Expert_Location__c loc = [SELECT Id FROM Expert_Location__c LIMIT 1];
             Expert_Location__c loc = [SELECT Id FROM Expert_Location__c WITH USER_MODE LIMIT 1];
             //changes end here by Abuzar
+            String uniqueEmail = 'new.' + String.valueOf(DateTime.now().getTime()) + '@test.com';
             EventBooking_Sch.RegRequest req = new EventBooking_Sch.RegRequest();
             req.fname = 'NewFirst';
             req.lname = 'NewLast';
-            req.email = 'new@test.com';
-            req.phone = '5555555555';
+            req.email = uniqueEmail;
+            req.phone = '5555555556';
             req.location = String.valueOf(loc.Id);
             req.event = String.valueOf(evt.Id);
 
@@ -1045,7 +1074,44 @@ public class EventBooking_SchTestClass {
             Test.stopTest();
 
             System.assertNotEquals(null, result, 'Registration should be created');
-            System.assertNotEquals(null, result.Id, 'Registration ID should not be null');
+            System.assertEquals(uniqueEmail, result.Customer_Email__c, 'Returned registration should preserve request email');
+
+            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+            // Registration_SCH__c createdReg = [
+            //     SELECT Id, Customer_Email__c, Customer_Name__c, Customer_Lastname__c, Event__c, Expert_Location__c, Status__c
+            //     FROM Registration_SCH__c
+            //     WHERE Customer_Email__c = :uniqueEmail
+            //     LIMIT 1
+            // ];
+            Registration_SCH__c createdReg = [
+                SELECT Id, Customer_Email__c, Customer_Name__c, Customer_Lastname__c, Event__c, Expert_Location__c, Status__c
+                FROM Registration_SCH__c
+                WHERE Customer_Email__c = :uniqueEmail
+                WITH USER_MODE
+                LIMIT 1
+            ];
+            //changes end here by Abuzar
+            System.assertNotEquals(null, createdReg.Id, 'Persisted registration ID should not be null');
+            System.assertEquals('Booked', createdReg.Status__c, 'Persisted registration should be booked');
+            System.assertEquals(evt.Id, createdReg.Event__c, 'Persisted registration should reference the requested event');
+            System.assertEquals(loc.Id, createdReg.Expert_Location__c, 'Persisted registration should reference the requested location');
+
+            // commented by Abuzar on 2026-03-24 for the Checkmarkx issue and added below line "Apex SOQL SOSL USER MODE MISSING"
+            // Contact createdContact = [
+            //     SELECT Id, Email, MobilePhone
+            //     FROM Contact
+            //     WHERE Email = :uniqueEmail
+            //     LIMIT 1
+            // ];
+            Contact createdContact = [
+                SELECT Id, Email, MobilePhone
+                FROM Contact
+                WHERE Email = :uniqueEmail
+                WITH USER_MODE
+                LIMIT 1
+            ];
+            //changes end here by Abuzar
+            System.assertEquals(req.phone, createdContact.MobilePhone, 'Contact should be created or updated with the request phone');
         }
     }
 
