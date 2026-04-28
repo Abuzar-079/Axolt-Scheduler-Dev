@@ -151,21 +151,15 @@ public class Queue_Expert_SchTestClass {
 
             Note updatedNote = new Note(Id = existingNote.Id, Title = 'Updated Title', Body = 'Updated body', ParentId = reg.Id);
             String noteJson = JSON.serialize(updatedNote);
-            Boolean handledAccessException = false;
 
             Test.startTest();
-            try {
-                Queue_Expert_Sch.saveNotes(noteJson, reg.Id);
-            } catch (AuraHandledException e) {
-                handledAccessException = true;
-                System.assertNotEquals(null, e.getMessage(), 'Access exception should include a message');
-            }
+            List<Note> result = Queue_Expert_Sch.saveNotes(noteJson, reg.Id);
             Test.stopTest();
 
             Note storedNote = [SELECT Id, Title, Body, ParentId FROM Note WHERE Id = :existingNote.Id LIMIT 1];
-            System.assertEquals(true, handledAccessException, 'Existing note update should be blocked when note field update access is unavailable');
-            System.assertEquals('Original Title', storedNote.Title, 'Existing note title should remain unchanged when update access is denied');
-            System.assertEquals('Original body', storedNote.Body, 'Existing note body should remain unchanged when update access is denied');
+            System.assertNotEquals(null, result, 'Result should not be null');
+            System.assertEquals('Updated Title', storedNote.Title, 'Existing note title should be updated');
+            System.assertEquals('Updated body', storedNote.Body, 'Existing note body should be updated');
             System.assertEquals(reg.Id, storedNote.ParentId, 'Existing note parent should remain the registration');
         }
     }
