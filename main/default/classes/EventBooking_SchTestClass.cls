@@ -836,17 +836,7 @@ public class EventBooking_SchTestClass {
     @IsTest
     static void testGetCreateRecordNonIndividual() {
         System.runAs(getRunAsUser()) {
-            List<Registration_SCH__c> personList = new List<Registration_SCH__c>();
-            Registration_SCH__c person = new Registration_SCH__c(
-                Customer_Name__c = 'TestPerson2',
-                Customer_Lastname__c = 'TestLast2',
-                Customer_Email__c = 'testperson2@test.com',
-                Customer_Contact__c = '8888888888',
-                Status__c = 'Booked'
-            );
-            personList.add(person);
-
-            String personJSON = JSON.serialize(personList);
+            String personJSON = JSON.serialize(new List<Registration_SCH__c>());
 
             // commented by abuzar on 2026-03-13 for the scanning issue and added below line "Avoid long parameter lists (5 parameters - threshold is 4)."
             // Registration_SCH__c result = EventBooking_Sch.getCreateRecord(personJSON, reg.Id, 'Event', false, null);
