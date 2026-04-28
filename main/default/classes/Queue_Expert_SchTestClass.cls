@@ -5,6 +5,51 @@ public class Queue_Expert_SchTestClass {
         return [SELECT Id FROM User WHERE Id = :UserInfo.getUserId()];
     }
 
+    private static Set<String> getUpdateRecordRequiredFields() {
+        return new Set<String>{
+            'Booked_Current_Status__c',
+            'Cancellation_Reason__c',
+            'Contact__c',
+            'Customer_Contact__c',
+            'Customer_Email__c',
+            'Customer_Lastname__c',
+            'Customer_Name__c',
+            'Customer_Status__c',
+            'Customer_Type__c',
+            'End_Time__c',
+            'Meeting_Status__c',
+            'Meeting_outcome__c',
+            'Purpose__c',
+            'Registration_Time__c',
+            'Registration_Type__c',
+            'Serve_Finished_Time__c',
+            'Serve_Start_Time__c',
+            'Status__c',
+            'waiting_Time__c'
+        };
+    }
+
+    private static Set<String> getSetStatusRequiredFields() {
+        return new Set<String>{
+            'Status__c',
+            'Booked_Current_Status__c',
+            'Cancellation_Reason__c',
+            'Serve_Finished_Time__c'
+        };
+    }
+
+    private static Set<String> getMissingRegistrationFields(Set<String> requiredFields) {
+        Map<String, Schema.SObjectField> registrationFields =
+            Registration_SCH__c.SObjectType.getDescribe(SObjectDescribeOptions.DEFERRED).fields.getMap();
+        Set<String> missingFields = new Set<String>();
+        for (String fieldApiName : requiredFields) {
+            if (!registrationFields.containsKey(fieldApiName)) {
+                missingFields.add(fieldApiName);
+            }
+        }
+        return missingFields;
+    }
+
     @TestSetup
     static void makeData() {
         Queue_SchTestDataFactory.createQueueData();
@@ -13,21 +58,50 @@ public class Queue_Expert_SchTestClass {
     @IsTest
     static void testUpdateRecordValues() {
         System.runAs(getRunAsUser()) {
-            Registration_SCH__c reg = [SELECT Id FROM Registration_SCH__c WHERE Customer_Email__c = 'jane.smith@test.com' LIMIT 1];
+            Registration_SCH__c reg = [
+                SELECT Id, Customer_Name__c, Customer_Status__c
+                FROM Registration_SCH__c
+                WHERE Customer_Email__c = 'jane.smith@test.com'
+                LIMIT 1
+            ];
+            Set<String> missingFields = getMissingRegistrationFields(getUpdateRecordRequiredFields());
             List<String> values = new List<String>{
                 'Attended', 'Walk In', 'Appointment', 'Completed', 'Success',
                 'Test Purpose', 'UpdatedFirst', 'UpdatedLast', 'updated@test.com', '9999999999',
                 '', '', '', '', '', ''
             };
             String jsonValues = JSON.serialize(values);
+            QueueExpertWrapper result;
+            Boolean sawAuraHandledException = false;
             Test.startTest();
-            QueueExpertWrapper result = Queue_Expert_Sch.updateRecordValues(
-                reg.Id, jsonValues, UserInfo.getUserId(), null, null, null, null, null, null, null
-            );
+            try {
+                result = Queue_Expert_Sch.updateRecordValues(
+                    reg.Id, jsonValues, UserInfo.getUserId(), null, null, null, null, null, null, null
+                );
+            } catch (AuraHandledException e) {
+                sawAuraHandledException = true;
+            }
             Test.stopTest();
-            Registration_SCH__c updatedReg = [SELECT Customer_Status__c FROM Registration_SCH__c WHERE Id = :reg.Id];
-            System.assertNotEquals(null, result, 'Result should not be null');
-            System.assertEquals('Attended', updatedReg.Customer_Status__c, 'Customer status should be Attended');
+            Registration_SCH__c updatedReg = [
+                SELECT Customer_Name__c, Customer_Status__c
+                FROM Registration_SCH__c
+                WHERE Id = :reg.Id
+            ];
+            if (missingFields.isEmpty()) {
+                System.assertEquals(false, sawAuraHandledException, 'Update should succeed when all required fields exist.');
+                System.assertNotEquals(null, result, 'Result should not be null');
+                System.assertEquals('UpdatedFirst', updatedReg.Customer_Name__c, 'Customer name should be updated.');
+                System.assertEquals('Attended', updatedReg.Customer_Status__c, 'Customer status should be Attended');
+            } else {
+                System.assertEquals(
+                    true,
+                    sawAuraHandledException,
+                    'Update should fail fast when Registration_SCH__c is missing required fields: ' +
+                    String.join(new List<String>(missingFields), ', ')
+                );
+                System.assertEquals('Jane', updatedReg.Customer_Name__c, 'Customer name should remain unchanged.');
+                System.assertEquals('Attended', updatedReg.Customer_Status__c, 'Customer status should remain unchanged.');
+            }
         }
     }
 
@@ -65,34 +139,61 @@ public class Queue_Expert_SchTestClass {
     @IsTest
     static void testSetStatus() {
         System.runAs(getRunAsUser()) {
-            Registration_SCH__c reg = [SELECT Id FROM Registration_SCH__c WHERE Customer_Email__c = 'alice.williams@test.com' LIMIT 1];
+            Registration_SCH__c reg = [
+                SELECT Id, Status__c, Booked_Current_Status__c
+                FROM Registration_SCH__c
+                WHERE Customer_Email__c = 'alice.williams@test.com'
+                LIMIT 1
+            ];
             Expert_Location__c loc = [SELECT Id FROM Expert_Location__c LIMIT 1];
-            Boolean handledExpectedException = false;
+            Set<String> missingFields = getMissingRegistrationFields(getSetStatusRequiredFields());
+            QueueExpertWrapper result;
+            Boolean sawAuraHandledException = false;
+            Boolean handledSecureQueryException = false;
+            Boolean sawNullPointerException = false;
             Test.startTest();
             try {
-                QueueExpertWrapper result = Queue_Expert_Sch.setStatus(reg.Id, loc.Id, 'Completed', 'Meeting completed');
-                System.assertNotEquals(null, result, 'Result should not be null');
+                result = Queue_Expert_Sch.setStatus(reg.Id, loc.Id, 'Completed', 'Meeting completed');
+            } catch (AuraHandledException e) {
+                sawAuraHandledException = true;
             } catch (QueryException e) {
-                handledExpectedException = e.getMessage().contains('secure query included inaccessible field');
+                handledSecureQueryException = e.getMessage().contains('secure query included inaccessible field');
             } catch (NullPointerException e) {
-                return;
-                //System.debug(LoggingLevel.DEBUG, 'NullPointerException in Queue_Expert_Sch: ' + e.getMessage());
+                sawNullPointerException = true;
             }
             Test.stopTest();
             Registration_SCH__c updatedReg = [SELECT Status__c, Booked_Current_Status__c FROM Registration_SCH__c WHERE Id = :reg.Id];
-            System.assertNotEquals(null, updatedReg, 'Updated reg should not be null');
-            System.assert(
-                handledExpectedException || updatedReg.Status__c != null,
-                'Test should either handle the secure-query restriction or return an accessible registration record'
-            );
+            if (!missingFields.isEmpty()) {
+                System.assertEquals(
+                    true,
+                    sawAuraHandledException,
+                    'setStatus should fail fast when Registration_SCH__c is missing required fields: ' +
+                    String.join(new List<String>(missingFields), ', ')
+                );
+                System.assertEquals('Booked', updatedReg.Status__c, 'Status should remain unchanged.');
+                System.assertEquals(null, updatedReg.Booked_Current_Status__c, 'Booked current status should remain unchanged.');
+            } else if (handledSecureQueryException || sawNullPointerException) {
+                System.assertNotEquals(null, updatedReg, 'Updated reg should still be queryable.');
+            } else {
+                System.assertEquals(false, sawAuraHandledException, 'setStatus should succeed when all required fields exist.');
+                System.assertNotEquals(null, result, 'Result should not be null');
+                System.assertEquals('Completed', updatedReg.Status__c, 'Status should be updated to Completed.');
+                System.assertEquals('Completed', updatedReg.Booked_Current_Status__c, 'Booked current status should be updated to Completed.');
+            }
         }
     }
 
     @IsTest
     static void testGetRegRecordUpdate() {
         System.runAs(getRunAsUser()) {
-            Registration_SCH__c reg = [SELECT Id FROM Registration_SCH__c WHERE Customer_Email__c = 'alice.williams@test.com' LIMIT 1];
+            Registration_SCH__c reg = [
+                SELECT Id, Status__c, Customer_Name__c, Booked_Current_Status__c
+                FROM Registration_SCH__c
+                WHERE Customer_Email__c = 'alice.williams@test.com'
+                LIMIT 1
+            ];
             Expert_Location__c loc = [SELECT Id FROM Expert_Location__c LIMIT 1];
+            Set<String> missingFields = getMissingRegistrationFields(getUpdateRecordRequiredFields());
             List<String> values = new List<String>{
                 'Attended', 'Walk In', 'Appointment', 'Booked', 'Success',
                 'Test Purpose', 'TestFirst', 'TestLast', 'test@test.com', '8888888888',
@@ -101,12 +202,39 @@ public class Queue_Expert_SchTestClass {
             String jsonValues = JSON.serialize(values);
             DateTime startTime = System.now().addHours(1);
             DateTime endTime = System.now().addHours(2);
+            QueueExpertWrapper result;
+            Boolean sawAuraHandledException = false;
             Test.startTest();
-            QueueExpertWrapper result = Queue_Expert_Sch.getRegRecordUpdate(
-                reg.Id, jsonValues, UserInfo.getUserId(), null, null, null, null, loc.Id, startTime, endTime
-            );
+            try {
+                result = Queue_Expert_Sch.getRegRecordUpdate(
+                    reg.Id, jsonValues, UserInfo.getUserId(), null, null, null, null, loc.Id, startTime, endTime
+                );
+            } catch (AuraHandledException e) {
+                sawAuraHandledException = true;
+            }
             Test.stopTest();
-            System.assertNotEquals(null, result, 'Result should not be null');
+            Registration_SCH__c updatedReg = [
+                SELECT Status__c, Customer_Name__c, Booked_Current_Status__c
+                FROM Registration_SCH__c
+                WHERE Id = :reg.Id
+            ];
+            if (missingFields.isEmpty()) {
+                System.assertEquals(false, sawAuraHandledException, 'Record refresh should succeed when all required fields exist.');
+                System.assertNotEquals(null, result, 'Result should not be null');
+                System.assertEquals('Completed', updatedReg.Status__c, 'Status should be updated to Completed.');
+                System.assertEquals('TestFirst', updatedReg.Customer_Name__c, 'Customer name should be updated.');
+                System.assertEquals('Completed', updatedReg.Booked_Current_Status__c, 'Booked current status should be updated to Completed.');
+            } else {
+                System.assertEquals(
+                    true,
+                    sawAuraHandledException,
+                    'Record refresh should fail fast when Registration_SCH__c is missing required fields: ' +
+                    String.join(new List<String>(missingFields), ', ')
+                );
+                System.assertEquals('Booked', updatedReg.Status__c, 'Status should remain unchanged.');
+                System.assertEquals('Alice', updatedReg.Customer_Name__c, 'Customer name should remain unchanged.');
+                System.assertEquals(null, updatedReg.Booked_Current_Status__c, 'Booked current status should remain unchanged.');
+            }
         }
     }
 
