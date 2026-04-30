@@ -3,8 +3,6 @@
  */
 @IsTest
 public class QueueSchInsertRecordsTestSupport {
-    public static final String INSERT_RECORD_ACTION = 'Queue_Sch_RecordHelper.insertRecords';
-
     /**
      * @description Mutable context used to build insertRecords requests in tests.
      */
@@ -95,7 +93,6 @@ public class QueueSchInsertRecordsTestSupport {
         request.selSlotET = context.slotEnd;
         request.serviceId = context.serviceId;
         request.res = '';
-        request.csrfToken = Queue_Sch_CsrfGuard.issueToken(INSERT_RECORD_ACTION);
         return request;
     }
 }

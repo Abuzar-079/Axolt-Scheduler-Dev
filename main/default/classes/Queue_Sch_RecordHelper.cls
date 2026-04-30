@@ -7,10 +7,6 @@ public with sharing class Queue_Sch_RecordHelper {
             if(request == null || request.selSlotST == null){
                 return wrapper;
             }
-            Queue_Sch_CsrfGuard.assertValidToken(
-                'Queue_Sch_RecordHelper.updateExistRecords',
-                request.csrfToken
-            );
 
             UpdateExistRecordsContext context = buildUpdateExistRecordsContext(request);
             if(String.isNotBlank(context.errMsg)){
@@ -36,10 +32,6 @@ public with sharing class Queue_Sch_RecordHelper {
     public static Queue_Sch_Wrapper insertRecords(Queue_Sch_InsertRecordsRequest request){
         Queue_Sch_Wrapper wrapper = new Queue_Sch_Wrapper();
         try{
-            Queue_Sch_CsrfGuard.assertValidToken(
-                'Queue_Sch_RecordHelper.insertRecords',
-                request != null ? request.csrfToken : null
-            );
             InsertRecordsContext context = buildInsertRecordsContext(request);
             Registration_SCH__c registration = buildInsertRegistration(request, context);
             registration.Contact__c = getOrCreateContactId(request);

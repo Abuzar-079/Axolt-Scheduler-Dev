@@ -55,11 +55,6 @@ public class Queue_Sch_InsertRecordsRequest {
      */
     @AuraEnabled public String res { get; set; }
     /**
-     * @description Server-issued verification token for this mutation request.
-     */
-    @AuraEnabled public String csrfToken { get; set; }
-
-    /**
      * @description Initializes the request with an empty existing-record map.
      */
     public Queue_Sch_InsertRecordsRequest() {
