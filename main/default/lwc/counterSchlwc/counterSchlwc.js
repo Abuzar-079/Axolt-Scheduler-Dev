@@ -116,8 +116,7 @@ export default class CounterSchlwc extends LightningElement {
                         this.dispatchEvent(
                             new CustomEvent('waitthresholdreached', {
                                 detail: { regId: this.regId },
-                                bubbles: true,
-                                composed: true
+                                bubbles: true
                             })
                         );
                     }
