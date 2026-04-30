@@ -222,8 +222,6 @@ fetchInitialRecord(recordId) { //adnan changed to Camel case ObjectName and Sear
         this.searchRecordsempty = false;
         this.message = '';
         const selectedEvent = new CustomEvent('lookup', {
-            bubbles: true,
-            composed: true,
             cancelable: true,
             detail: {
                 data: {
