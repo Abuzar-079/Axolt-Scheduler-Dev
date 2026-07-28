@@ -6,12 +6,17 @@ import getQueueRecords from '@salesforce/apex/Queue_Sch_Support.getQueueRecords'
 import insertRecord from '@salesforce/apex/Queue_Sch_RecordHelper.insertRecords';
 import getBookedRegsList from '@salesforce/apex/Queue_Sch_QueryHelper.getBookedRegsList';
 import saveRegistrationStatus from '@salesforce/apex/Queue_Sch_Support.updateReg';
+import issueCsrfToken from '@salesforce/apex/Queue_Sch_CsrfGuard.issueToken';
 //import getTimeSlot from '@salesforce/apex/Queue_Sch.getTimeSlot';
 import setLocations from '@salesforce/apex/Queue_Sch_Support.setLocations';
 import getCancellationReasons from '@salesforce/apex/Queue_Sch_Support.getCancellationReasons';
 import updateCancelReg from '@salesforce/apex/Queue_Sch_Support.updateCancelReg';
 import schedulingapp from '@salesforce/resourceUrl/schedulingapp';
 import { loadStyle } from 'lightning/platformResourceLoader';
+
+const INSERT_RECORD_ACTION = 'Queue_Sch_RecordHelper.insertRecords';
+const UPDATE_EXISTING_RECORD_ACTION = 'Queue_Sch_RecordHelper.updateExistRecords';
+const STATUS_CHANGE_ACTION = 'Queue_Sch_Support.updateReg';
 
 export default class Queue_Sch_LWC extends LightningElement {
     @track showFilters = false;
@@ -118,7 +123,8 @@ export default class Queue_Sch_LWC extends LightningElement {
                 });
                 this.showCancelModal = true;
             } else {
-                await saveRegistrationStatus({ rId: String(recordId), status: status });
+                const csrfToken = await this.getMutationToken(STATUS_CHANGE_ACTION);
+                await saveRegistrationStatus({ rId: String(recordId), status: status, csrfToken });
                 this.toastMessage = 'Registration marked as ' + status + ' succesfully.';
                 await this.handleFind();
             }
@@ -292,6 +298,10 @@ export default class Queue_Sch_LWC extends LightningElement {
         } catch (error) {
             console.error('Queue refresh failed.', error);
         }
+    }
+
+    async getMutationToken(actionName) {
+        return issueCsrfToken({ actionName });
     }
 
     applyQueueResponseState(response) {
@@ -624,6 +634,7 @@ export default class Queue_Sch_LWC extends LightningElement {
             if (record.Id) {
                 await this.handleUpdateRecord();
             } else {
+                const csrfToken = await this.getMutationToken(INSERT_RECORD_ACTION);
                 await insertRecord({
                     request: {
                         fname: record.First_Name__c,
@@ -638,7 +649,8 @@ export default class Queue_Sch_LWC extends LightningElement {
                         selSlotST: record.Slot_Start_Time__c || null,
                         selSlotET: record.Slot_End_Time__c || null,
                         serviceId: record.Service__c,
-                        res: record.User__c
+                        res: record.User__c,
+                        csrfToken
                     }
                 });
                 this.toastMessage = 'Registration added successfully.';
@@ -685,6 +697,7 @@ export default class Queue_Sch_LWC extends LightningElement {
         this.isDisabled = true;
 
         try {
+            const csrfToken = await this.getMutationToken(UPDATE_EXISTING_RECORD_ACTION);
             const result = await saveExistingRegistration({
                 request: {
                     qId: this.queueRecord.Id,
@@ -700,7 +713,8 @@ export default class Queue_Sch_LWC extends LightningElement {
                     queueId: this.selectedQueue,
                     selSlotST: selST,
                     selSlotET: selET,
-                    reschedule: this.rescheduleValue
+                    reschedule: this.rescheduleValue,
+                    csrfToken
                 }
             });
 
